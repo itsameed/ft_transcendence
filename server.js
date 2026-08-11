@@ -7,6 +7,23 @@ const mongoose = require('mongoose');
 const userdate = require("./models/articleSchema");
 app.set('view engine', 'ejs')
 
+app.use(express.static('public'))
+
+const path = require("path");
+const livereload = require("livereload");
+const liveReloadServer = livereload.createServer();
+liveReloadServer.watch(path.join(__dirname, 'public'));
+
+
+// const connectLivereload = require("connect-livereload");
+// app.use(connectLivereload());
+
+// liveReloadServer.server.once("connection", () => {
+//   setTimeout(() => {
+//     liveReloadServer.refresh("/");
+//   }, 100);
+// });
+
 // let players = [
 //     { name: "ameed", id: 1, scour: 1000 },
 //     { name: "player1", id: 2, scour: 100 },
@@ -17,7 +34,7 @@ app.set('view engine', 'ejs')
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.sendFile('index.html', { root: __dirname });
+    res.sendFile('./views/index.html', { root: __dirname });
 })
 
 app.get('/welcome', (req, res) => {
@@ -27,10 +44,23 @@ app.get('/welcome', (req, res) => {
         console.log(err);
     })
 })
+
+app.get('/users', (req, res) => {
+    userdate.find().then((dateuser) => {
+        res.render('users', { title: "users", users: dateuser })
+    }).catch((err) => {
+        console.log(err);
+    })
+})
+
 app.post('/', (req, res) => {
-    const _userdate = new userdate(req.body);
+    const _userdate = new userdate({
+        username: req.body.username,
+        useremail: req.body.useremail,
+        userage: req.body.userage
+    });
     _userdate.save().then((() => {
-        res.redirect('/welcome')
+        res.status(201).redirect('/welcome')
     })).catch(((err) => {
         console.log(err);
     }))
@@ -53,15 +83,116 @@ app.post('/', (req, res) => {
 
 // })
 
-// app.get('/:playerid', (req, res) => {
-//     const { playerid } = req.params;
-//     const foundplayer = players.find((item) => item.id === Number(playerid));
-//     if (!foundplayer) {
-//         res.send(`player whit this ID ${playerid} not found`);
-//     } else {
-//         res.send(foundplayer);
-//     }
-// })
+app.get('/users/:userid', async (req, res) => {
+
+    try {
+
+        const { userid } = req.params;
+
+        const founduser = await userdate.findById(userid);
+
+        if (!founduser) {
+            return res.status(404).send(
+                `User with this ID ${userid} not found`
+            );
+        }
+
+        res.render('profile', {
+            title: "User Profile",
+            user: founduser
+        });
+
+    } catch (err) {
+
+        console.log(err);
+        res.status(500).send("Something went wrong");
+
+    }
+});
+
+app.post('/users/:userid/delete', async (req, res) => {
+
+    try {
+
+        const { userid } = req.params;
+
+        const founduser = await userdate.findByIdAndDelete(userid);
+
+        if (!founduser) {
+            return res.status(404).send(
+                `User with this ID ${userid} not found`
+            );
+        }
+
+        res.redirect("/users");
+    } catch (err) {
+
+        console.log(err);
+        res.status(500).send("Something went wrong");
+
+    }
+});
+
+app.get('/users/:userid/edit', async (req, res) => {
+
+    try {
+
+        const { userid } = req.params;
+
+        const founduser = await userdate.findById(userid);
+
+        if (!founduser) {
+            return res.status(404).send(
+                `User with this ID ${userid} not found`
+            );
+        }
+
+        res.render('edit', {
+            title: "Update",
+            user: founduser
+        });
+    } catch (err) {
+
+        console.log(err);
+        res.status(500).send("Something went wrong");
+
+    }
+});
+
+app.post("/users/:userid/edit", async (req, res) => {
+
+    try {
+
+        const { userid } = req.params;
+
+        const { username, useremail, userage } = req.body;
+
+        const updatedUser = await userdate.findByIdAndUpdate(
+            userid,
+            {
+                username: username,
+                useremail: useremail,
+                userage: userage
+            },
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).send("User not found");
+        }
+
+        res.redirect("/users");
+
+    } catch (err) {
+
+        console.log(err);
+        res.status(500).send("Something went wrong");
+
+    }
+});
 
 // app.delete('/:playerid', (req, res) => {
 //     const { playerid } = req.params;

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/mystyle.css">
+    <title>Profile</title>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="card">
+
+            <h1><%= user.username %>'s Profile</h1>
+
+            <div class="user">
+                <p><strong>Username:</strong> <%= user.username %></p>
+                <p><strong>Email:</strong> <%= user.useremail %></p>
+                <p><strong>Age:</strong> <%= user.userage %></p>
+            </div>
+
+            <form action="/users" method="GET">
+                <button type="submit">Back</button>
+            </form>
+
+        </div>
+    </div>
+
+</body>
+</html>

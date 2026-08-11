@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/mystyle.css">
+    <title>Update user info</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1><%= user.username %></h1>
+            <p><%= title %> your info</p>
+            <form action="/users/<%= user._id %>/edit" method="POST">
+                <label for="username">Your name</label>
+
+                <input type="text" id="username" name="username" value="<%= user.username %>" required
+                    autocomplete="name">
+
+                <label for="useremail">Your email</label>
+
+                <input type="email" id="useremail" name="useremail" value="<%= user.useremail %>" required
+                    autocomplete="email">
+
+                <label for="userage">Your age</label>
+
+                <input type="number" id="userage" name="userage" value="<%= user.userage %>" required
+                    autocomplete="number">
+
+                <button type="submit">Update</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

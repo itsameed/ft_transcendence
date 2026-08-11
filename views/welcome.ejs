@@ -1,14 +1,34 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <link rel="stylesheet" href="/mystyle.css">
+    <title>Welcome</title>
 </head>
+
 <body>
-    <h1>Welcome <%= oarr.at(-1).username %></h1>
-    <form action="/" method="get">
-        <button>back</button>
-    </form>
+    <div class="container">
+        <div class="card welcome-card">
+            <h1>
+                Welcome, <span>
+                    <%= oarr.at(-1).username %>
+                </span> 👋
+            </h1>
+            <p>You have successfully joined us.</p>
+
+            <form action="/users" method="GET">
+                <button type="submit">View Users</button>
+            </form>
+
+            <form action="/" method="GET">
+                <button type="submit">Back</button>
+            </form>
+        </div>
+    </div>
+
 </body>
+
 </html>
