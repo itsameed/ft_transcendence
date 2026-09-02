@@ -1,5 +1,5 @@
 {
-  "name": "Node.js Backend",
+  "name": "ft_transcendence",
   "image": "node:22",
   "workspaceFolder": "/workspace",
   "mounts": [

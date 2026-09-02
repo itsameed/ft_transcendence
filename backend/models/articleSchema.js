@@ -16,6 +16,21 @@ const articleSchema = new Schema({
     },
 });
 
-const userdate = mongoose.model("userdate", articleSchema);
+const roomSchema = new Schema({
+    roomname: {
+        type: String,
+        req: true
+    },
+    lent: {
+        type: Number,
+        req: true
+    },
+});
 
-module.exports = userdate;
+const userdate = mongoose.model("userdate", articleSchema);
+const roomdate = mongoose.model("roomdate", roomSchema);
+
+module.exports = {
+    userdate,
+    roomdate,
+};
