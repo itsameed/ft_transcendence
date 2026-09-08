@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Chat</title>
+
+    <link rel="stylesheet" href="/mystyle.css">
+</head>
+
+<body>
+
+    <main class="chat-container">
+
+        <!-- =========================
+             HEADER
+        ========================== -->
+
+        <header class="chat-header">
+
+            <div class="chat-user">
+                <div class="avatar">
+                    U
+                </div>
+
+                <div>
+                    <h2>Chat</h2>
+                    <span id="status">
+                        ● Online
+                    </span>
+                </div>
+            </div>
+
+        </header>
+
+
+        <!-- =========================
+             MESSAGES
+        ========================== -->
+
+        <section
+            id="messages"
+            class="messages"
+            aria-live="polite"
+        >
+
+            <div class="empty-message">
+                <span>💬</span>
+                <p>No messages yet</p>
+                <small>Start the conversation</small>
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             MESSAGE FORM
+        ========================== -->
+
+        <form
+            id="messageForm"
+            class="message-form"
+        >
+
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="Write a message..."
+                autocomplete="off"
+                maxlength="1000"
+                required
+            >
+
+            <button
+                type="submit"
+                id="sendButton"
+            >
+                Send
+            </button>
+
+        </form>
+
+    </main>
+
+
+    <!-- Socket.IO -->
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+
+        // ========================================
+        // CONFIG
+        // ========================================
+
+        const conversationId =
+            "6a9f277d804f75177e0c763a";
+
+        const params =
+            new URLSearchParams(window.location.search);
+
+        const currentUserId =
+            params.get("userId");
+
+
+        // ========================================
+        // CHECK USER
+        // ========================================
+
+        if (!currentUserId) {
+
+            alert("userId is missing");
+
+            throw new Error("userId is missing");
+        }
+
+
+        // ========================================
+        // DOM ELEMENTS
+        // ========================================
+
+        const messagesContainer =
+            document.getElementById("messages");
+
+        const messageForm =
+            document.getElementById("messageForm");
+
+        const messageInput =
+            document.getElementById("messageInput");
+
+        const sendButton =
+            document.getElementById("sendButton");
+
+
+        // ========================================
+        // SOCKET.IO
+        // ========================================
+
+        const socket = io();
+
+
+        // Join conversation
+
+        socket.emit(
+            "joinConversation",
+            conversationId
+        );
+
+
+        // Join user's private room
+
+        socket.emit(
+            "joinUser",
+            currentUserId
+        );
+
+
+        // ========================================
+        // SOCKET CONNECTION
+        // ========================================
+
+        socket.on("connect", () => {
+
+            console.log(
+                "Socket connected:",
+                socket.id
+            );
+
+        });
+
+
+        socket.on("disconnect", () => {
+
+            console.log(
+                "Socket disconnected"
+            );
+
+        });
+
+
+        // ========================================
+        // NOTIFICATIONS
+        // ========================================
+
+        socket.on(
+            "newNotification",
+            (notification) => {
+
+                console.log(
+                    "New notification:",
+                    notification
+                );
+
+                alert(
+                    `${notification.title}: ${notification.message}`
+                );
+            }
+        );
+
+
+        // ========================================
+        // CREATE MESSAGE ELEMENT
+        // ========================================
+
+        function createMessageElement(message) {
+
+            const div =
+                document.createElement("div");
+
+            div.classList.add("message");
+
+
+            // Sent / Received
+
+            if (
+                String(message.senderId) ===
+                String(currentUserId)
+            ) {
+
+                div.classList.add("sent");
+
+            } else {
+
+                div.classList.add("received");
+            }
+
+
+            // Message content
+
+            const content =
+                document.createElement("div");
+
+            content.classList.add(
+                "message-content"
+            );
+
+            // textContent = safer than innerHTML
+
+            content.textContent =
+                message.content;
+
+
+            // Time
+
+            const time =
+                document.createElement("small");
+
+            time.textContent =
+                new Date(
+                    message.createdAt
+                ).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+
+
+            div.appendChild(content);
+            div.appendChild(time);
+
+
+            return div;
+        }
+
+
+        // ========================================
+        // ADD MESSAGE
+        // ========================================
+
+        function addMessage(message) {
+
+            // Remove empty message
+
+            const emptyMessage =
+                messagesContainer.querySelector(
+                    ".empty-message"
+                );
+
+            if (emptyMessage) {
+                emptyMessage.remove();
+            }
+
+
+            const messageElement =
+                createMessageElement(message);
+
+
+            messagesContainer.appendChild(
+                messageElement
+            );
+
+
+            scrollToBottom();
+        }
+
+
+        // ========================================
+        // SCROLL
+        // ========================================
+
+        function scrollToBottom() {
+
+            messagesContainer.scrollTop =
+                messagesContainer.scrollHeight;
+        }
+
+
+        // ========================================
+        // LOAD MESSAGES
+        // ========================================
+
+        async function loadMessages() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/conversations/${conversationId}/messages?userId=${encodeURIComponent(currentUserId)}`
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Failed to load messages"
+                    );
+                }
+
+
+                const messages =
+                    await response.json();
+
+
+                messagesContainer.innerHTML = "";
+
+
+                // No messages
+
+                if (messages.length === 0) {
+
+                    messagesContainer.innerHTML = `
+                        <div class="empty-message">
+                            <span>💬</span>
+                            <p>No messages yet</p>
+                            <small>Start the conversation</small>
+                        </div>
+                    `;
+
+                    return;
+                }
+
+
+                // Display messages
+
+                messages.forEach(message => {
+
+                    const messageElement =
+                        createMessageElement(
+                            message
+                        );
+
+                    messagesContainer.appendChild(
+                        messageElement
+                    );
+                });
+
+
+                scrollToBottom();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Error loading messages:",
+                    error
+                );
+
+                messagesContainer.innerHTML = `
+                    <div class="error-message">
+                        Unable to load messages.
+                    </div>
+                `;
+            }
+        }
+
+
+        // ========================================
+        // SEND MESSAGE
+        // ========================================
+
+        messageForm.addEventListener(
+            "submit",
+            async (event) => {
+
+                event.preventDefault();
+
+
+                const content =
+                    messageInput.value.trim();
+
+
+                if (!content) {
+                    return;
+                }
+
+
+                // Disable button while sending
+
+                sendButton.disabled = true;
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            `/api/conversations/${conversationId}/messages`,
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body: JSON.stringify({
+                                    content,
+                                    senderId:
+                                        currentUserId
+                                })
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (!response.ok) {
+
+                        console.error(data);
+
+                        alert(
+                            data.message ||
+                            "Failed to send message"
+                        );
+
+                        return;
+                    }
+
+
+                    // Clear input
+
+                    messageInput.value = "";
+
+                    messageInput.focus();
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Error sending message:",
+                        error
+                    );
+
+                    alert(
+                        "Something went wrong while sending the message."
+                    );
+
+
+                } finally {
+
+                    sendButton.disabled = false;
+                }
+            }
+        );
+
+
+        // ========================================
+        // NEW MESSAGE
+        // ========================================
+
+        socket.on(
+            "newMessage",
+            (message) => {
+
+                console.log(
+                    "New message:",
+                    message
+                );
+
+                addMessage(message);
+            }
+        );
+
+
+        // ========================================
+        // START
+        // ========================================
+
+        loadMessages();
+
+    </script>
+
+</body>
+
+</html>

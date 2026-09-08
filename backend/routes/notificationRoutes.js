@@ -2,14 +2,14 @@ const express = require("express");
 
 const {
   getNotifications,
-  markAsRead,
+  markNotificationAsRead,
   deleteNotification
 } = require("../controllers/notificationController");
 
 const router = express.Router();
 
-router.get("/", getNotifications);
-router.patch("/:id/read", markAsRead);
+router.get("/:userId", getNotifications);
+router.patch("/:notificationId/read", markNotificationAsRead);
 router.delete("/:id", deleteNotification);
 
 router.post("/test", async (req, res) => {

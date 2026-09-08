@@ -42,13 +42,25 @@ const sendMessage = async (req, res) => {
     });
 
     // Create notification
-    await Notification.create({
+    const notification = await Notification.create({
       userId: receiverId,
       type: "CHAT_MESSAGE",
       title: "New message",
       message: content,
       isRead: false
     });
+
+    const io = req.app.get("io");
+
+    io.to(`user:${receiverId}`).emit(
+      "newNotification",
+      notification
+    );
+
+    io.to(`conversation:${conversationId}`).emit(
+      "newMessage",
+      message
+    );
 
     res.status(201).json(message);
 

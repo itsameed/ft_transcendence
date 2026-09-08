@@ -1,36 +1,30 @@
 const Notification = require("../models/Notification");
 
-// GET /api/notifications
+// GET notifications
 const getNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({
-      userId: "6a9879a2e79e1e889a2897d0"
-    }).sort({ createdAt: -1 });
+    const { userId } = req.params;
 
-    res.status(200).json(notifications);
+    const notifications = await Notification.find({ userId })
+      .sort({ createdAt: -1 });
+
+    res.json(notifications);
+
   } catch (error) {
+    console.error(error);
     res.status(500).json({
-      message: "Failed to get notifications"
+      message: "Error getting notifications"
     });
   }
 };
 
 
-// PATCH /api/notifications/:id/read
-const markAsRead = async (req, res) => {
+// PATCH notification as read
+const markNotificationAsRead = async (req, res) => {
   try {
-    const notification = await Notification.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        userId: "6a9879a2e79e1e889a2897d0"
-      },
-      {
-        isRead: true
-      },
-      {
-        new: true
-      }
-    );
+    const { notificationId } = req.params;
+
+    const notification = await Notification.findById(notificationId);
 
     if (!notification) {
       return res.status(404).json({
@@ -38,14 +32,19 @@ const markAsRead = async (req, res) => {
       });
     }
 
-    res.status(200).json(notification);
+    notification.isRead = true;
+
+    await notification.save();
+
+    res.json(notification);
+
   } catch (error) {
+    console.error(error);
     res.status(500).json({
-      message: "Failed to mark notification as read"
+      message: "Error marking notification as read"
     });
   }
 };
-
 
 // DELETE /api/notifications/:id
 const deleteNotification = async (req, res) => {
@@ -74,6 +73,6 @@ const deleteNotification = async (req, res) => {
 
 module.exports = {
   getNotifications,
-  markAsRead,
+  markNotificationAsRead,
   deleteNotification
 };
