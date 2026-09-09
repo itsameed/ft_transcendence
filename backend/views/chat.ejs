@@ -340,25 +340,21 @@
 
 
             // Sent / Received
+            const sender = document.createElement("div");
+            div.classList.add("sent");
 
             if (
                 String(message.senderId._id) ===
                 String(currentUserId)
             ) {
-
-                div.classList.add("sent");
+                sender.classList.add("message-you");
+                sender.textContent = "You";
 
             } else {
-
+                sender.classList.add("message-sender");
+                sender.textContent = message.senderId.username;
                 div.classList.add("received");
             }
-
-
-            const sender = document.createElement("div");
-
-            sender.classList.add("message-sender");
-
-            sender.textContent = message.senderId.username;
 
             // Message content
 

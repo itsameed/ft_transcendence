@@ -1,5 +1,5 @@
 const Conversation = require("../models/Conversation");
-const Notification = require("../models/Notification");
+const { createNotification } = require("../utils/notificationService");
 const Message = require("../models/Message");
 
 // Send a message
@@ -44,16 +44,13 @@ const sendMessage = async (req, res) => {
     await message.populate("senderId", "_id username");
 
     // Create notification
-    const notification = await Notification.create({
+    const notification = await createNotification({
       userId: receiverId,
       senderId: senderId,
       type: "CHAT_MESSAGE",
       title: "New message",
-      message: content,
-      isRead: false
+      message: content
     });
-
-    await notification.populate("senderId", "username");
 
     const io = req.app.get("io");
 
@@ -114,8 +111,8 @@ const getMessages = async (req, res) => {
     const messages = await Message.find({
       conversationId
     })
-    .populate("senderId", "_id username")
-    .sort({ createdAt: 1 });
+      .populate("senderId", "_id username")
+      .sort({ createdAt: 1 });
 
     res.status(200).json(messages);
 
