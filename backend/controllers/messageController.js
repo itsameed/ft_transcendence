@@ -41,14 +41,19 @@ const sendMessage = async (req, res) => {
       content
     });
 
+    await message.populate("senderId", "_id username");
+
     // Create notification
     const notification = await Notification.create({
       userId: receiverId,
+      senderId: senderId,
       type: "CHAT_MESSAGE",
       title: "New message",
       message: content,
       isRead: false
     });
+
+    await notification.populate("senderId", "username");
 
     const io = req.app.get("io");
 
@@ -108,7 +113,9 @@ const getMessages = async (req, res) => {
     // Get messages
     const messages = await Message.find({
       conversationId
-    }).sort({ createdAt: 1 });
+    })
+    .populate("senderId", "_id username")
+    .sort({ createdAt: 1 });
 
     res.status(200).json(messages);
 

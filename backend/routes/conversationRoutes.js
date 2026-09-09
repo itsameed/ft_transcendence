@@ -17,7 +17,7 @@ router.post("/test", async (req, res) => {
     // const { user1Id, user2Id } = req.body;
 
     const conversation = await Conversation.create({
-      participants: ["6a9878447c14d5f2522a994c", "6a9879a2e79e1e889a2897d0"]
+      participants: ["6aa17a3f0e4485dfbaed9b5a", "6aa17a4e0e4485dfbaed9b5b"]
     });
 
     res.status(201).json(conversation);
