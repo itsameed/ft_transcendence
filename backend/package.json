@@ -1,7 +1,7 @@
 {
   "scripts": {
     "start": "node app.js",
-    "watch": "nodemon server.js"
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "connect-livereload": "^0.6.1",

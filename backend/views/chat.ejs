@@ -311,21 +311,6 @@
 
             }
         );
-        // ========================================
-        // NOTIFICATIONS
-        // ========================================
-
-        socket.on("newNotification", (notification) => {
-
-            console.log(
-                "New notification:",
-                notification
-            );
-
-            loadNotifications();
-
-        });
-
 
         // ========================================
         // CREATE MESSAGE ELEMENT
@@ -465,12 +450,12 @@
                 if (messages.length === 0) {
 
                     messagesContainer.innerHTML = `
-                        <div class="empty-message">
-                            <span>💬</span>
-                            <p>No messages yet</p>
-                            <small>Start the conversation</small>
+                    <div class="empty-message">
+                        <span>💬</span>
+                        <p>No messages yet</p>
+                        <small>Start the conversation</small>
                         </div>
-                    `;
+                        `;
 
                     return;
                 }
@@ -504,8 +489,8 @@
                 messagesContainer.innerHTML = `
                     <div class="error-message">
                         Unable to load messages.
-                    </div>
-                `;
+                        </div>
+                        `;
             }
         }
 
@@ -602,22 +587,30 @@
 
 
         // ========================================
-        // NEW MESSAGE
+        // NEW MESSAGE && NOTIFICATION
         // ========================================
 
-        socket.on(
-            "newMessage",
-            (message) => {
+        socket.on("newMessage", (message) => {
 
-                console.log(
-                    "New message:",
-                    message
-                );
+            console.log(
+                "New message:",
+                message
+            );
 
-                addMessage(message);
-            }
+            addMessage(message);
+        }
         );
 
+        socket.on("newNotification", (notification) => {
+
+            console.log(
+                "New notification:",
+                notification
+            );
+
+            loadNotifications();
+
+        });
 
         // ========================================
         // START

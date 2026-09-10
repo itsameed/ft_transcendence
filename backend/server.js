@@ -23,6 +23,12 @@ const messageRoutes = require("./routes/messageRoutes");
 
 //////////////////////////////////
 
+app.get("/user1", (req, res) => {
+  res.render("user1");
+});
+app.get("/user2", (req, res) => {
+  res.render("user2");
+});
 app.use("/chat", chatRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
