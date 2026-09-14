@@ -1,9 +1,4 @@
 // src/authMiddleware.js
-// يتحقق من التوكن القادم من العميل.
-// في وضع الإنتاج: يجب أن يكون توكن JWT حقيقي موقّع بنفس JWT_SECRET
-// المستخدم عند تسجيل الدخول في الـ backend الرئيسي.
-// في وضع الاختبار (MOCK_AUTH=true): نقبل رقم مستخدم بسيط بدل JWT حقيقي،
-// وهذا كان معلناً في .env لكن غير مفعّل فعلياً في الكود سابقاً.
 const jwt = require('jsonwebtoken');
 
 function authenticateJWT(req, res, next) {
@@ -32,7 +27,6 @@ function authenticateJWT(req, res, next) {
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
 
-    // نتوقع أن يحتوي التوكن على معرف المستخدم، بحسب الحقل الذي يستعمله فريق الـ backend
     let userId;
     if (payload.id) {
       userId = payload.id;
