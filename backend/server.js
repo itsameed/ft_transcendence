@@ -20,6 +20,8 @@ const chatRoutes = require("./routes/chatRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const conversationRoutes = require("./routes/conversationRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+const friendRoutes = require("./routes/friendRoutes");
+const groupRoutes = require("./routes/groupRoutes");
 
 //////////////////////////////////
 
@@ -29,6 +31,8 @@ app.get("/user1", (req, res) => {
 app.get("/user2", (req, res) => {
   res.render("user2");
 });
+app.use("/api/groups", groupRoutes);
+app.use("/api/friends", friendRoutes);
 app.use("/chat", chatRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
