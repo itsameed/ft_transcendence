@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -12,9 +13,9 @@ const {
 
 router.post("/request", sendFriendRequest);
 
-router.patch("/request/accept", acceptFriendRequest);
+router.patch("/request/:friendshipId/accept", acceptFriendRequest);
 
-router.patch("/request/reject", rejectFriendRequest);
+router.patch("/request/:friendshipId/reject", rejectFriendRequest);
 
 router.get("/", getFriends);
 

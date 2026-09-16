@@ -183,98 +183,450 @@
         // RENDER NOTIFICATIONS
         // ========================================
 
-        function renderNotifications(
-            notifications
-        ) {
+        function renderNotifications(notifications) {
 
-            notificationsContainer.innerHTML =
-                "";
-
+            notificationsContainer.innerHTML = "";
 
             const unreadCount =
                 notifications.filter(
-                    notification =>
-                        !notification.isRead
+                    notification => !notification.isRead
                 ).length;
 
-
-            notificationCount.textContent =
-                unreadCount;
-
+            notificationCount.textContent = unreadCount;
 
             if (notifications.length === 0) {
-
                 notificationsContainer.innerHTML = `
-                    <p class="no-notifications">
-                        No notifications
-                    </p>`;
-
+            <p class="no-notifications">
+                No notifications
+            </p>`;
                 return;
-
             }
 
+            notifications.forEach(notification => {
 
-            notifications.forEach(
-                notification => {
+                const div = document.createElement("div");
 
-                    const div =
-                        document.createElement("div");
+                div.classList.add("notification-item");
+
+                if (!notification.isRead) {
+                    div.classList.add("unread");
+                }
+
+                const senderName =
+                    notification.senderId
+                        ? notification.senderId.username
+                        : "Someone";
 
 
-                    div.classList.add(
-                        "notification-item"
+                /*
+                 * =========================
+                 * GROUP INVITATION
+                 * =========================
+                 */
+
+                if (notification.type === "GROUP_INVITATION") {
+
+                    div.innerHTML = `
+                <strong>
+                    ${senderName}
+                    invited you to a group
+                </strong>
+
+                <div>
+                    ${notification.message}
+                </div>
+
+                <div class="invitation-actions">
+
+                    <button
+                        class="accept-button"
+                        data-id="${notification.relatedId}">
+                        Accept
+                    </button>
+
+                    <button
+                        class="reject-button"
+                        data-id="${notification.relatedId}">
+                        Reject
+                    </button>
+
+                </div>
+
+                <small>
+                    ${new Date(
+                        notification.createdAt
+                    ).toLocaleString()}
+                </small>
+            `;
+
+                    const acceptButton =
+                        div.querySelector(".accept-button");
+
+                    acceptButton.addEventListener(
+                        "click",
+                        (event) => {
+
+                            event.stopPropagation();
+
+                            acceptGroupInvitation(
+                                notification.relatedId,
+                                notification._id
+                            );
+                        }
                     );
 
 
-                    if (!notification.isRead) {
+                    const rejectButton =
+                        div.querySelector(".reject-button");
 
-                        div.classList.add(
-                            "unread"
-                        );
+                    rejectButton.addEventListener(
+                        "click",
+                        (event) => {
 
-                    }
+                            event.stopPropagation();
 
+                            rejectGroupInvitation(
+                                notification.relatedId,
+                                notification._id
+                            );
+                        }
+                    );
+
+                }
+
+
+                /*
+                 * =========================
+                 * FRIEND REQUEST
+                 * =========================
+                 */
+
+                else if (notification.type === "FRIEND_REQUEST") {
 
                     div.innerHTML = `
-                        <strong>
-                            ${notification.senderId.username}
-                            sent a message
-                        </strong>
+                <strong>
+                    ${senderName}
+                    sent you a friend request
+                </strong>
 
-                        <div>
-                            ${notification.message}
-                        </div>
+                <div>
+                    ${notification.message}
+                </div>
 
-                        <small>
-                            ${new Date(
+                <div class="invitation-actions">
+
+                    <button
+                        class="accept-button"
+                        data-id="${notification.relatedId}">
+                        Accept
+                    </button>
+
+                    <button
+                        class="reject-button"
+                        data-id="${notification.relatedId}">
+                        Reject
+                    </button>
+
+                </div>
+
+                <small>
+                    ${new Date(
                         notification.createdAt
                     ).toLocaleString()}
-                        </small>
-                    `;
+                </small>
+            `;
 
 
-                    div.addEventListener(
+                    const acceptButton =
+                        div.querySelector(".accept-button");
+
+                    acceptButton.addEventListener(
                         "click",
-                        () => {
+                        (event) => {
+
+                            event.stopPropagation();
+
+                            acceptFriendRequest(
+                                notification.relatedId,
+                                notification._id
+                            );
+                        }
+                    );
+
+
+                    const rejectButton =
+                        div.querySelector(".reject-button");
+
+                    rejectButton.addEventListener(
+                        "click",
+                        (event) => {
+
+                            event.stopPropagation();
+
+                            rejectFriendRequest(
+                                notification.relatedId,
+                                notification._id
+                            );
+                        }
+                    );
+
+                }
+
+
+                /*
+                 * =========================
+                 * OTHER NOTIFICATIONS
+                 * =========================
+                 */
+
+                else {
+
+                    div.innerHTML = `
+                <strong>
+                    ${senderName}
+                    sent a message
+                </strong>
+
+                <div>
+                    ${notification.message}
+                </div>
+
+                <small>
+                    ${new Date(
+                        notification.createdAt
+                    ).toLocaleString()}
+                </small>
+            `;
+                }
+
+
+                /*
+                 * =========================
+                 * MARK AS READ
+                 * =========================
+                 */
+
+                div.addEventListener(
+                    "click",
+                    () => {
+
+                        if (!notification.isRead) {
 
                             markNotificationAsRead(
                                 notification._id,
                                 div
                             );
+                        }
+                    }
+                );
 
+                notificationsContainer.appendChild(div);
+            });
+        }
+
+        async function acceptFriendRequest(
+            friendshipId,
+            notificationId
+        ) {
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/friends/request/${friendshipId}/accept`,
+                        {
+                            method: "PATCH"
                         }
                     );
 
+                const data = await response.json();
 
-                    notificationsContainer.appendChild(
-                        div
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+
+                /*
+                 * Delete notification
+                 */
+
+                const deleteResponse =
+                    await fetch(
+                        `/api/notifications/${notificationId}`,
+                        {
+                            method: "DELETE"
+                        }
                     );
 
+                if (!deleteResponse.ok) {
+                    console.error(
+                        "Failed to delete notification"
+                    );
                 }
-            );
 
+
+                /*
+                 * Reload notifications
+                 */
+
+                loadNotifications();
+
+            } catch (error) {
+
+                console.error(
+                    "Error accepting friend request:",
+                    error
+                );
+            }
         }
 
+        async function rejectFriendRequest(
+            friendshipId,
+            notificationId
+        ) {
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/friends/request/${friendshipId}/reject`,
+                        {
+                            method: "PATCH"
+                        }
+                    );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+
+                /*
+                 * Delete notification
+                 */
+
+                const deleteResponse =
+                    await fetch(
+                        `/api/notifications/${notificationId}`,
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                if (!deleteResponse.ok) {
+                    console.error(
+                        "Failed to delete notification"
+                    );
+                }
+
+
+                /*
+                 * Reload notifications
+                 */
+
+                loadNotifications();
+
+            } catch (error) {
+
+                console.error(
+                    "Error rejecting friend request:",
+                    error
+                );
+            }
+        }
+
+        async function acceptGroupInvitation(
+            invitationId,
+            notificationId
+        ) {
+
+            try {
+
+                // Accept invitation
+                const response =
+                    await fetch(
+                        `/api/group-invitations/${invitationId}/accept`,
+                        {
+                            method: "PATCH"
+                        }
+                    );
+
+                const data =
+                    await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+
+                // Delete notification
+                await fetch(
+                    `/api/notifications/${notificationId}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+
+                // Refresh notifications
+                loadNotifications();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Error accepting invitation:",
+                    error
+                );
+
+            }
+        }
+
+        async function rejectGroupInvitation(
+            invitationId,
+            notificationId
+        ) {
+
+            try {
+
+                // Reject invitation
+                const response =
+                    await fetch(
+                        `/api/group-invitations/${invitationId}/reject`,
+                        {
+                            method: "PATCH"
+                        }
+                    );
+
+                const data =
+                    await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+
+                // Delete notification
+                await fetch(
+                    `/api/notifications/${notificationId}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+
+                // Refresh notifications
+                loadNotifications();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Error rejecting invitation:",
+                    error
+                );
+
+            }
+        }
 
         // ========================================
         // MARK NOTIFICATION AS READ

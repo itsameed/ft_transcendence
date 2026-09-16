@@ -50,53 +50,59 @@ const markNotificationAsRead = async (req, res) => {
 // DELETE /api/notifications/:id
 const deleteNotification = async (req, res) => {
   try {
-    const notification = await Notification.findOneAndDelete({
-      _id: req.params.id,
-      userId: "6a9879a2e79e1e889a2897d0"
-    });
+
+    const notification =
+      await Notification.findByIdAndDelete(
+        req.params.id
+      );
 
     if (!notification) {
+
       return res.status(404).json({
         message: "Notification not found"
       });
+
     }
 
     res.status(200).json({
       message: "Notification deleted successfully"
     });
+
   } catch (error) {
+
     res.status(500).json({
       message: "Failed to delete notification"
     });
+
   }
 };
 
 
 const clearUserNotifications = async (req, res) => {
-    try {
+  try {
 
-        const { userId } = req.params;
+    const { userId } = req.params;
 
-        const result = await Notification.deleteMany({
-            userId: userId
-        });
+    const result = await Notification.deleteMany({
+      userId: userId
+    });
 
-        res.status(200).json({
-            message: "All notifications deleted",
-            deletedCount: result.deletedCount
-        });
+    res.status(200).json({
+      message: "All notifications deleted",
+      deletedCount: result.deletedCount
+    });
 
-    } catch (error) {
+  } catch (error) {
 
-        console.error(
-            "Error clearing notifications:",
-            error
-        );
+    console.error(
+      "Error clearing notifications:",
+      error
+    );
 
-        res.status(500).json({
-            message: "Failed to clear notifications"
-        });
-    }
+    res.status(500).json({
+      message: "Failed to clear notifications"
+    });
+  }
 };
 
 module.exports = {

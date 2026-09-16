@@ -1,110 +1,151 @@
 const mongoose = require("mongoose");
 const Friendship = require("../models/Friendship");
 const User = require("../models/User");
+const { createNotification } = require("../utils/notificationService");
 
 const sendFriendRequest = async (req, res) => {
-    try {
-        const { requesterId, receiverId } = req.body;
-        const currentUserId = requesterId;
-        // const currentUserId = req.user.id;
-        // const receiverId = req.params.userId;
+  try {
 
-        // 1. Check if receiver ID is valid
-        if (!mongoose.Types.ObjectId.isValid(receiverId)) {
-            return res.status(400).json({
-                message: "Invalid user ID"
-            });
-        }
+    const { requesterId, receiverId } = req.body;
+    const currentUserId = requesterId;
 
-        // 2. User cannot send request to himself
-        if (currentUserId === receiverId) {
-            return res.status(400).json({
-                message: "You cannot send a friend request to yourself"
-            });
-        }
-
-        // 3. Check if receiver exists
-        const receiver = await User.findById(receiverId);
-
-        if (!receiver) {
-            return res.status(404).json({
-                message: "User not found"
-            });
-        }
-
-        // 4. Check if a relationship already exists
-        const existingFriendship = await Friendship.findOne({
-            $or: [
-                {
-                    requester: currentUserId,
-                    receiver: receiverId
-                },
-                {
-                    requester: receiverId,
-                    receiver: currentUserId
-                }
-            ]
-        });
-
-        // 5. Handle existing relationship
-        if (existingFriendship) {
-
-            if (existingFriendship.status === "PENDING") {
-                return res.status(409).json({
-                    message: "Friend request already exists"
-                });
-            }
-
-            if (existingFriendship.status === "ACCEPTED") {
-                return res.status(409).json({
-                    message: "You are already friends"
-                });
-            }
-
-            // REJECTED → reuse the same document
-            if (existingFriendship.status === "REJECTED") {
-                existingFriendship.requester = currentUserId;
-                existingFriendship.receiver = receiverId;
-                existingFriendship.status = "PENDING";
-
-                await existingFriendship.save();
-
-                return res.status(200).json({
-                    message: "Friend request sent again",
-                    friendship: existingFriendship
-                });
-            }
-        }
-
-        // 6. Create new friend request
-        const friendship = await Friendship.create({
-            requester: currentUserId,
-            receiver: receiverId,
-            status: "PENDING"
-        });
-
-        // 7. Send response
-        return res.status(201).json({
-            message: "Friend request sent",
-            friendship
-        });
-
-    } catch (error) {
-        console.error(error);
-
-        return res.status(500).json({
-            message: "Server error"
-        });
+    // 1. Check receiver ID
+    if (!mongoose.Types.ObjectId.isValid(receiverId)) {
+      return res.status(400).json({
+        message: "Invalid user ID"
+      });
     }
+
+    // 2. Cannot send to yourself
+    if (currentUserId === receiverId) {
+      return res.status(400).json({
+        message: "You cannot send a friend request to yourself"
+      });
+    }
+
+    // 3. Check receiver exists
+    const receiver = await User.findById(receiverId);
+
+    if (!receiver) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    // 4. Check existing relationship
+    const existingFriendship = await Friendship.findOne({
+      $or: [
+        {
+          requester: currentUserId,
+          receiver: receiverId
+        },
+        {
+          requester: receiverId,
+          receiver: currentUserId
+        }
+      ]
+    });
+
+    // 5. Existing relationship
+    if (existingFriendship) {
+
+      if (existingFriendship.status === "PENDING") {
+        return res.status(409).json({
+          message: "Friend request already exists"
+        });
+      }
+
+      if (existingFriendship.status === "ACCEPTED") {
+        return res.status(409).json({
+          message: "You are already friends"
+        });
+      }
+
+      // REJECTED → send again
+      if (existingFriendship.status === "REJECTED") {
+
+        existingFriendship.requester = currentUserId;
+        existingFriendship.receiver = receiverId;
+        existingFriendship.status = "PENDING";
+
+        await existingFriendship.save();
+
+        // Create notification
+        const notification = await createNotification({
+          userId: receiverId,
+          senderId: currentUserId,
+          type: "FRIEND_REQUEST",
+          title: "Friend request",
+          message: "You received a new friend request",
+          relatedId: existingFriendship._id
+        });
+
+        // Socket.IO
+        const io = req.app.get("io");
+
+        if (io) {
+          io.to(`user:${receiverId}`).emit(
+            "newNotification",
+            notification
+          );
+        }
+
+        return res.status(200).json({
+          message: "Friend request sent again",
+          friendship: existingFriendship
+        });
+      }
+    }
+
+    // 6. Create new friend request
+    const friendship = await Friendship.create({
+      requester: currentUserId,
+      receiver: receiverId,
+      status: "PENDING"
+    });
+
+    // 7. Create notification
+    const notification = await createNotification({
+      userId: receiverId,
+      senderId: currentUserId,
+      type: "FRIEND_REQUEST",
+      title: "Friend request",
+      message: "You received a new friend request",
+      relatedId: friendship._id
+    });
+
+    // 8. Send real-time notification
+    const io = req.app.get("io");
+
+    if (io) {
+      io.to(`user:${receiverId}`).emit(
+        "newNotification",
+        notification
+      );
+    }
+
+    // 9. Response
+    return res.status(201).json({
+      message: "Friend request sent",
+      friendship
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Server error"
+    });
+  }
 };
 
 const acceptFriendRequest = async (req, res) => {
   try {
-    const { requesterId, receiverId } = req.body;
+    const { friendshipId } = req.params;
 
     const friendship = await Friendship.findOne({
-      requester: requesterId,
-      receiver: receiverId,
+      _id: friendshipId,
       status: "PENDING"
     });
 
@@ -134,11 +175,11 @@ const acceptFriendRequest = async (req, res) => {
 
 const rejectFriendRequest = async (req, res) => {
   try {
-    const { requesterId, receiverId } = req.body;
+
+    const { friendshipId } = req.params;
 
     const friendship = await Friendship.findOne({
-      requester: requesterId,
-      receiver: receiverId,
+      _id: friendshipId,
       status: "PENDING"
     });
 
@@ -158,6 +199,7 @@ const rejectFriendRequest = async (req, res) => {
     });
 
   } catch (error) {
+
     console.error(error);
 
     return res.status(500).json({
@@ -264,10 +306,10 @@ const removeFriend = async (req, res) => {
 };
 
 module.exports = {
-    sendFriendRequest,
-    acceptFriendRequest,
-    rejectFriendRequest,
-    getFriends,
-    getFriendRequests,
-    removeFriend
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  getFriends,
+  getFriendRequests,
+  removeFriend
 };

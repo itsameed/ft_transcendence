@@ -23,6 +23,7 @@ const conversationRoutes = require("./routes/conversationRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const friendRoutes = require("./routes/friendRoutes");
 const groupRoutes = require("./routes/groupRoutes");
+const groupInvitationRoutes = require("./routes/groupInvitationRoutes");
 
 //////////////////////////////////
 
@@ -32,6 +33,10 @@ app.get("/user1", (req, res) => {
 app.get("/user2", (req, res) => {
   res.render("user2");
 });
+app.get("/friend_user1", (req, res) => {
+  res.render("friend_user1");
+});
+app.use("/api/group-invitations", groupInvitationRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/chat", chatRoutes);

@@ -679,3 +679,31 @@ body {
 
     cursor: not-allowed;
 }
+
+.invitation-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.invitation-actions button {
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.accept-button {
+    background: #4caf50;
+    color: white;
+}
+
+.reject-button {
+    background: #f44336;
+    color: white;
+}
+
+.invitation-actions button:hover {
+    opacity: 0.85;
+}

@@ -16,6 +16,7 @@ const notificationSchema = new mongoose.Schema(
             type: String,
             enum: [
                 "GROUP_INVITATION",
+                "FRIEND_REQUEST",
                 "EXPENSE_ADDED",
                 "PAYMENT_RECEIVED",
                 "TRIP_INVITATION",

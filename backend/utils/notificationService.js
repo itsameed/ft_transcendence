@@ -5,7 +5,8 @@ const createNotification = async ({
     senderId = null,
     type,
     title,
-    message
+    message,
+    relatedId = null
 }) => {
 
     const notification = await Notification.create({
@@ -14,6 +15,7 @@ const createNotification = async ({
         type,
         title,
         message,
+        relatedId,
         isRead: false
     });
 
