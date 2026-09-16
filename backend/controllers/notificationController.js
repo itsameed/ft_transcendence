@@ -1,5 +1,5 @@
 const Notification = require("../models/Notification");
-const User = require("../models/User");
+
 // GET notifications
 const getNotifications = async (req, res) => {
   try {
@@ -72,8 +72,36 @@ const deleteNotification = async (req, res) => {
 };
 
 
+const clearUserNotifications = async (req, res) => {
+    try {
+
+        const { userId } = req.params;
+
+        const result = await Notification.deleteMany({
+            userId: userId
+        });
+
+        res.status(200).json({
+            message: "All notifications deleted",
+            deletedCount: result.deletedCount
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error clearing notifications:",
+            error
+        );
+
+        res.status(500).json({
+            message: "Failed to clear notifications"
+        });
+    }
+};
+
 module.exports = {
   getNotifications,
   markNotificationAsRead,
-  deleteNotification
+  deleteNotification,
+  clearUserNotifications
 };

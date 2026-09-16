@@ -1,73 +1,415 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>User Profile</title>
+    <title>Notifications</title>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-        }
+    <link rel="stylesheet" href="/mystyle.css">
 
-        .chat-button {
-            position: fixed;
-
-            right: 25px;
-            bottom: 25px;
-
-            padding: 14px 22px;
-
-            border: none;
-            border-radius: 25px;
-
-            background: #2563eb;
-            color: white;
-
-            font-size: 16px;
-            font-weight: bold;
-
-            cursor: pointer;
-
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .chat-button:hover {
-            background: #1d4ed8;
-        }
-    </style>
 </head>
 
 <body>
+
+    <div class="notification-container">
+
+        <button id="notificationButton" aria-label="Notifications">
+            🔔
+            <span id="notificationCount">0</span>
+        </button>
+
+
+        <div id="notificationPanel" class="notification-panel">
+
+            <div class="notification-header">
+                <h3>Notifications</h3>
+
+                <button id="clearNotifications">
+                    Clear
+                </button>
+            </div>
+
+            <div id="notifications">
+
+                <p class="no-notifications">
+                    No notifications
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
 
     <button class="chat-button" id="chatButton">
         💬 Chat
     </button>
 
+    <!-- Socket.IO -->
+
+    <script src="/socket.io/socket.io.js"></script>
+
 
     <script>
 
-        const userId = "6aa186adcee849c379ddab34";
+        // ========================================
+        // CONFIG
+        // ========================================
+
+        const currentUserId =
+            "6aa186c9cee849c379ddab38";
 
 
-        /*
-         * When the user clicks Chat,
-         * go to the existing chat page.
-         */
+        // ========================================
+        // CHECK USER
+        // ========================================
+
+        if (!currentUserId) {
+
+            alert("userId is missing");
+
+            throw new Error("userId is missing");
+
+        }
+
+
+        // ========================================
+        // DOM ELEMENTS
+        // ========================================
+
+        const notificationButton =
+            document.getElementById(
+                "notificationButton"
+            );
+
+
+        const notificationPanel =
+            document.getElementById(
+                "notificationPanel"
+            );
+
+
+        const notificationsContainer =
+            document.getElementById(
+                "notifications"
+            );
+
+
+        const notificationCount =
+            document.getElementById(
+                "notificationCount"
+            );
+
+        const clearNotifications =
+            document.getElementById("clearNotifications");
+        // ========================================
+        // SOCKET.IO
+        // ========================================
+
+        const socket = io();
+
+
+        // Join user's private room
+
+        socket.emit(
+            "joinUser",
+            currentUserId
+        );
+
+
+        // ========================================
+        // SOCKET CONNECTION
+        // ========================================
+
+        socket.on("connect", () => {
+
+            console.log(
+                "Socket connected:",
+                socket.id
+            );
+
+        });
+
+
+        socket.on("disconnect", () => {
+
+            console.log(
+                "Socket disconnected"
+            );
+
+        });
+
+
+        // ========================================
+        // LOAD NOTIFICATIONS
+        // ========================================
+
+        async function loadNotifications() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/notifications/${currentUserId}`
+                    );
+
+
+                const notifications =
+                    await response.json();
+
+
+                renderNotifications(
+                    notifications
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Error loading notifications:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        // ========================================
+        // RENDER NOTIFICATIONS
+        // ========================================
+
+        function renderNotifications(
+            notifications
+        ) {
+
+            notificationsContainer.innerHTML =
+                "";
+
+
+            const unreadCount =
+                notifications.filter(
+                    notification =>
+                        !notification.isRead
+                ).length;
+
+
+            notificationCount.textContent =
+                unreadCount;
+
+
+            if (notifications.length === 0) {
+
+                notificationsContainer.innerHTML = `
+                    <p class="no-notifications">
+                        No notifications
+                    </p>`;
+
+                return;
+
+            }
+
+
+            notifications.forEach(
+                notification => {
+
+                    const div =
+                        document.createElement("div");
+
+
+                    div.classList.add(
+                        "notification-item"
+                    );
+
+
+                    if (!notification.isRead) {
+
+                        div.classList.add(
+                            "unread"
+                        );
+
+                    }
+
+
+                    div.innerHTML = `
+                        <strong>
+                            ${notification.senderId.username}
+                            sent a message
+                        </strong>
+
+                        <div>
+                            ${notification.message}
+                        </div>
+
+                        <small>
+                            ${new Date(
+                        notification.createdAt
+                    ).toLocaleString()}
+                        </small>
+                    `;
+
+
+                    div.addEventListener(
+                        "click",
+                        () => {
+
+                            markNotificationAsRead(
+                                notification._id,
+                                div
+                            );
+
+                        }
+                    );
+
+
+                    notificationsContainer.appendChild(
+                        div
+                    );
+
+                }
+            );
+
+        }
+
+
+        // ========================================
+        // MARK NOTIFICATION AS READ
+        // ========================================
+
+        async function markNotificationAsRead(
+            notificationId,
+            element
+        ) {
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/notifications/${notificationId}/read`,
+                        {
+                            method: "PATCH"
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    return;
+
+                }
+
+
+                element.classList.remove(
+                    "unread"
+                );
+
+
+                loadNotifications();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Error marking notification:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        // ========================================
+        // NOTIFICATION BUTTON
+        // ========================================
+
+        notificationButton.addEventListener("click", (event) => {
+            event.stopPropagation();
+            notificationPanel.classList.toggle("show");
+        });
+
+        notificationPanel.addEventListener("click", (event) => {
+            event.stopPropagation();
+        });
+
+        document.addEventListener("click", () => {
+            notificationPanel.classList.remove("show");
+        });
+
+        clearNotifications.addEventListener(
+            "click",
+            async () => {
+
+                try {
+
+                    const response = await fetch(
+                        `/api/notifications/user/${currentUserId}`,
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message);
+                    }
+
+                    console.log(data.message);
+
+                    loadNotifications();
+
+                } catch (error) {
+
+                    console.error(
+                        "Error clearing notifications:",
+                        error
+                    );
+                }
+            }
+        );
+
+        // ========================================
+        // NEW NOTIFICATION
+        // ========================================
+
+        socket.on(
+            "newNotification",
+            (notification) => {
+
+                console.log(
+                    "New notification:",
+                    notification
+                );
+
+
+                loadNotifications();
+
+            }
+        );
+
+
+        // ========================================
+        // START
+        // ========================================
+
+        loadNotifications();
 
         document
             .getElementById("chatButton")
             .addEventListener("click", () => {
 
                 window.location.href =
-                    `/chat?userId=${userId}`;
+                    `/chat?userId=${currentUserId}`;
 
             });
 
     </script>
 
 </body>
+
 </html>

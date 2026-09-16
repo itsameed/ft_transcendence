@@ -16,6 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 /////////////////////////////////////////////////
 
+const Group = require("./models/Group");
 const chatRoutes = require("./routes/chatRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const conversationRoutes = require("./routes/conversationRoutes");
@@ -48,33 +49,53 @@ app.set("io", io);
 
 io.on("connection", (socket) => {
 
-    console.log("User connected:", socket.id);
+  console.log("User connected:", socket.id);
 
-    socket.on("joinUser", (userId) => {
+  socket.on("joinUser", (userId) => {
 
-        socket.join(`user:${userId}`);
+    socket.join(`user:${userId}`);
 
-        console.log(
-            `Socket ${socket.id} joined user room ${userId}`
-        );
+    console.log(
+      `Socket ${socket.id} joined user room ${userId}`
+    );
 
-    });
+  });
 
-    socket.on("joinConversation", (conversationId) => {
+  socket.on("joinConversation", async (conversationId, userId) => {
+    try {
 
-        socket.join(`conversation:${conversationId}`);
+      const group = await Group.findOne({
+        conversationId: conversationId,
+        "members.userId": userId
+      });
 
-        console.log(
-            `Socket ${socket.id} joined conversation ${conversationId}`
-        );
+      if (!group) {
+        socket.emit("chatError", {
+          message: "You are not a member of this group"
+        });
+        return;
+      }
 
-    });
+      socket.join(`conversation:${conversationId}`);
 
-    socket.on("disconnect", () => {
+      console.log(
+        `User ${userId} joined conversation:${conversationId}`
+      );
 
-        console.log("User disconnected:", socket.id);
+    } catch (error) {
+      console.error(error);
 
-    });
+      socket.emit("chatError", {
+        message: "Could not join conversation"
+      });
+    }
+  });
+
+  socket.on("disconnect", () => {
+
+    console.log("User disconnected:", socket.id);
+
+  });
 
 });
 

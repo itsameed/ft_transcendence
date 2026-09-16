@@ -35,6 +35,35 @@ body {
     color: #1e293b;
 }
 
+/* ========================================
+   CHAT BUTTON
+======================================== */
+
+.chat-button {
+    position: fixed;
+
+    right: 25px;
+    bottom: 25px;
+
+    padding: 14px 22px;
+
+    border: none;
+    border-radius: 25px;
+
+    background: #2563eb;
+    color: white;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.chat-button:hover {
+    background: #1d4ed8;
+}
 
 /* ========================================
    CHAT CONTAINER
@@ -144,8 +173,42 @@ body {
    NOTIFICATIONS
 ========================= */
 
+/* Notification header */
+.notification-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Clear button */
+#clearNotifications {
+    border: none;
+    background: transparent;
+    color: #888;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 5px 8px;
+    border-radius: 6px;
+    transition: 0.2s ease;
+}
+
+#clearNotifications:hover {
+    color: #ff4d4d;
+    background: rgba(255, 77, 77, 0.1);
+}
+
+#clearNotifications:active {
+    transform: scale(0.95);
+}
+
 .notification-container {
-    position: relative;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
 }
 
 #notificationButton {
@@ -243,11 +306,6 @@ body {
 
 /* Panel header */
 
-.notification-header {
-    padding: 15px 16px;
-
-    border-bottom: 1px solid #e5e7eb;
-}
 
 .notification-header h3 {
     margin: 0;
@@ -295,9 +353,8 @@ body {
 /* Empty state */
 
 .no-notifications {
-    margin: 10;
 
-    padding: 50px 32px;
+    padding: 28px 32px;
 
     text-align: center;
 

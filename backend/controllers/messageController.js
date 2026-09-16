@@ -23,14 +23,14 @@ const sendMessage = async (req, res) => {
       });
     }
 
-    // Find the other participant
-    const receiverId = conversation.participants.find(
-      (id) => id.toString() !== senderId
+    // Check if sender is a participant
+    const isParticipant = conversation.participants.some(
+      (id) => id.toString() === senderId
     );
 
-    if (!receiverId) {
-      return res.status(400).json({
-        message: "Receiver not found"
+    if (!isParticipant) {
+      return res.status(403).json({
+        message: "You are not a participant in this conversation"
       });
     }
 
@@ -43,33 +43,42 @@ const sendMessage = async (req, res) => {
 
     await message.populate("senderId", "_id username");
 
-    // Create notification
-    const notification = await createNotification({
-      userId: receiverId,
-      senderId: senderId,
-      type: "CHAT_MESSAGE",
-      title: "New message",
-      message: content
-    });
-
     const io = req.app.get("io");
 
-    io.to(`user:${receiverId}`).emit(
-      "newNotification",
-      notification
+    // Create notification for every participant except sender
+    const receiverIds = conversation.participants.filter(
+      (id) => id.toString() !== senderId
     );
 
+    for (const receiverId of receiverIds) {
+
+      const notification = await createNotification({
+        userId: receiverId,
+        senderId: senderId,
+        type: "CHAT_MESSAGE",
+        title: "New message",
+        message: content
+      });
+
+      // Send notification in real-time
+      io.to(`user:${receiverId}`).emit(
+        "newNotification",
+        notification
+      );
+    }
+
+    // Send message to conversation room
     io.to(`conversation:${conversationId}`).emit(
       "newMessage",
       message
     );
 
-    res.status(201).json(message);
+    return res.status(201).json(message);
 
   } catch (error) {
     console.error(error);
 
-    res.status(500).json({
+    return res.status(500).json({
       message: error.message
     });
   }
@@ -125,76 +134,7 @@ const getMessages = async (req, res) => {
   }
 };
 
-const markMessageAsRead = async (req, res) => {
-  try {
-    const { messageId } = req.params;
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({
-        message: "userId is required"
-      });
-    }
-
-    // Find message
-    const message = await Message.findById(messageId);
-
-    if (!message) {
-      return res.status(404).json({
-        message: "Message not found"
-      });
-    }
-
-    // Find conversation
-    const conversation = await Conversation.findById(
-      message.conversationId
-    );
-
-    if (!conversation) {
-      return res.status(404).json({
-        message: "Conversation not found"
-      });
-    }
-
-    // Check if user is participant
-    const isParticipant = conversation.participants.some(
-      (id) => id.toString() === userId
-    );
-
-    if (!isParticipant) {
-      return res.status(403).json({
-        message: "You are not a participant in this conversation"
-      });
-    }
-
-    // Don't allow sender to mark his own message as read
-    if (message.senderId.toString() === userId) {
-      return res.status(400).json({
-        message: "You cannot mark your own message as read"
-      });
-    }
-
-    // Mark as read
-    message.isRead = true;
-
-    await message.save();
-
-    res.status(200).json({
-      message: "Message marked as read",
-      data: message
-    });
-
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      message: error.message
-    });
-  }
-};
-
 module.exports = {
   sendMessage,
   getMessages,
-  markMessageAsRead
 };

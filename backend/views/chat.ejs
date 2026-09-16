@@ -21,6 +21,7 @@
         <header class="chat-header">
 
             <div class="chat-user">
+
                 <div class="avatar">
                     U
                 </div>
@@ -28,26 +29,6 @@
                 <div class="chat-user-info">
                     <h2>Chat</h2>
                     <span id="status">● Online</span>
-                </div>
-            </div>
-
-            <div class="notification-container">
-
-                <button id="notificationButton" aria-label="Notifications">
-                    🔔
-                    <span id="notificationCount">0</span>
-                </button>
-
-                <div id="notificationPanel" class="notification-panel">
-
-                    <div class="notification-header">
-                        <h3>Notifications</h3>
-                    </div>
-
-                    <div id="notifications">
-                        <p class="no-notifications">No notifications</p>
-                    </div>
-
                 </div>
 
             </div>
@@ -99,7 +80,7 @@
         // ========================================
 
         const conversationId =
-            "6aa17d1ed0bf7ad4e5f7a7de";
+            "6aa9a267070a190a3884228e";
 
         const params =
             new URLSearchParams(window.location.search);
@@ -136,17 +117,6 @@
         const sendButton =
             document.getElementById("sendButton");
 
-        const notificationButton =
-            document.getElementById("notificationButton");
-
-        const notificationPanel =
-            document.getElementById("notificationPanel");
-
-        const notificationsContainer =
-            document.getElementById("notifications");
-
-        const notificationCount =
-            document.getElementById("notificationCount");
 
         // ========================================
         // SOCKET.IO
@@ -159,14 +129,7 @@
 
         socket.emit(
             "joinConversation",
-            conversationId
-        );
-
-
-        // Join user's private room
-
-        socket.emit(
-            "joinUser",
+            conversationId,
             currentUserId
         );
 
@@ -193,124 +156,6 @@
 
         });
 
-        async function loadNotifications() {
-
-            try {
-
-                const response = await fetch(
-                    `/api/notifications/${currentUserId}`
-                );
-
-                const notifications = await response.json();
-
-                renderNotifications(notifications);
-
-            } catch (error) {
-
-                console.error(
-                    "Error loading notifications:",
-                    error
-                );
-
-            }
-        }
-
-        function renderNotifications(notifications) {
-
-            notificationsContainer.innerHTML = "";
-
-            const unreadCount = notifications.filter(
-                notification => !notification.isRead
-            ).length;
-
-            notificationCount.textContent = unreadCount;
-
-            if (notifications.length === 0) {
-
-                notificationsContainer.innerHTML =
-                    "<p>No notifications</p>";
-
-                return;
-            }
-
-            notifications.forEach(notification => {
-
-                const div = document.createElement("div");
-
-                div.classList.add("notification-item");
-
-                if (!notification.isRead) {
-                    div.classList.add("unread");
-                }
-
-                div.innerHTML = `
-            <strong>${notification.senderId.username} sent a message</strong>
-
-            <div>
-                ${notification.message}
-            </div>
-
-            <small>
-                ${new Date(
-                    notification.createdAt
-                ).toLocaleString()}
-            </small>
-        `;
-
-                div.addEventListener("click", () => {
-
-                    markNotificationAsRead(
-                        notification._id,
-                        div
-                    );
-
-                });
-
-                notificationsContainer.appendChild(div);
-
-            });
-        }
-
-        async function markNotificationAsRead(
-            notificationId,
-            element
-        ) {
-
-            try {
-
-                const response = await fetch(
-                    `/api/notifications/${notificationId}/read`,
-                    {
-                        method: "PATCH"
-                    }
-                );
-
-                if (!response.ok) {
-                    return;
-                }
-
-                element.classList.remove("unread");
-
-                loadNotifications();
-
-            } catch (error) {
-
-                console.error(
-                    "Error marking notification:",
-                    error
-                );
-
-            }
-        }
-
-        notificationButton.addEventListener(
-            "click",
-            () => {
-
-                notificationPanel.classList.toggle("show");
-
-            }
-        );
 
         // ========================================
         // CREATE MESSAGE ELEMENT
@@ -324,30 +169,49 @@
             div.classList.add("message");
 
 
-            // Sent / Received
-            const sender = document.createElement("div");
+            // ====================================
+            // SENT / RECEIVED
+            // ====================================
+
+            const sender =
+                document.createElement("div");
+
             div.classList.add("sent");
+
 
             if (
                 String(message.senderId._id) ===
                 String(currentUserId)
             ) {
+
                 sender.classList.add("message-you");
+
                 sender.textContent = "You";
 
             } else {
-                sender.classList.add("message-sender");
-                sender.textContent = message.senderId.username;
+
+                sender.classList.add(
+                    "message-sender"
+                );
+
+                sender.textContent =
+                    message.senderId.username;
+
                 div.classList.add("received");
             }
 
-            // Message content
 
-            const content = document.createElement("div");
+            // ====================================
+            // MESSAGE CONTENT
+            // ====================================
+
+            const content =
+                document.createElement("div");
 
             content.classList.add(
                 "message-content"
             );
+
 
             // textContent = safer than innerHTML
 
@@ -355,7 +219,9 @@
                 message.content;
 
 
-            // Time
+            // ====================================
+            // TIME
+            // ====================================
 
             const time =
                 document.createElement("small");
@@ -369,8 +235,14 @@
                 });
 
 
+            // ====================================
+            // APPEND
+            // ====================================
+
             div.appendChild(sender);
+
             div.appendChild(content);
+
             div.appendChild(time);
 
 
@@ -394,8 +266,12 @@
             if (emptyMessage) {
                 emptyMessage.remove();
             }
+
+
             const messageElement =
                 createMessageElement(message);
+
+
             messagesContainer.appendChild(
                 messageElement
             );
@@ -445,23 +321,27 @@
                 messagesContainer.innerHTML = "";
 
 
-                // No messages
+                // =================================
+                // NO MESSAGES
+                // =================================
 
                 if (messages.length === 0) {
 
                     messagesContainer.innerHTML = `
-                    <div class="empty-message">
-                        <span>💬</span>
-                        <p>No messages yet</p>
-                        <small>Start the conversation</small>
+                        <div class="empty-message">
+                            <span>💬</span>
+                            <p>No messages yet</p>
+                            <small>Start the conversation</small>
                         </div>
-                        `;
+                    `;
 
                     return;
                 }
 
 
-                // Display messages
+                // =================================
+                // DISPLAY MESSAGES
+                // =================================
 
                 messages.forEach(message => {
 
@@ -473,6 +353,7 @@
                     messagesContainer.appendChild(
                         messageElement
                     );
+
                 });
 
 
@@ -486,11 +367,12 @@
                     error
                 );
 
+
                 messagesContainer.innerHTML = `
                     <div class="error-message">
                         Unable to load messages.
-                        </div>
-                        `;
+                    </div>
+                `;
             }
         }
 
@@ -573,6 +455,7 @@
                         error
                     );
 
+
                     alert(
                         "Something went wrong while sending the message."
                     );
@@ -587,37 +470,29 @@
 
 
         // ========================================
-        // NEW MESSAGE && NOTIFICATION
+        // NEW MESSAGE
         // ========================================
 
-        socket.on("newMessage", (message) => {
+        socket.on(
+            "newMessage",
+            (message) => {
 
-            console.log(
-                "New message:",
-                message
-            );
+                console.log(
+                    "New message:",
+                    message
+                );
 
-            addMessage(message);
-        }
+                addMessage(message);
+            }
         );
 
-        socket.on("newNotification", (notification) => {
-
-            console.log(
-                "New notification:",
-                notification
-            );
-
-            loadNotifications();
-
-        });
 
         // ========================================
         // START
         // ========================================
 
         loadMessages();
-        loadNotifications();
+
     </script>
 
 </body>
