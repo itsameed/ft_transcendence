@@ -9,15 +9,18 @@ var PREFERRED_MODEL_HINTS = [
 
 var MODEL_LIST_CACHE_MS = 10 * 60 * 1000;
 
+
 class LLMClient {
+
   constructor(apiKey) {
     if (!apiKey) {
-      throw new Error('GROQ_API_KEY مطلوب. لا يمكن تشغيل LLMClient بدون مفتاح حقيقي.');
+      throw new Error('GROQ_API_KEY is required. LLMClient cannot run without a real key.');
     }
 
     this.apiKey = apiKey;
     this._modelCache = { list: null, fetchedAt: 0 };
   }
+
 
   _request(path, method, body) {
     var self = this;
@@ -57,13 +60,13 @@ class LLMClient {
             var parsed = JSON.parse(raw);
             resolve(parsed);
           } catch (parseError) {
-            reject(new Error('تعذر تحليل رد Groq: ' + raw));
+            reject(new Error('Failed to parse Groq response: ' + raw));
           }
         });
       });
 
       request.on('error', function (connectionError) {
-        reject(new Error('خطأ في الاتصال بـ Groq: ' + connectionError.message));
+        reject(new Error('Connection error with Groq: ' + connectionError.message));
       });
 
       if (postData !== null) {
@@ -85,7 +88,7 @@ class LLMClient {
 
     return self._request('/openai/v1/models', 'GET', null).then(function (data) {
       if (!data.data) {
-        throw new Error('تعذر جلب قائمة الموديلات من Groq: ' + JSON.stringify(data));
+        throw new Error('Failed to fetch model list from Groq: ' + JSON.stringify(data));
       }
 
       var textModels = [];
@@ -149,7 +152,7 @@ class LLMClient {
         return data.choices[0].message.content;
       }
 
-      throw new Error('[' + modelName + '] لم يتمكن النموذج من توليد إجابة.');
+      throw new Error('[' + modelName + '] The model failed to generate an answer.');
     });
   }
 
@@ -158,12 +161,12 @@ class LLMClient {
 
     return self._getActiveModels().then(function (models) {
       if (models.length === 0) {
-        return 'لا توجد موديلات نصية نشطة على هذا الحساب حالياً.';
+        return 'No active text models available on this account currently.';
       }
 
       var attempt = function (index, errors) {
         if (index >= models.length) {
-          return 'فشلت كل الموديلات المتاحة:\n' + errors.join('\n');
+          return 'All available models failed:\n' + errors.join('\n');
         }
 
         return self._callModel(models[index], prompt).catch(function (err) {
@@ -174,7 +177,7 @@ class LLMClient {
 
       return attempt(0, []);
     }).catch(function (err) {
-      return 'تعذر جلب قائمة الموديلات: ' + err.message;
+      return 'Failed to fetch model list: ' + err.message;
     });
   }
 
@@ -184,7 +187,7 @@ class LLMClient {
     return self._getActiveModels().then(function (models) {
       var tryModel = function (index) {
         if (index >= models.length) {
-          var failMessage = 'تعذر توليد إجابة (فشلت كل النماذج المتاحة).';
+          var failMessage = 'Failed to generate an answer (all available models failed).';
           onToken(failMessage);
           return failMessage;
         }
@@ -196,7 +199,7 @@ class LLMClient {
 
       return tryModel(0);
     }).catch(function (err) {
-      var errorMessage = 'تعذر جلب قائمة الموديلات: ' + err.message;
+      var errorMessage = 'Failed to fetch model list: ' + err.message;
       onToken(errorMessage);
       return errorMessage;
     });
@@ -284,7 +287,7 @@ class LLMClient {
 
         response.on('end', function () {
           if (receivedAnyToken === false) {
-            reject(new Error('[' + modelName + '] لم يُرجع أي محتوى.'));
+            reject(new Error('[' + modelName + '] Returned no content.'));
           } else {
             resolve(fullText);
           }
@@ -292,13 +295,15 @@ class LLMClient {
       });
 
       request.on('error', function (connectionError) {
-        reject(new Error('خطأ اتصال streaming: ' + connectionError.message));
+        reject(new Error('Streaming connection error: ' + connectionError.message));
       });
 
       request.write(postData);
       request.end();
     });
   }
+
 }
+
 
 module.exports = LLMClient;
