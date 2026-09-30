@@ -2,19 +2,17 @@ const Conversation = require("../models/Conversation");
 const { createNotification } = require("../utils/notificationService");
 const Message = require("../models/Message");
 
-// Send a message
-const sendMessage = async (req, res) => {
+const sendMessage = async (req, res, next) => {
   try {
     const { content, senderId } = req.body;
     const { conversationId } = req.params;
 
-    if (!content || !senderId) {
+    if (!content || !senderId || !content.trim()) {
       return res.status(400).json({
         message: "content and senderId are required"
       });
     }
 
-    // Find the conversation
     const conversation = await Conversation.findById(conversationId);
 
     if (!conversation) {
@@ -23,7 +21,6 @@ const sendMessage = async (req, res) => {
       });
     }
 
-    // Check if sender is a participant
     const isParticipant = conversation.participants.some(
       (id) => id.toString() === senderId
     );
@@ -34,7 +31,6 @@ const sendMessage = async (req, res) => {
       });
     }
 
-    // Create message
     const message = await Message.create({
       conversationId,
       senderId,
@@ -45,7 +41,6 @@ const sendMessage = async (req, res) => {
 
     const io = req.app.get("io");
 
-    // Create notification for every participant except sender
     const receiverIds = conversation.participants.filter(
       (id) => id.toString() !== senderId
     );
@@ -60,14 +55,12 @@ const sendMessage = async (req, res) => {
         message: content
       });
 
-      // Send notification in real-time
       io.to(`user:${receiverId}`).emit(
         "newNotification",
         notification
       );
     }
 
-    // Send message to conversation room
     io.to(`conversation:${conversationId}`).emit(
       "newMessage",
       message
@@ -76,16 +69,11 @@ const sendMessage = async (req, res) => {
     return res.status(201).json(message);
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: error.message
-    });
+    next(error);
   }
 };
 
-// Get messages
-const getMessages = async (req, res) => {
+const getMessages = async (req, res, next) => {
   try {
     const { conversationId } = req.params;
     const { userId } = req.query;
@@ -96,7 +84,6 @@ const getMessages = async (req, res) => {
       });
     }
 
-    // Find conversation
     const conversation = await Conversation.findById(conversationId);
 
     if (!conversation) {
@@ -105,7 +92,6 @@ const getMessages = async (req, res) => {
       });
     }
 
-    // Check if user is a participant
     const isParticipant = conversation.participants.some(
       (id) => id.toString() === userId
     );
@@ -116,7 +102,6 @@ const getMessages = async (req, res) => {
       });
     }
 
-    // Get messages
     const messages = await Message.find({
       conversationId
     })
@@ -126,11 +111,7 @@ const getMessages = async (req, res) => {
     res.status(200).json(messages);
 
   } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      message: error.message
-    });
+    next(error);
   }
 };
 

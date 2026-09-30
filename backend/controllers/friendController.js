@@ -3,27 +3,30 @@ const Friendship = require("../models/Friendship");
 const User = require("../models/User");
 const { createNotification } = require("../utils/notificationService");
 
-const sendFriendRequest = async (req, res) => {
+const sendFriendRequest = async (req, res, next) => {
   try {
 
     const { requesterId, receiverId } = req.body;
     const currentUserId = requesterId;
 
-    // 1. Check receiver ID
+    if (!requesterId || !receiverId) {
+      return res.status(400).json({
+        message: "requesterId and receiverId are required"
+      });
+    }
+
     if (!mongoose.Types.ObjectId.isValid(receiverId)) {
       return res.status(400).json({
         message: "Invalid user ID"
       });
     }
 
-    // 2. Cannot send to yourself
     if (currentUserId === receiverId) {
       return res.status(400).json({
         message: "You cannot send a friend request to yourself"
       });
     }
 
-    // 3. Check receiver exists
     const receiver = await User.findById(receiverId);
 
     if (!receiver) {
@@ -32,7 +35,6 @@ const sendFriendRequest = async (req, res) => {
       });
     }
 
-    // 4. Check existing relationship
     const existingFriendship = await Friendship.findOne({
       $or: [
         {
@@ -46,7 +48,6 @@ const sendFriendRequest = async (req, res) => {
       ]
     });
 
-    // 5. Existing relationship
     if (existingFriendship) {
 
       if (existingFriendship.status === "PENDING") {
@@ -60,8 +61,6 @@ const sendFriendRequest = async (req, res) => {
           message: "You are already friends"
         });
       }
-
-      // REJECTED → send again
       if (existingFriendship.status === "REJECTED") {
 
         existingFriendship.requester = currentUserId;
@@ -70,7 +69,6 @@ const sendFriendRequest = async (req, res) => {
 
         await existingFriendship.save();
 
-        // Create notification
         const notification = await createNotification({
           userId: receiverId,
           senderId: currentUserId,
@@ -80,7 +78,6 @@ const sendFriendRequest = async (req, res) => {
           relatedId: existingFriendship._id
         });
 
-        // Socket.IO
         const io = req.app.get("io");
 
         if (io) {
@@ -97,14 +94,11 @@ const sendFriendRequest = async (req, res) => {
       }
     }
 
-    // 6. Create new friend request
     const friendship = await Friendship.create({
       requester: currentUserId,
       receiver: receiverId,
       status: "PENDING"
     });
-
-    // 7. Create notification
     const notification = await createNotification({
       userId: receiverId,
       senderId: currentUserId,
@@ -114,7 +108,6 @@ const sendFriendRequest = async (req, res) => {
       relatedId: friendship._id
     });
 
-    // 8. Send real-time notification
     const io = req.app.get("io");
 
     if (io) {
@@ -124,23 +117,17 @@ const sendFriendRequest = async (req, res) => {
       );
     }
 
-    // 9. Response
     return res.status(201).json({
       message: "Friend request sent",
       friendship
     });
 
   } catch (error) {
-
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 
-const acceptFriendRequest = async (req, res) => {
+const acceptFriendRequest = async (req, res, next) => {
   try {
     const { friendshipId } = req.params;
 
@@ -165,15 +152,11 @@ const acceptFriendRequest = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 
-const rejectFriendRequest = async (req, res) => {
+const rejectFriendRequest = async (req, res, next) => {
   try {
 
     const { friendshipId } = req.params;
@@ -199,16 +182,11 @@ const rejectFriendRequest = async (req, res) => {
     });
 
   } catch (error) {
-
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 
-const getFriends = async (req, res) => {
+const getFriends = async (req, res, next) => {
   try {
     const { userId } = req.query;
 
@@ -234,15 +212,11 @@ const getFriends = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 
-const getFriendRequests = async (req, res) => {
+const getFriendRequests = async (req, res, next) => {
   try {
     const { userId } = req.query;
 
@@ -257,15 +231,11 @@ const getFriendRequests = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 
-const removeFriend = async (req, res) => {
+const removeFriend = async (req, res, next) => {
   try {
     const { userId, friendId } = req.body;
 
@@ -297,11 +267,7 @@ const removeFriend = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 

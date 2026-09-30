@@ -43,7 +43,21 @@ app.use("/chat", chatRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
+app.use((err, req, res, next) => {
+  if (err.name !== "CastError") {
+    console.error(err);
+  }
 
+  if (err.name === "CastError") {
+    return res.status(400).json({
+      message: "Invalid ID"
+    });
+  }
+
+  return res.status(500).json({
+    message: "Server error"
+  });
+});
 ////////////////////////////////////////////////////////////////
 
 const server = http.createServer(app);

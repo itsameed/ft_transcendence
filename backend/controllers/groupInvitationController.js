@@ -4,20 +4,17 @@ const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 const { createNotification } = require("../utils/notificationService");
 
-// Send group invitation
-const sendGroupInvitation = async (req, res) => {
+const sendGroupInvitation = async (req, res, next) => {
     try {
         const { groupId } = req.params;
         const { userId, invitedBy } = req.body;
 
-        // 1. Check required fields
         if (!userId || !invitedBy) {
             return res.status(400).json({
                 message: "userId and invitedBy are required"
             });
         }
 
-        // 2. Find group
         const group = await Group.findById(groupId);
 
         if (!group) {
@@ -26,7 +23,6 @@ const sendGroupInvitation = async (req, res) => {
             });
         }
 
-        // 3. Check if invitedBy is the owner
         const owner = group.members.find(
             (member) =>
                 member.userId.toString() === invitedBy &&
@@ -39,7 +35,6 @@ const sendGroupInvitation = async (req, res) => {
             });
         }
 
-        // 4. Check if user exists
         const user = await User.findById(userId);
 
         if (!user) {
@@ -48,7 +43,6 @@ const sendGroupInvitation = async (req, res) => {
             });
         }
 
-        // 5. Check if user is already a member
         const alreadyMember = group.members.some(
             (member) => member.userId.toString() === userId
         );
@@ -59,7 +53,6 @@ const sendGroupInvitation = async (req, res) => {
             });
         }
 
-        // 6. Check if there is already a pending invitation
         const existingInvitation = await GroupInvitation.findOne({
             groupId,
             invitedUserId: userId,
@@ -72,7 +65,6 @@ const sendGroupInvitation = async (req, res) => {
             });
         }
 
-        // 7. Create invitation
         const invitation = await GroupInvitation.create({
             groupId,
             invitedUserId: userId,
@@ -80,7 +72,6 @@ const sendGroupInvitation = async (req, res) => {
             status: "pending"
         });
 
-        // 8. Create notification
         const notification = await createNotification({
             userId,
             senderId: invitedBy,
@@ -90,7 +81,6 @@ const sendGroupInvitation = async (req, res) => {
             relatedId: invitation._id
         });
 
-        // 9. Send notification in real-time
         const io = req.app.get("io");
 
         if (io) {
@@ -106,17 +96,12 @@ const sendGroupInvitation = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
-
-        return res.status(500).json({
-            message: "Server error"
-        });
+        next(error);
     }
 };
 
 
-// Accept group invitation
-const acceptGroupInvitation = async (req, res) => {
+const acceptGroupInvitation = async (req, res, next) => {
     try {
         const { invitationId } = req.params;
 
@@ -130,14 +115,12 @@ const acceptGroupInvitation = async (req, res) => {
             });
         }
 
-        // Check invitation status
         if (invitation.status !== "pending") {
             return res.status(400).json({
                 message: "Invitation is no longer pending"
             });
         }
 
-        // Find group
         const group = await Group.findById(
             invitation.groupId
         );
@@ -148,7 +131,6 @@ const acceptGroupInvitation = async (req, res) => {
             });
         }
 
-        // Check if user is already a member
         const alreadyMember = group.members.some(
             (member) =>
                 member.userId.toString() ===
@@ -157,7 +139,6 @@ const acceptGroupInvitation = async (req, res) => {
 
         if (!alreadyMember) {
 
-            // Add user to group
             group.members.push({
                 userId: invitation.invitedUserId,
                 role: "member"
@@ -165,7 +146,6 @@ const acceptGroupInvitation = async (req, res) => {
 
             await group.save();
 
-            // Add user to group conversation
             if (group.conversationId) {
                 await Conversation.findByIdAndUpdate(
                     group.conversationId,
@@ -178,7 +158,6 @@ const acceptGroupInvitation = async (req, res) => {
             }
         }
 
-        // Update invitation
         invitation.status = "accepted";
 
         await invitation.save();
@@ -187,19 +166,13 @@ const acceptGroupInvitation = async (req, res) => {
             message: "Invitation accepted successfully",
             group
         });
-
     } catch (error) {
-        console.error(error);
-
-        return res.status(500).json({
-            message: "Server error"
-        });
+        next(error);
     }
 };
 
 
-// Reject group invitation
-const rejectGroupInvitation = async (req, res) => {
+const rejectGroupInvitation = async (req, res, next) => {
     try {
         const { invitationId } = req.params;
 
@@ -213,14 +186,12 @@ const rejectGroupInvitation = async (req, res) => {
             });
         }
 
-        // Check invitation status
         if (invitation.status !== "pending") {
             return res.status(400).json({
                 message: "Invitation is no longer pending"
             });
         }
 
-        // Update invitation
         invitation.status = "rejected";
 
         await invitation.save();
@@ -228,13 +199,8 @@ const rejectGroupInvitation = async (req, res) => {
         return res.status(200).json({
             message: "Invitation rejected successfully"
         });
-
     } catch (error) {
-        console.error(error);
-
-        return res.status(500).json({
-            message: "Server error"
-        });
+        next(error);
     }
 };
 

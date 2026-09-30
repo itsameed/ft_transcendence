@@ -1,7 +1,6 @@
 const Notification = require("../models/Notification");
 
-// GET notifications
-const getNotifications = async (req, res) => {
+const getNotifications = async (req, res, next) => {
   try {
     const { userId } = req.params;
 
@@ -12,16 +11,12 @@ const getNotifications = async (req, res) => {
     res.json(notifications);
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Error getting notifications"
-    });
+    next(error);
   }
 };
 
 
-// PATCH notification as read
-const markNotificationAsRead = async (req, res) => {
+const markNotificationAsRead = async (req, res, next) => {
   try {
     const { notificationId } = req.params;
 
@@ -40,15 +35,11 @@ const markNotificationAsRead = async (req, res) => {
     res.json(notification);
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Error marking notification as read"
-    });
+    next(error);
   }
 };
 
-// DELETE /api/notifications/:id
-const deleteNotification = async (req, res) => {
+const deleteNotification = async (req, res, next) => {
   try {
 
     const notification =
@@ -69,16 +60,12 @@ const deleteNotification = async (req, res) => {
     });
 
   } catch (error) {
-
-    res.status(500).json({
-      message: "Failed to delete notification"
-    });
-
+    next(error);
   }
 };
 
 
-const clearUserNotifications = async (req, res) => {
+const clearUserNotifications = async (req, res, next) => {
   try {
 
     const { userId } = req.params;
@@ -93,15 +80,7 @@ const clearUserNotifications = async (req, res) => {
     });
 
   } catch (error) {
-
-    console.error(
-      "Error clearing notifications:",
-      error
-    );
-
-    res.status(500).json({
-      message: "Failed to clear notifications"
-    });
+    next(error);
   }
 };
 

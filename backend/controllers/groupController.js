@@ -2,8 +2,11 @@ const mongoose = require("mongoose");
 const Group = require("../models/Group");
 const User = require("../models/User");
 const Conversation = require("../models/Conversation");
+const Message = require("../models/Message");
+const GroupInvitation = require("../models/GroupInvitation");
+const Notification = require("../models/Notification");
 
-const createGroup = async (req, res) => {
+const createGroup = async (req, res, next) => {
   try {
     const { name, createdBy } = req.body;
 
@@ -19,7 +22,6 @@ const createGroup = async (req, res) => {
       });
     }
 
-    // Create Group
     const group = await Group.create({
       name: name,
       createdBy: createdBy,
@@ -31,12 +33,10 @@ const createGroup = async (req, res) => {
       ]
     });
 
-    // Create Conversation for this Group
     const conversation = await Conversation.create({
       participants: [createdBy]
     });
 
-    // Link Conversation to Group
     group.conversationId = conversation._id;
 
     await group.save();
@@ -48,20 +48,15 @@ const createGroup = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 
-const addMemberToGroup = async (req, res) => {
+const addMemberToGroup = async (req, res, next) => {
   try {
     const { userId, addedBy } = req.body;
     const { groupId } = req.params;
 
-    // 1. Find the group
     const group = await Group.findById(groupId);
 
     if (!group) {
@@ -70,7 +65,6 @@ const addMemberToGroup = async (req, res) => {
       });
     }
 
-    // 2. Check if the person adding the member is the owner
     const owner = group.members.find(
       (member) =>
         member.userId.toString() === addedBy &&
@@ -83,7 +77,6 @@ const addMemberToGroup = async (req, res) => {
       });
     }
 
-    // 3. Check if user exists
     const user = await User.findById(userId);
 
     if (!user) {
@@ -92,7 +85,6 @@ const addMemberToGroup = async (req, res) => {
       });
     }
 
-    // 4. Check if user is already a member
     const alreadyMember = group.members.some(
       (member) => member.userId.toString() === userId
     );
@@ -103,7 +95,6 @@ const addMemberToGroup = async (req, res) => {
       });
     }
 
-    // 5. Add user to Group
     group.members.push({
       userId: userId,
       role: "member"
@@ -111,7 +102,6 @@ const addMemberToGroup = async (req, res) => {
 
     await group.save();
 
-    // 6. Add user to Conversation
     if (group.conversationId) {
       await Conversation.findByIdAndUpdate(
         group.conversationId,
@@ -129,20 +119,15 @@ const addMemberToGroup = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 
-const removeMemberFromGroup = async (req, res) => {
+const removeMemberFromGroup = async (req, res, next) => {
   try {
     const { groupId, userId } = req.params;
     const { removedBy } = req.body;
 
-    // 1. Find the group
     const group = await Group.findById(groupId);
 
     if (!group) {
@@ -151,7 +136,6 @@ const removeMemberFromGroup = async (req, res) => {
       });
     }
 
-    // 2. Check that the person removing is the owner
     const owner = group.members.find(
       (member) =>
         member.userId.toString() === removedBy &&
@@ -164,7 +148,6 @@ const removeMemberFromGroup = async (req, res) => {
       });
     }
 
-    // 3. Check if the user is actually a member
     const memberExists = group.members.some(
       (member) => member.userId.toString() === userId
     );
@@ -175,7 +158,6 @@ const removeMemberFromGroup = async (req, res) => {
       });
     }
 
-    // 4. Owner cannot be removed
     const memberToRemove = group.members.find(
       (member) => member.userId.toString() === userId
     );
@@ -186,14 +168,12 @@ const removeMemberFromGroup = async (req, res) => {
       });
     }
 
-    // 5. Remove user from Group.members
     group.members = group.members.filter(
       (member) => member.userId.toString() !== userId
     );
 
     await group.save();
 
-    // 6. Remove user from group conversation
     if (group.conversationId) {
       await Conversation.findByIdAndUpdate(
         group.conversationId,
@@ -211,15 +191,11 @@ const removeMemberFromGroup = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 
-const getGroupById = async (req, res) => {
+const getGroupById = async (req, res, next) => {
   try {
     const { groupId } = req.params;
 
@@ -238,15 +214,11 @@ const getGroupById = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 
-const getUserGroups = async (req, res) => {
+const getUserGroups = async (req, res, next) => {
   try {
     const { userId } = req.params;
 
@@ -262,20 +234,15 @@ const getUserGroups = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 
-const leaveGroup = async (req, res) => {
+const leaveGroup = async (req, res, next) => {
   try {
     const { groupId } = req.params;
     const { userId } = req.body;
 
-    // 1. Find group
     const group = await Group.findById(groupId);
 
     if (!group) {
@@ -284,7 +251,6 @@ const leaveGroup = async (req, res) => {
       });
     }
 
-    // 2. Find the member
     const member = group.members.find(
       (member) => member.userId.toString() === userId
     );
@@ -295,21 +261,18 @@ const leaveGroup = async (req, res) => {
       });
     }
 
-    // 3. Owner cannot leave
     if (member.role === "owner") {
       return res.status(400).json({
         message: "The group owner cannot leave the group"
       });
     }
 
-    // 4. Remove user from Group.members
     group.members = group.members.filter(
       (member) => member.userId.toString() !== userId
     );
 
     await group.save();
 
-    // 5. Remove user from Conversation.participants
     if (group.conversationId) {
       await Conversation.findByIdAndUpdate(
         group.conversationId,
@@ -326,27 +289,21 @@ const leaveGroup = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 
-const updateGroup = async (req, res) => {
+const updateGroup = async (req, res, next) => {
   try {
     const { groupId } = req.params;
     const { name, updatedBy } = req.body;
 
-    // 1. Check name
     if (!name || !name.trim()) {
       return res.status(400).json({
         message: "Group name is required"
       });
     }
 
-    // 2. Find group
     const group = await Group.findById(groupId);
 
     if (!group) {
@@ -355,7 +312,6 @@ const updateGroup = async (req, res) => {
       });
     }
 
-    // 3. Check owner
     const owner = group.members.find(
       (member) =>
         member.userId.toString() === updatedBy &&
@@ -368,7 +324,6 @@ const updateGroup = async (req, res) => {
       });
     }
 
-    // 4. Update name
     group.name = name.trim();
 
     await group.save();
@@ -379,20 +334,15 @@ const updateGroup = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 
-const deleteGroup = async (req, res) => {
+const deleteGroup = async (req, res, next) => {
   try {
     const { groupId } = req.params;
     const { deletedBy } = req.body;
 
-    // 1. Find group
     const group = await Group.findById(groupId);
 
     if (!group) {
@@ -401,7 +351,6 @@ const deleteGroup = async (req, res) => {
       });
     }
 
-    // 2. Check owner
     const owner = group.members.find(
       (member) =>
         member.userId.toString() === deletedBy &&
@@ -414,14 +363,31 @@ const deleteGroup = async (req, res) => {
       });
     }
 
-    // 3. Delete conversation
     if (group.conversationId) {
+      await Message.deleteMany({
+        conversationId: group.conversationId
+      });
+
       await Conversation.findByIdAndDelete(
         group.conversationId
       );
     }
+    const invitations = await GroupInvitation.find({
+      groupId: groupId
+    });
 
-    // 4. Delete group
+    const invitationIds = invitations.map(
+      (invitation) => invitation._id
+    );
+
+    await Notification.deleteMany({
+      relatedId: { $in: invitationIds }
+    });
+
+    await GroupInvitation.deleteMany({
+      groupId: groupId
+    });
+
     await Group.findByIdAndDelete(groupId);
 
     return res.status(200).json({
@@ -429,11 +395,7 @@ const deleteGroup = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      message: "Server error"
-    });
+    next(error);
   }
 };
 
