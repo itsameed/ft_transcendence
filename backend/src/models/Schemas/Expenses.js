@@ -33,9 +33,19 @@ const ExpenseSchema = new Mongoose.Schema({
     },
     splitMethod: {
         type: String,
-        enum: ["equal", "custom", "percentage"],
+        enum: ["equal", "custom"],
         default: "equal",
     },
+    customSplits: [{
+        user:{
+            type: Mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        },
+        amount: {
+            type: Number,
+            required: true,
+        },
+    }],
 });
 
 

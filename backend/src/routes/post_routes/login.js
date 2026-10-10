@@ -2,7 +2,7 @@ const express = require(`express`);
 const bcrypt = require('bcrypt');
 
 const PLogin = express.Router();
-const User = require(`../../Schemas/User`);
+const User = require(`../../models/Schemas/User`);
 
 
 PLogin.post(`/`, async (req, res) => {

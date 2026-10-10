@@ -8,7 +8,10 @@ function Auth(req, res, next) {
     // // console.log("ggg");
     // console.log(req.session.userId);
     if (!req.session?.userId)
+    {
+        console.log("new user");
         return res.redirect(`/signup`);
+    }
     return next()
 }
 

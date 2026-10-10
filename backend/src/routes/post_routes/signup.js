@@ -1,7 +1,7 @@
 const express = require(`express`);
 const PSignup = express.Router();
 const bcrypt = require('bcrypt');
-const User = require(`../../Schemas/User`);
+const User = require(`../../models/Schemas/User`);
 
 
 PSignup.post('/', async (req, res) => {

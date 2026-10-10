@@ -1,7 +1,7 @@
 const express = require(`express`);
 const Auth = require(`../../controllers/middleware`);
 const CreateGroup = express.Router();
-const GroupSchema = require(`../../Schemas/Group`);
+const GroupSchema = require(`../../models/Schemas/Group`);
 
 
 

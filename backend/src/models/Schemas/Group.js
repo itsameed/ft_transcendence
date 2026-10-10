@@ -1,5 +1,6 @@
 const Mongoose = require(`mongoose`);
 const User = require(`./User`);
+const ExpenseSchema = require(`./Expenses`);
 
 const GroupSchema = new Mongoose.Schema({
     owner: {
@@ -18,6 +19,10 @@ const GroupSchema = new Mongoose.Schema({
         default: '',
         trim: true,
     },
+    expenses: [{
+        type: Mongoose.Schema.Types.ObjectId,
+        ref: `ExpenseSchema`,
+    }],
     members: [{
         type: Mongoose.Schema.Types.ObjectId,
         ref: `User`

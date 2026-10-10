@@ -1,6 +1,6 @@
 const express = require(`express`);
 const ExpenseRouter = express.Router();
-const ExpenseSchema = require(`../../Schemas/Expenses`);
+const ExpenseSchema = require(`../../models/Schemas/Expenses`);
 
 ExpenseRouter.post(`/`, async (req, res) => {
     const {groupId, payer, participants, amount, splitMethod} = req.body;
