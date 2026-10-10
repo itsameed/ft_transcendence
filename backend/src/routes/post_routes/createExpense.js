@@ -1,6 +1,7 @@
-const express = require(`express`);
+import express from 'express';
+import ExpenseSchema from '../../models/Schemas/Expenses.js';
+
 const ExpenseRouter = express.Router();
-const ExpenseSchema = require(`../../models/Schemas/Expenses`);
 
 ExpenseRouter.post(`/`, async (req, res) => {
     const {groupId, payer, participants, amount, splitMethod} = req.body;
@@ -25,4 +26,4 @@ ExpenseRouter.post(`/`, async (req, res) => {
     }
 });
 
-module.exports = ExpenseRouter;
+export default ExpenseRouter;

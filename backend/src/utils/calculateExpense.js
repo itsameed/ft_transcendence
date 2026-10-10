@@ -1,18 +1,23 @@
-const User = require(`../models/Schemas/User`);
-
-
-function calculate_all_payments(Expense) {
-    if(Expense.splitMethod == 'equal')
-        return (Expense.amount - (Expense.amount / Expense.participants.length));
-    else if (Expense.splitMethod == 'custom')
+function calculate_user_expenses(Expense) {
+    let totalExpenses = 0;
+    for (let i = 0; i < Expense.length; i++)
     {
-        let i = 0;
-        let share = 0;
-        while (i < Expense.customSplit.length)
+        const item = Expense[i];
+        if(item.splitMethod === 'equal')
         {
-            share += Expense.customSplit[i].amount;
-            i++;
+            if (item.participants && item.participants.length > 0)
+                totalExpenses += (item.amount - (item.amount / item.participants.length));
         }
-        return share;
+        else if (item.splitMethod === 'custom')
+        {
+            for ( let j = 0; i < item.customSplit.length; j++)
+            {
+                if (String(item.customSplit[j].user) !== String(item.payer))
+                    totalExpenses += item.customSplit[i].amount;
+            }
+        }
     }
+    return totalExpenses;
 }
+
+export default calculate_user_expenses;

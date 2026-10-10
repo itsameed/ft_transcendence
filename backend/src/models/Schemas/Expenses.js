@@ -1,21 +1,18 @@
-const Mongoose = require(`mongoose`);
-const User = require(`./User`);
-const Group = require(`./Group`);
+import mongoose from 'mongoose';
 
-
-const ExpenseSchema = new Mongoose.Schema({
+const ExpenseSchema = new mongoose.Schema({
     group: {
-        type: Mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: `Group`,
         required: true,
     },
     payer: {
-        type: Mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: `User`,
         required: true,
     },
     participants: [{
-        type: Mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: `User`,
     }], 
     amount: {
@@ -36,9 +33,9 @@ const ExpenseSchema = new Mongoose.Schema({
         enum: ["equal", "custom"],
         default: "equal",
     },
-    customSplits: [{
+    customSplit: [{
         user:{
-            type: Mongoose.Schema.Types.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
         },
         amount: {
@@ -48,6 +45,5 @@ const ExpenseSchema = new Mongoose.Schema({
     }],
 });
 
-
-const Expense = new Mongoose.model(`Expense`, ExpenseSchema);
-module.exports = Expense;
+const Expense = mongoose.model(`Expense`, ExpenseSchema);
+export default Expense;

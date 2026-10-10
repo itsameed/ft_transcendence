@@ -1,20 +1,18 @@
-const Mongoose = require(`mongoose`);
-const User = require(`./User`);
-const Group = require(`./Group`);
+import mongoose from 'mongoose';
 
-const SettlementSchema = new Mongoose.Schema({
+const SettlementSchema = new mongoose.Schema({
     group: {
-        type: Mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: `Group`,
         required: true,
-    }, 
+    },
     fromUser: {
-        type: Mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: `User`,
         required: true,
     },
     toUser: {
-        type: Mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: `User`,
         required: true,
     },
@@ -23,12 +21,17 @@ const SettlementSchema = new Mongoose.Schema({
         required: true,
         default: 0,
     },
+    status:{
+        type: String,
+        enum: ["pending", "accepted", "rejected"],
+        default: "pending",
+    },
     date: {
         type: Date,
         default: Date.now,
     },
 });
 
-const Settlement = Mongoose.model(`Settlement`, SettlementSchema);
+const Settlement = mongoose.model(`Settlement`, SettlementSchema);
 
-module.exports = Settlement;
+export default Settlement;

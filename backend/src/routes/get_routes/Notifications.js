@@ -1,7 +1,7 @@
-const express = require(`express`);
-const Auth = require(`../../controllers/middleware`);
-const Notifications = express.Router();
+import express from 'express';
+import Auth from '../../controllers/middleware.js';
 
+const Notifications = express.Router();
 
 Notifications.get('/', Auth, (req, res) => {
     process.stdout.write("user with id : ");
@@ -17,7 +17,6 @@ Notifications.get('/', Auth, (req, res) => {
     }
     else
         res.render('Notifications');
-})
+});
 
-
-module.exports = Notifications;
+export default Notifications;

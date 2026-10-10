@@ -1,7 +1,7 @@
-const express = require(`express`);
-const Auth = require(`../../controllers/middleware`);
-const CreateGroup = express.Router();
+import express from 'express';
+import Auth from '../../controllers/middleware.js';
 
+const CreateGroup = express.Router();
 
 CreateGroup.post(`/`, Auth, async (req, res) => {
     if (!req.body)
@@ -25,4 +25,4 @@ CreateGroup.post(`/`, Auth, async (req, res) => {
     console.log(currentDate);
 });
 
-module.exports = CreateGroup;
+export default CreateGroup;

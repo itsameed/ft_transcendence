@@ -1,9 +1,8 @@
-const express = require(`express`);
-const bcrypt = require('bcrypt');
+import express from 'express';
+import bcrypt from 'bcrypt';
+import User from '../../models/Schemas/User.js';
 
 const PLogin = express.Router();
-const User = require(`../../models/Schemas/User`);
-
 
 PLogin.post(`/`, async (req, res) => {
     // console.log("Received login data :", req.body);
@@ -26,7 +25,7 @@ PLogin.post(`/`, async (req, res) => {
     // const currentDate = date.toLocaleString();
     // console.log(currentDate);
     return res.redirect(`Dashboard`);
-})
+});
 
 // PLogin.post('/', async (req, res) => {
 //     const { email, password } = req.body;
@@ -51,5 +50,4 @@ PLogin.post(`/`, async (req, res) => {
 //     // Success...
 // });
 
-
-module.exports = PLogin;
+export default PLogin;

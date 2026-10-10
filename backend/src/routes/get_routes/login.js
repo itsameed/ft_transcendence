@@ -1,7 +1,6 @@
-const express = require(`express`);
+import express from 'express';
 
 const Login = express.Router();
-
 
 Login.get(`/`, (req, res) => {
     // console.log(gogo);
@@ -12,6 +11,6 @@ Login.get(`/`, (req, res) => {
     // }
     // else
     res.render('signup');
-})
+});
 
-module.exports = Login;
+export default Login;

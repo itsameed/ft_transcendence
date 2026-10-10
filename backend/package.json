@@ -2,6 +2,7 @@
     "name": "backend",
     "version": "1.0.0",
     "description": "this is the ft_trascendance backend .json file",
+    "type": "module",
     "main": "src/main.js",
     "scripts": {
         "devStart": "nodemon main.js"

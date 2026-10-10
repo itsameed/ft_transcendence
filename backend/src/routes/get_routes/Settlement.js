@@ -1,5 +1,5 @@
-const express = require(`express`);
-const Auth = require(`../../controllers/middleware`);
+import express from 'express';
+import Auth from '../../controllers/middleware.js';
 
 const Settlement = express.Router();
 
@@ -17,3 +17,5 @@ Settlement.get(`/`, Auth, (req, res ) => {
         
     // }
 });
+
+export default Settlement;

@@ -1,8 +1,8 @@
-const express = require(`express`);
-const PSignup = express.Router();
-const bcrypt = require('bcrypt');
-const User = require(`../../models/Schemas/User`);
+import express from 'express';
+import bcrypt from 'bcrypt';
+import User from '../../models/Schemas/User.js';
 
+const PSignup = express.Router();
 
 PSignup.post('/', async (req, res) => {
     const hashedPass = await bcrypt.hash(req.body.password, 10);
@@ -35,7 +35,6 @@ PSignup.post('/', async (req, res) => {
     console.log("Received signup data :", req.body);
     // res.send("Data Received successfully");
     return res.redirect(`Dashboard`);
-})
+});
 
-
-module.exports = PSignup;
+export default PSignup;

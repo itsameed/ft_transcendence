@@ -1,8 +1,8 @@
-const Mongoose = require(`mongoose`);
-const express = require(`express`);
-const Auth = require(`../../controllers/middleware`);
+import express from 'express';
+import Auth from '../../controllers/middleware.js';
+import SettlementSchema from '../../models/Schemas/Settlement.js';
+
 const SettlementRouter = express.Router();
-const SettlementSchema = require(`../../models/Schemas/Settlement`);
 
 SettlementRouter.post(`/`, Auth, async (req, res) => {
     const {groupId, toUserId, amount} = req.body;
@@ -14,6 +14,7 @@ SettlementRouter.post(`/`, Auth, async (req, res) => {
         group: req.body.groupId,
         fromUser: req.session.userId,
         toUser: req.body.toUserId,
+        status: "pending",
         amount: req.body.amount,
     });
     try {
@@ -25,4 +26,4 @@ SettlementRouter.post(`/`, Auth, async (req, res) => {
     }
 });
 
-module.exports = Settlement;
+export default SettlementRouter;

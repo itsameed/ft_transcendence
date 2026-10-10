@@ -1,5 +1,3 @@
-const express = require(`express`);
-
 function Auth(req, res, next) {
     // const date = new Date();
     // const currentTime = date.toLocaleDateString();
@@ -12,8 +10,7 @@ function Auth(req, res, next) {
         console.log("new user");
         return res.redirect(`/signup`);
     }
-    return next()
+    return next();
 }
 
-
-module.exports = Auth;
+export default Auth;

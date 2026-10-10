@@ -1,9 +1,8 @@
-const express = require('express');
+import express from 'express';
+import expenseSchema from '../../models/Schemas/Expenses.js';
+import Auth from '../../controllers/middleware.js';
+
 const Expense = express.Router();
-const expenseSchema = require(`../../models/Schemas/Expenses`);
-const User = require(`../../models/Schemas/User`);
-const Group = require(`../../models/Schemas/Group`);
-const Auth = require(`../../controllers/middleware`);
 
 Expense.get(`/`, Auth, async (req, res) => {
     const userId = req.session.userId;
@@ -25,4 +24,4 @@ Expense.get(`/`, Auth, async (req, res) => {
 
 });
 
-module.exports = Expense;
+export default Expense;

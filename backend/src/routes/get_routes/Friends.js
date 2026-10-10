@@ -1,8 +1,7 @@
-const express = require(`express`);
-const Auth = require(`../../controllers/middleware`);
+import express from 'express';
+import Auth from '../../controllers/middleware.js';
 
 const Friends = express.Router();
-
 
 Friends.get('/', Auth, (req, res) => {
     process.stdout.write("user with id : ");
@@ -20,5 +19,4 @@ Friends.get('/', Auth, (req, res) => {
         res.render('Friends');
 });
 
-
-module.exports = Friends;
+export default Friends;

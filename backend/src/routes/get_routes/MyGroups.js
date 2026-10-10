@@ -1,7 +1,7 @@
-const express = require (`express`);
-const Auth = require(`../../controllers/middleware`);
-const MyGroups = express.Router();
+import express from 'express';
+import Auth from '../../controllers/middleware.js';
 
+const MyGroups = express.Router();
 
 MyGroups.get('/', Auth, (req, res, next) => {
     process.stdout.write("user with id : ");
@@ -17,6 +17,6 @@ MyGroups.get('/', Auth, (req, res, next) => {
     }
     else
         res.render('MyGroups');
-})
+});
 
-module.exports = MyGroups;
+export default MyGroups;

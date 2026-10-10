@@ -1,10 +1,8 @@
-const Mongoose = require(`mongoose`);
-const User = require(`./User`);
-const ExpenseSchema = require(`./Expenses`);
+import mongoose from 'mongoose';
 
-const GroupSchema = new Mongoose.Schema({
+const GroupSchema = new mongoose.Schema({
     owner: {
-        type: Mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
@@ -20,11 +18,11 @@ const GroupSchema = new Mongoose.Schema({
         trim: true,
     },
     expenses: [{
-        type: Mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: `ExpenseSchema`,
     }],
     members: [{
-        type: Mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: `User`
     }],
     createdAt: {
@@ -33,5 +31,4 @@ const GroupSchema = new Mongoose.Schema({
     }
 });
 
-
-module.exports = Mongoose.model(`GroupSchema`, GroupSchema);
+export default mongoose.model(`GroupSchema`, GroupSchema);
