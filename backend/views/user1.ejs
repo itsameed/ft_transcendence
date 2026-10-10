@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Notifications</title>
+
+    <link rel="stylesheet" href="/mystyle.css">
+
+</head>
+
+<body>
+
+    <div class="notification-container">
+
+        <button id="notificationButton" aria-label="Notifications">
+            🔔
+            <span id="notificationCount">0</span>
+        </button>
+
+
+        <div id="notificationPanel" class="notification-panel">
+
+            <div class="notification-header">
+                <h3>Notifications</h3>
+
+                <button id="clearNotifications">
+                    Clear
+                </button>
+            </div>
+
+            <div id="notifications">
+
+                <p class="no-notifications">
+                    No notifications
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <button class="chat-button" id="chatButton">
+        💬 Chat
+    </button>
+
+    <!-- Socket.IO -->
+
+    <script src="/socket.io/socket.io.js"></script>
+
+
+    <script>
+
+        // ========================================
+        // CONFIG
+        // ========================================
+
+        const currentUserId =
+            "6aa186c9cee849c379ddab38";
+
+
+        // ========================================
+        // CHECK USER
+        // ========================================
+
+        if (!currentUserId) {
+
+            alert("userId is missing");
+
+            throw new Error("userId is missing");
+
+        }
+
+
+        // ========================================
+        // DOM ELEMENTS
+        // ========================================
+
+        const notificationButton =
+            document.getElementById(
+                "notificationButton"
+            );
+
+
+        const notificationPanel =
+            document.getElementById(
+                "notificationPanel"
+            );
+
+
+        const notificationsContainer =
+            document.getElementById(
+                "notifications"
+            );
+
+
+        const notificationCount =
+            document.getElementById(
+                "notificationCount"
+            );
+
+        const clearNotifications =
+            document.getElementById("clearNotifications");
+        // ========================================
+        // SOCKET.IO
+        // ========================================
+
+        const socket = io();
+
+
+        // Join user's private room
+
+        socket.emit(
+            "joinUser",
+            currentUserId
+        );
+
+
+        // ========================================
+        // SOCKET CONNECTION
+        // ========================================
+
+        socket.on("connect", () => {
+
+            console.log(
+                "Socket connected:",
+                socket.id
+            );
+
+        });
+
+
+        socket.on("disconnect", () => {
+
+            console.log(
+                "Socket disconnected"
+            );
+
+        });
+
+
+        // ========================================
+        // LOAD NOTIFICATIONS
+        // ========================================
+
+        async function loadNotifications() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/notifications/${currentUserId}`
+                    );
+
+
+                const notifications =
+                    await response.json();
+
+
+                renderNotifications(
+                    notifications
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Error loading notifications:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        // ========================================
+        // RENDER NOTIFICATIONS
+        // ========================================
+
+        function renderNotifications(notifications) {
+
+            notificationsContainer.innerHTML = "";
+
+            const unreadCount =
+                notifications.filter(
+                    notification => !notification.isRead
+                ).length;
+
+            notificationCount.textContent = unreadCount;
+
+            if (notifications.length === 0) {
+                notificationsContainer.innerHTML = `
+            <p class="no-notifications">
+                No notifications
+            </p>`;
+                return;
+            }
+
+            notifications.forEach(notification => {
+
+                const div = document.createElement("div");
+
+                div.classList.add("notification-item");
+
+                if (!notification.isRead) {
+                    div.classList.add("unread");
+                }
+
+                const senderName =
+                    notification.senderId
+                        ? notification.senderId.username
+                        : "Someone";
+
+
+                /*
+                 * =========================
+                 * GROUP INVITATION
+                 * =========================
+                 */
+
+                if (notification.type === "GROUP_INVITATION") {
+
+                    div.innerHTML = `
+                <strong>
+                    ${senderName}
+                    invited you to a group
+                </strong>
+
+                <div>
+                    ${notification.message}
+                </div>
+
+                <div class="invitation-actions">
+
+                    <button
+                        class="accept-button"
+                        data-id="${notification.relatedId}">
+                        Accept
+                    </button>
+
+                    <button
+                        class="reject-button"
+                        data-id="${notification.relatedId}">
+                        Reject
+                    </button>
+
+                </div>
+
+                <small>
+                    ${new Date(
+                        notification.createdAt
+                    ).toLocaleString()}
+                </small>
+            `;
+
+                    const acceptButton =
+                        div.querySelector(".accept-button");
+
+                    acceptButton.addEventListener(
+                        "click",
+                        (event) => {
+
+                            event.stopPropagation();
+
+                            acceptGroupInvitation(
+                                notification.relatedId,
+                                notification._id
+                            );
+                        }
+                    );
+
+
+                    const rejectButton =
+                        div.querySelector(".reject-button");
+
+                    rejectButton.addEventListener(
+                        "click",
+                        (event) => {
+
+                            event.stopPropagation();
+
+                            rejectGroupInvitation(
+                                notification.relatedId,
+                                notification._id
+                            );
+                        }
+                    );
+
+                }
+
+
+                /*
+                 * =========================
+                 * FRIEND REQUEST
+                 * =========================
+                 */
+
+                else if (notification.type === "FRIEND_REQUEST") {
+
+                    div.innerHTML = `
+                <strong>
+                    ${senderName}
+                    sent you a friend request
+                </strong>
+
+                <div>
+                    ${notification.message}
+                </div>
+
+                <div class="invitation-actions">
+
+                    <button
+                        class="accept-button"
+                        data-id="${notification.relatedId}">
+                        Accept
+                    </button>
+
+                    <button
+                        class="reject-button"
+                        data-id="${notification.relatedId}">
+                        Reject
+                    </button>
+
+                </div>
+
+                <small>
+                    ${new Date(
+                        notification.createdAt
+                    ).toLocaleString()}
+                </small>
+            `;
+
+
+                    const acceptButton =
+                        div.querySelector(".accept-button");
+
+                    acceptButton.addEventListener(
+                        "click",
+                        (event) => {
+
+                            event.stopPropagation();
+
+                            acceptFriendRequest(
+                                notification.relatedId,
+                                notification._id
+                            );
+                        }
+                    );
+
+
+                    const rejectButton =
+                        div.querySelector(".reject-button");
+
+                    rejectButton.addEventListener(
+                        "click",
+                        (event) => {
+
+                            event.stopPropagation();
+
+                            rejectFriendRequest(
+                                notification.relatedId,
+                                notification._id
+                            );
+                        }
+                    );
+
+                }
+
+
+                /*
+                 * =========================
+                 * OTHER NOTIFICATIONS
+                 * =========================
+                 */
+
+                else {
+
+                    div.innerHTML = `
+                <strong>
+                    ${senderName}
+                    sent a message
+                </strong>
+
+                <div>
+                    ${notification.message}
+                </div>
+
+                <small>
+                    ${new Date(
+                        notification.createdAt
+                    ).toLocaleString()}
+                </small>
+            `;
+                }
+
+
+                /*
+                 * =========================
+                 * MARK AS READ
+                 * =========================
+                 */
+
+                div.addEventListener(
+                    "click",
+                    () => {
+
+                        if (!notification.isRead) {
+
+                            markNotificationAsRead(
+                                notification._id,
+                                div
+                            );
+                        }
+                    }
+                );
+
+                notificationsContainer.appendChild(div);
+            });
+        }
+
+        async function acceptFriendRequest(
+            friendshipId,
+            notificationId
+        ) {
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/friends/request/${friendshipId}/accept`,
+                        {
+                            method: "PATCH"
+                        }
+                    );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+
+                /*
+                 * Delete notification
+                 */
+
+                const deleteResponse =
+                    await fetch(
+                        `/api/notifications/${notificationId}`,
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                if (!deleteResponse.ok) {
+                    console.error(
+                        "Failed to delete notification"
+                    );
+                }
+
+
+                /*
+                 * Reload notifications
+                 */
+
+                loadNotifications();
+
+            } catch (error) {
+
+                console.error(
+                    "Error accepting friend request:",
+                    error
+                );
+            }
+        }
+
+        async function rejectFriendRequest(
+            friendshipId,
+            notificationId
+        ) {
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/friends/request/${friendshipId}/reject`,
+                        {
+                            method: "PATCH"
+                        }
+                    );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+
+                /*
+                 * Delete notification
+                 */
+
+                const deleteResponse =
+                    await fetch(
+                        `/api/notifications/${notificationId}`,
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                if (!deleteResponse.ok) {
+                    console.error(
+                        "Failed to delete notification"
+                    );
+                }
+
+
+                /*
+                 * Reload notifications
+                 */
+
+                loadNotifications();
+
+            } catch (error) {
+
+                console.error(
+                    "Error rejecting friend request:",
+                    error
+                );
+            }
+        }
+
+        async function acceptGroupInvitation(
+            invitationId,
+            notificationId
+        ) {
+
+            try {
+
+                // Accept invitation
+                const response =
+                    await fetch(
+                        `/api/group-invitations/${invitationId}/accept`,
+                        {
+                            method: "PATCH"
+                        }
+                    );
+
+                const data =
+                    await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+
+                // Delete notification
+                await fetch(
+                    `/api/notifications/${notificationId}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+
+                // Refresh notifications
+                loadNotifications();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Error accepting invitation:",
+                    error
+                );
+
+            }
+        }
+
+        async function rejectGroupInvitation(
+            invitationId,
+            notificationId
+        ) {
+
+            try {
+
+                // Reject invitation
+                const response =
+                    await fetch(
+                        `/api/group-invitations/${invitationId}/reject`,
+                        {
+                            method: "PATCH"
+                        }
+                    );
+
+                const data =
+                    await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+
+                // Delete notification
+                await fetch(
+                    `/api/notifications/${notificationId}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+
+                // Refresh notifications
+                loadNotifications();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Error rejecting invitation:",
+                    error
+                );
+
+            }
+        }
+
+        // ========================================
+        // MARK NOTIFICATION AS READ
+        // ========================================
+
+        async function markNotificationAsRead(
+            notificationId,
+            element
+        ) {
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/notifications/${notificationId}/read`,
+                        {
+                            method: "PATCH"
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    return;
+
+                }
+
+
+                element.classList.remove(
+                    "unread"
+                );
+
+
+                loadNotifications();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Error marking notification:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        // ========================================
+        // NOTIFICATION BUTTON
+        // ========================================
+
+        notificationButton.addEventListener("click", (event) => {
+            event.stopPropagation();
+            notificationPanel.classList.toggle("show");
+        });
+
+        notificationPanel.addEventListener("click", (event) => {
+            event.stopPropagation();
+        });
+
+        document.addEventListener("click", () => {
+            notificationPanel.classList.remove("show");
+        });
+
+        clearNotifications.addEventListener(
+            "click",
+            async () => {
+
+                try {
+
+                    const response = await fetch(
+                        `/api/notifications/user/${currentUserId}`,
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message);
+                    }
+
+                    console.log(data.message);
+
+                    loadNotifications();
+
+                } catch (error) {
+
+                    console.error(
+                        "Error clearing notifications:",
+                        error
+                    );
+                }
+            }
+        );
+
+        // ========================================
+        // NEW NOTIFICATION
+        // ========================================
+
+        socket.on(
+            "newNotification",
+            (notification) => {
+
+                console.log(
+                    "New notification:",
+                    notification
+                );
+
+
+                loadNotifications();
+
+            }
+        );
+
+
+        // ========================================
+        // START
+        // ========================================
+
+        loadNotifications();
+
+        document
+            .getElementById("chatButton")
+            .addEventListener("click", () => {
+
+                window.location.href =
+                    `/chat?userId=${currentUserId}`;
+
+            });
+
+    </script>
+
+</body>
+
+</html>

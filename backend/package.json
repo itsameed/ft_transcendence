@@ -1,40 +1,33 @@
 {
-    "name": "backend",
-    "version": "1.0.0",
-    "description": "this is the ft_trascendance backend .json file",
-    "type": "module",
-    "main": "src/main.js",
-    "scripts": {
-        "devStart": "nodemon main.js"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/Aidimh/ft_Trascendance.git"
-    },
-    "author": "Aidix_Mh",
-    "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/Aidimh/ft_Trascendance/issues"
-    },
-    "homepage": "https://github.com/Aidimh/ft_Trascendance#readme",
-    "dependencies": {
-        "bcrypt": "^6.0.0",
-        "bcryptjs": "^3.0.3",
-        "connect-mongo": "^6.0.0",
-        "cookie-parser": "^1.4.7",
-        "cors": "^2.8.6",
-        "dotenv": "^17.4.2",
-        "ejs": "^6.0.1",
-        "express": "^5.2.1",
-        "express-session": "^1.19.0",
-        "helmet": "^8.3.0",
-        "jsonwebtoken": "^9.0.3",
-        "mongodb": "^7.6.0",
-        "mongoose": "^9.10.0",
-        "zod": "^4.6.5"
-    },
-    "keywords": [],
-    "devDependencies": {
-        "nodemon": "^3.1.14"
-    }
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "this is the ft_transcendence backend .json file",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "devStart": "nodemon src/main.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "connect-livereload": "^0.6.1",
+    "connect-mongo": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "livereload": "^0.10.3",
+    "mongodb": "^7.6.0",
+    "mongoose": "^9.10.0",
+    "socket.io": "^4.8.3",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "nodemon": "^1.14.10"
+  }
 }
