@@ -13,4 +13,4 @@ function Auth(req, res, next) {
     return next();
 }
 
-export default Auth;
+module.exports = Auth;

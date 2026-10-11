@@ -1,25 +1,25 @@
-import 'dotenv/config';
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import mongoose from 'mongoose';
-import path from 'path';
-import session from 'express-session';
-import MongoStore from 'connect-mongo';
-import { MongoTailableCursorError } from 'mongodb';
+require('dotenv/config');
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
+const path = require('path');
+const session = require('express-session');
+const MongoStore = require('connect-mongo').default;
+const { MongoTailableCursorError } = require('mongodb');
 
 // Route Imports (with .js extensions)
-import FriendsList from './routes/get_routes/Friends.js';
-import Login from './routes/get_routes/login.js';
-import postLogin from './routes/post_routes/login.js';
-import postSignup from './routes/post_routes/signup.js';
-import Notif from './routes/get_routes/Notifications.js';
-import Groups from './routes/get_routes/MyGroups.js';
-import Homepage from './routes/get_routes/Home.js';
-import Signup from './routes/get_routes/signup.js';
-import postCreateGroup from './routes/post_routes/createGroup.js';
-import getCreateGroup from './routes/get_routes/CreateGroup.js';
-import getExpenses from './routes/get_routes/Expenses.js';
-import postExpense from './routes/post_routes/createExpense.js';
+const FriendsList = require('./routes/get_routes/Friends.js');
+const Login = require('./routes/get_routes/login.js');
+const postLogin = require('./routes/post_routes/login.js');
+const postSignup = require('./routes/post_routes/signup.js');
+const Notif = require('./routes/get_routes/Notifications.js');
+const Groups = require('./routes/get_routes/MyGroups.js');
+const Homepage = require('./routes/get_routes/Home.js');
+const Signup = require('./routes/get_routes/signup.js');
+const postCreateGroup = require('./routes/post_routes/createGroup.js');
+const getCreateGroup = require('./routes/get_routes/CreateGroup.js');
+const getExpenses = require('./routes/get_routes/Expenses.js');
+const postExpense = require('./routes/post_routes/createExpense.js');
 
 const app = express();
 
@@ -27,7 +27,7 @@ app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    store: new MongoStore({
+    store: MongoStore.create({
         mongoUrl: process.env.MONGO_URL,
     }),
     cookie: {

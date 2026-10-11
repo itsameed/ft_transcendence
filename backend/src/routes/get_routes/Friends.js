@@ -1,6 +1,6 @@
-import express from 'express';
-import Auth from '../../controllers/middleware.js';
-import printLogsDate from '../../utils/printLogs.js';
+const express = require('express');
+const Auth = require('../../controllers/middleware.js');
+const printLogsDate = require('../../utils/printLogs.js');
 
 const Friends = express.Router();
 
@@ -16,4 +16,4 @@ Friends.get('/', Auth, (req, res) => {
         res.render('Friends');
 });
 
-export default Friends;
+module.exports = Friends;

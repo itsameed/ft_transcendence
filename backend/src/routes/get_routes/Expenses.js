@@ -1,7 +1,7 @@
-import express from 'express';
-import expenseSchema from '../../models/Schemas/Expenses.js';
-import Auth from '../../controllers/middleware.js';
-import printLogsDate from '../../utils/printLogs.js';
+const express = require('express');
+const expenseSchema = require('../../models/Schemas/Expenses.js');
+const Auth = require('../../controllers/middleware.js');
+const printLogsDate = require('../../utils/printLogs.js');
 
 const Expense = express.Router();
 
@@ -26,4 +26,4 @@ Expense.get(`/`, Auth, async (req, res) => {
 
 });
 
-export default Expense;
+module.exports = Expense;

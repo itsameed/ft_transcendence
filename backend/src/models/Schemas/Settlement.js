@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const SettlementSchema = new mongoose.Schema({
     group: {
@@ -34,4 +34,4 @@ const SettlementSchema = new mongoose.Schema({
 
 const Settlement = mongoose.model(`Settlement`, SettlementSchema);
 
-export default Settlement;
+module.exports = Settlement;

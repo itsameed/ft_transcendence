@@ -5,4 +5,4 @@ function printLogsDate(target) {
     console.log(currentDate);
 };
 
-export default printLogsDate;
+module.exports = printLogsDate;

@@ -1,6 +1,6 @@
-import express from 'express';
-import ExpenseSchema from '../../models/Schemas/Expenses.js';
-import printLogsDate from '../../utils/printLogs.js';
+const express = require('express');
+const ExpenseSchema = require('../../models/Schemas/Expenses.js');
+const printLogsDate = require('../../utils/printLogs.js');
 
 const ExpenseRouter = express.Router();
 
@@ -29,4 +29,4 @@ ExpenseRouter.post(`/`, async (req, res) => {
     }
 });
 
-export default ExpenseRouter;
+module.exports = ExpenseRouter;

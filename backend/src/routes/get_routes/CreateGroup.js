@@ -1,7 +1,7 @@
-import express from 'express';
-import Auth from '../../controllers/middleware.js';
-import GroupSchema from '../../models/Schemas/Group.js';
-import printLogsDate from '../../utils/printLogs.js';
+const express = require('express');
+const Auth = require('../../controllers/middleware.js');
+const GroupSchema = require('../../models/Schemas/Group.js');
+const printLogsDate = require('../../utils/printLogs.js');
 
 const CreateGroup = express.Router();
 
@@ -26,4 +26,4 @@ CreateGroup.get('/', Auth, async (req, res) =>
 //     });
 // })
 
-export default CreateGroup;
+module.exports = CreateGroup;

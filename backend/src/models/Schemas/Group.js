@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const GroupSchema = new mongoose.Schema({
     owner: {
@@ -31,4 +31,4 @@ const GroupSchema = new mongoose.Schema({
     }
 });
 
-export default mongoose.model(`Group`, GroupSchema);
+module.exports = mongoose.model(`Group`, GroupSchema);

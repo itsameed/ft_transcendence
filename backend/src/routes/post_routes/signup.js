@@ -1,7 +1,7 @@
-import express from 'express';
-import bcrypt from 'bcrypt';
-import User from '../../models/Schemas/User.js';
-import printLogsDate from '../../utils/printLogs.js';
+const express = require('express');
+const bcrypt = require('bcrypt');
+const User = require('../../models/Schemas/User.js');
+const printLogsDate = require('../../utils/printLogs.js');
 
 const PSignup = express.Router();
 
@@ -32,4 +32,4 @@ PSignup.post('/', async (req, res) => {
     return res.redirect(`Dashboard`);
 });
 
-export default PSignup;
+module.exports = PSignup;

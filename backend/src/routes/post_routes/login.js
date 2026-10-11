@@ -1,7 +1,7 @@
-import express from 'express';
-import bcrypt from 'bcrypt';
-import User from '../../models/Schemas/User.js';
-import printLogsDate from '../../utils/printLogs.js';
+const express = require('express');
+const bcrypt = require('bcrypt');
+const User = require('../../models/Schemas/User.js');
+const printLogsDate = require('../../utils/printLogs.js');
 
 const PLogin = express.Router();
 
@@ -46,4 +46,4 @@ PLogin.post(`/`, async (req, res) => {
 //     // Success...
 // });
 
-export default PLogin;
+module.exports = PLogin;

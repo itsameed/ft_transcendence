@@ -1,7 +1,7 @@
-import express from 'express';
-import Auth from '../../controllers/middleware.js';
-import SettlementSchema from '../../models/Schemas/Settlement.js';
-import printLogsDate from '../../utils/printLogs.js';
+const express = require('express');
+const Auth = require('../../controllers/middleware.js');
+const SettlementSchema = require('../../models/Schemas/Settlement.js');
+const printLogsDate = require('../../utils/printLogs.js');
 
 const SettlementRouter = express.Router();
 
@@ -29,4 +29,4 @@ SettlementRouter.post(`/`, Auth, async (req, res) => {
     }
 });
 
-export default SettlementRouter;
+module.exports = SettlementRouter;

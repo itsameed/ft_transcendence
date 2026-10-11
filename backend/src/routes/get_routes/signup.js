@@ -1,4 +1,4 @@
-import express from 'express';
+const express = require('express');
 
 const Signup = express.Router();
 
@@ -7,4 +7,4 @@ Signup.get(`/`, (req, res) => {
     res.render(`signup`);
 });
 
-export default Signup;
+module.exports = Signup;

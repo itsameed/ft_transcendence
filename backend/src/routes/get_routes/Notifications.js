@@ -1,6 +1,6 @@
-import express from 'express';
-import Auth from '../../controllers/middleware.js';
-import printLogsDate from '../../utils/printLogs.js';
+const express = require('express');
+const Auth = require('../../controllers/middleware.js');
+const printLogsDate = require('../../utils/printLogs.js');
 
 const Notifications = express.Router();
 
@@ -16,4 +16,4 @@ Notifications.get('/', Auth, (req, res) => {
     printLogsDate(`User with Id ${userId} viewed Notifications list at : `);
 });
 
-export default Notifications;
+module.exports = Notifications;
