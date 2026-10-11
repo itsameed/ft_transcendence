@@ -1,19 +1,12 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import User from '../../models/Schemas/User.js';
+import printLogsDate from '../../utils/printLogs.js';
 
 const PSignup = express.Router();
 
 PSignup.post('/', async (req, res) => {
     const hashedPass = await bcrypt.hash(req.body.password, 10);
-    // process.stdout.write("user with id : ");
-    // process.stdout.write(req.session.userId);
-    // process.stdout.write(" username : ");
-    // process.stdout.write(req.username);
-    // process.stdout.write(" signed up at ");
-    // const date = new Date();
-    // const currentDate = date.toLocaleString();
-    // console.log(currentDate);
     const newUser = new User({
         username: req.body.fullName,
         email: req.body.email,
@@ -23,6 +16,8 @@ PSignup.post('/', async (req, res) => {
     try{
         console.log('user is being saved');
         await newUser.save();
+        const userId = req.session.userId;
+        printLogsDate(`User with Id ${userId} Signed in at : `);
     }
     catch(error){
         console.log(error.message);

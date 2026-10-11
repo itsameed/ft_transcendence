@@ -1,15 +1,10 @@
 import express from 'express';
 import Auth from '../../controllers/middleware.js';
+import printLogsDate from '../../utils/printLogs.js';
 
 const MyGroups = express.Router();
 
-MyGroups.get('/', Auth, (req, res, next) => {
-    process.stdout.write("user with id : ");
-    process.stdout.write(req.session.userId);
-    process.stdout.write(" navigated to groups list at : ");
-    const date = new Date();
-    const currentDate = date.toLocaleString();
-    console.log(currentDate);
+MyGroups.get('/', Auth, (req, res) => {
     if (!req.cookies.has_visited)
     {
         req.cookies('has_visited', 'true', {maxAge: 365 * 24 * 60 * 60 * 1000});
@@ -17,6 +12,8 @@ MyGroups.get('/', Auth, (req, res, next) => {
     }
     else
         res.render('MyGroups');
+    const userId = req.session.userId;
+    printLogsDate(`User with Id ${userId} viewed Groups list at : `);
 });
 
 export default MyGroups;

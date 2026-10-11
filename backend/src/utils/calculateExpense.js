@@ -10,10 +10,10 @@ function calculate_user_expenses(Expense) {
         }
         else if (item.splitMethod === 'custom')
         {
-            for ( let j = 0; i < item.customSplit.length; j++)
+            for ( let j = 0; j < item.customSplit.length; j++)
             {
                 if (String(item.customSplit[j].user) !== String(item.payer))
-                    totalExpenses += item.customSplit[i].amount;
+                    totalExpenses += item.customSplit[j].amount;
             }
         }
     }

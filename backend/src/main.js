@@ -37,7 +37,7 @@ app.use(session({
 
 }));
 
-mongoose.connect('mongodb://127.0.0.1:27017/ft_transcendence');
+mongoose.connect(process.env.MONGO_URL);
 app.use(express.urlencoded({extended: true}));
 app.use(express.static(`public`));
 app.use(cookieParser());

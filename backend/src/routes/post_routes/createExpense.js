@@ -1,5 +1,6 @@
 import express from 'express';
 import ExpenseSchema from '../../models/Schemas/Expenses.js';
+import printLogsDate from '../../utils/printLogs.js';
 
 const ExpenseRouter = express.Router();
 
@@ -20,6 +21,8 @@ ExpenseRouter.post(`/`, async (req, res) => {
     try {
         await newExpense.save();
         res.redirect(`Dashboard`);
+        const userId = req.session.userId;
+        printLogsDate(`User with Id ${userId} created an expense at : `);
     } catch (error) {
         console.error(`Error while attempting to save the Expense.`);
         res.status(500).send("Error while attempting to save the expense");

@@ -1,5 +1,6 @@
 import express from 'express';
 import Auth from '../../controllers/middleware.js';
+import printLogsDate from '../../utils/printLogs.js';
 
 const CreateGroup = express.Router();
 
@@ -14,15 +15,11 @@ CreateGroup.post(`/`, Auth, async (req, res) => {
     });
     try {
         await newGroup.save();
+        const userId = req.session.userId;
+        printLogsDate(`User with Id ${userId} created a group at : `);
     } catch (error) {
         console.log(error);
     }
-    process.stdout.write("user with id : ");
-    process.stdout.write(req.session.userId);
-    process.stdout.write(" created a group at ");
-    const date = new Date();
-    const currentDate = date.toLocaleString();
-    console.log(currentDate);
 });
 
 export default CreateGroup;

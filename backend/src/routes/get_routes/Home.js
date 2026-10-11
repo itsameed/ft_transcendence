@@ -6,9 +6,9 @@ const Home = express.Router();
 
 Home.get('/', Auth, async (req, res) => {
     const userId = req.session.userId;
-    console.log(userId);
+    // console.log(userId);
     const userExpenses = await ExpenseSchema.find({payer: userId});
-    console.log(JSON.stringify(userExpenses, null, 2));
+    // console.log(JSON.stringify(userExpenses, null, 2));
     const userDebtsInt = calculate_user_expenses(userExpenses);
     console.log(userDebtsInt);
     const userDebts = await ExpenseSchema.find({participants: userId, payer: {$ne: userId}});

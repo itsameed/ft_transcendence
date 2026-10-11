@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import User from '../../models/Schemas/User.js';
+import printLogsDate from '../../utils/printLogs.js';
 
 const PLogin = express.Router();
 
@@ -17,13 +18,8 @@ PLogin.post(`/`, async (req, res) => {
         return res.status(401).send(`Invalid credentials . please try again !`);
     req.session.userId = user._id;
     req.session.username = user.fullName;
-    //     console.log(`login here`);
-    // process.stdout.write("user with id : ");
-    // process.stdout.write(req.session.userId);
-    // process.stdout.write(" Logged in at ");
-    // const date = new Date();
-    // const currentDate = date.toLocaleString();
-    // console.log(currentDate);
+    const userId = req.session.userId;
+    printLogsDate(`User with Id ${userId} Logged in at : `);
     return res.redirect(`Dashboard`);
 });
 

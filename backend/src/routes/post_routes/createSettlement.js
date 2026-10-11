@@ -1,6 +1,7 @@
 import express from 'express';
 import Auth from '../../controllers/middleware.js';
 import SettlementSchema from '../../models/Schemas/Settlement.js';
+import printLogsDate from '../../utils/printLogs.js';
 
 const SettlementRouter = express.Router();
 
@@ -19,7 +20,9 @@ SettlementRouter.post(`/`, Auth, async (req, res) => {
     });
     try {
         await newSettlement.save();
-        return res.redirect('Dashboard');   
+        const userId = req.session.userId;
+        printLogsDate(`User with Id ${userId} created a Settlement at : `);
+        return res.redirect('Dashboard');
     } catch (error) {
         console.error("Error while saving the settlement");
         return res.status(500).send("Internal Error while attempting to save the settlement.");
