@@ -1,4 +1,5 @@
 const express = require("express");
+const apiAuth = require("../controllers/apiAuth");
 
 const {
   createConversation,
@@ -7,7 +8,7 @@ const {
 
 const router = express.Router();
 
-router.post("/", createConversation);
-router.get("/", getConversations);
+router.post("/", apiAuth, createConversation);
+router.get("/", apiAuth, getConversations);
 
 module.exports = router;

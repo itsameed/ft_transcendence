@@ -1,18 +1,30 @@
+const mongoose = require("mongoose");
 const GroupInvitation = require("../models/Schemas/GroupInvitation");
 const Group = require("../models/Schemas/Group");
 const Conversation = require("../models/Schemas/Conversation");
 const User = require("../models/Schemas/User");
 const { createNotification } = require("../utils/notificationService");
 
+
 const sendGroupInvitation = async (req, res, next) => {
     try {
-        const invitedBy = req.session.userId;
+        const invitedBy = req.user.id;
         const { groupId } = req.params;
         const { userId } = req.body;
 
-        if (!userId || !invitedBy) {
+        if (
+            !mongoose.Types.ObjectId.isValid(groupId) ||
+            !userId ||
+            !mongoose.Types.ObjectId.isValid(userId)
+        ) {
             return res.status(400).json({
-                message: "userId and invitedBy are required"
+                message: "Valid groupId and userId are required"
+            });
+        }
+
+        if (invitedBy === userId.toString()) {
+            return res.status(400).json({
+                message: "You cannot invite yourself"
             });
         }
 
@@ -24,13 +36,13 @@ const sendGroupInvitation = async (req, res, next) => {
             });
         }
 
-        const owner = group.members.find(
+        const isOwner = group.members.some(
             (member) =>
                 member.userId.toString() === invitedBy &&
                 member.role === "owner"
         );
 
-        if (!owner) {
+        if (!isOwner) {
             return res.status(403).json({
                 message: "Only the group owner can invite members"
             });
@@ -45,7 +57,8 @@ const sendGroupInvitation = async (req, res, next) => {
         }
 
         const alreadyMember = group.members.some(
-            (member) => member.userId.toString() === userId
+            (member) =>
+                member.userId.toString() === userId.toString()
         );
 
         if (alreadyMember) {
@@ -95,16 +108,24 @@ const sendGroupInvitation = async (req, res, next) => {
             message: "Group invitation sent successfully",
             invitation
         });
-
     } catch (error) {
         next(error);
     }
 };
 
 
+
+
 const acceptGroupInvitation = async (req, res, next) => {
     try {
         const { invitationId } = req.params;
+        const currentUserId = req.user.id;
+
+        if (!mongoose.Types.ObjectId.isValid(invitationId)) {
+            return res.status(400).json({
+                message: "Invalid invitation ID"
+            });
+        }
 
         const invitation = await GroupInvitation.findById(
             invitationId
@@ -113,6 +134,12 @@ const acceptGroupInvitation = async (req, res, next) => {
         if (!invitation) {
             return res.status(404).json({
                 message: "Invitation not found"
+            });
+        }
+
+        if (invitation.invitedUserId.toString() !== currentUserId) {
+            return res.status(403).json({
+                message: "You are not allowed to accept this invitation"
             });
         }
 
@@ -134,14 +161,12 @@ const acceptGroupInvitation = async (req, res, next) => {
 
         const alreadyMember = group.members.some(
             (member) =>
-                member.userId.toString() ===
-                invitation.invitedUserId.toString()
+                member.userId.toString() === currentUserId
         );
 
         if (!alreadyMember) {
-
             group.members.push({
-                userId: invitation.invitedUserId,
+                userId: currentUserId,
                 role: "member"
             });
 
@@ -152,7 +177,7 @@ const acceptGroupInvitation = async (req, res, next) => {
                     group.conversationId,
                     {
                         $addToSet: {
-                            participants: invitation.invitedUserId
+                            participants: currentUserId
                         }
                     }
                 );
@@ -160,7 +185,6 @@ const acceptGroupInvitation = async (req, res, next) => {
         }
 
         invitation.status = "accepted";
-
         await invitation.save();
 
         return res.status(200).json({
@@ -172,10 +196,16 @@ const acceptGroupInvitation = async (req, res, next) => {
     }
 };
 
-
 const rejectGroupInvitation = async (req, res, next) => {
     try {
         const { invitationId } = req.params;
+        const currentUserId = req.user.id;
+
+        if (!mongoose.Types.ObjectId.isValid(invitationId)) {
+            return res.status(400).json({
+                message: "Invalid invitation ID"
+            });
+        }
 
         const invitation = await GroupInvitation.findById(
             invitationId
@@ -187,6 +217,12 @@ const rejectGroupInvitation = async (req, res, next) => {
             });
         }
 
+        if (invitation.invitedUserId.toString() !== currentUserId){
+            return res.status(403).json({
+                message: "You are not allowed to reject this invitation"
+            });
+        }
+
         if (invitation.status !== "pending") {
             return res.status(400).json({
                 message: "Invitation is no longer pending"
@@ -194,8 +230,13 @@ const rejectGroupInvitation = async (req, res, next) => {
         }
 
         invitation.status = "rejected";
-
         await invitation.save();
+
+        await Notification.deleteMany({
+            relatedId: invitation._id,
+            userId: currentUserId,
+            type: "GROUP_INVITATION"
+        });
 
         return res.status(200).json({
             message: "Invitation rejected successfully"

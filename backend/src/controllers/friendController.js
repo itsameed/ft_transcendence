@@ -6,12 +6,12 @@ const { createNotification } = require("../utils/notificationService");
 const sendFriendRequest = async (req, res, next) => {
   try {
 
-    const { requesterId, receiverId } = req.body;
-    const currentUserId = requesterId;
+    const currentUserId = req.user.id;
+    const { receiverId } = req.body;
 
-    if (!requesterId || !receiverId) {
+    if (!receiverId) {
       return res.status(400).json({
-        message: "requesterId and receiverId are required"
+        message: "receiverId is required"
       });
     }
 
@@ -21,7 +21,7 @@ const sendFriendRequest = async (req, res, next) => {
       });
     }
 
-    if (currentUserId === receiverId) {
+    if (currentUserId.toString() === receiverId.toString()) {
       return res.status(400).json({
         message: "You cannot send a friend request to yourself"
       });
@@ -127,12 +127,15 @@ const sendFriendRequest = async (req, res, next) => {
   }
 };
 
+
 const acceptFriendRequest = async (req, res, next) => {
   try {
     const { friendshipId } = req.params;
+    const currentUserId = req.user.id;
 
     const friendship = await Friendship.findOne({
       _id: friendshipId,
+      receiver: currentUserId,
       status: "PENDING"
     });
 
@@ -156,13 +159,16 @@ const acceptFriendRequest = async (req, res, next) => {
   }
 };
 
+
+
 const rejectFriendRequest = async (req, res, next) => {
   try {
-
     const { friendshipId } = req.params;
+    const currentUserId = req.user.id;
 
     const friendship = await Friendship.findOne({
       _id: friendshipId,
+      receiver: currentUserId,
       status: "PENDING"
     });
 
@@ -188,19 +194,19 @@ const rejectFriendRequest = async (req, res, next) => {
 
 const getFriends = async (req, res, next) => {
   try {
-    const { userId } = req.query;
+    const currentUserId = req.user.id;
 
     const friendships = await Friendship.find({
       $or: [
-        { requester: userId, status: "ACCEPTED" },
-        { receiver: userId, status: "ACCEPTED" }
+        { requester: currentUserId, status: "ACCEPTED" },
+        { receiver: currentUserId, status: "ACCEPTED" }
       ]
     })
-      .populate("requester", "username useremail")
-      .populate("receiver", "username useremail");
+      .populate("requester", "username email")
+      .populate("receiver", "username email");
 
     const friends = friendships.map((friendship) => {
-      if (friendship.requester._id.toString() === userId) {
+      if (friendship.requester._id.toString() === currentUserId) {
         return friendship.receiver;
       }
 
@@ -218,13 +224,12 @@ const getFriends = async (req, res, next) => {
 
 const getFriendRequests = async (req, res, next) => {
   try {
-    const { userId } = req.query;
+    const currentUserId = req.user.id;
 
     const requests = await Friendship.find({
-      receiver: userId,
+      receiver: currentUserId,
       status: "PENDING"
-    })
-      .populate("requester", "username useremail");
+    }).populate("requester", "username email");
 
     return res.status(200).json({
       requests
@@ -235,21 +240,40 @@ const getFriendRequests = async (req, res, next) => {
   }
 };
 
+
 const removeFriend = async (req, res, next) => {
   try {
-    const { userId, friendId } = req.body;
+    const currentUserId = req.user.id;
+    const { friendId } = req.body;
+
+    if (!friendId) {
+      return res.status(400).json({
+        message: "friendId is required"
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(friendId)) {
+      return res.status(400).json({
+        message: "Invalid user ID"
+      });
+    }
+
+    if (currentUserId === friendId) {
+      return res.status(400).json({
+        message: "You cannot remove yourself as a friend"
+      });
+    }
 
     const friendship = await Friendship.findOne({
+      status: "ACCEPTED",
       $or: [
         {
-          requester: userId,
-          receiver: friendId,
-          status: "ACCEPTED"
+          requester: currentUserId,
+          receiver: friendId
         },
         {
           requester: friendId,
-          receiver: userId,
-          status: "ACCEPTED"
+          receiver: currentUserId
         }
       ]
     });
@@ -270,6 +294,7 @@ const removeFriend = async (req, res, next) => {
     next(error);
   }
 };
+
 
 module.exports = {
   sendFriendRequest,

@@ -1,4 +1,5 @@
 const express = require("express");
+const apiAuth = require("../controllers/apiAuth");
 
 const {
   getNotifications,
@@ -9,9 +10,9 @@ const {
 
 const router = express.Router();
 
-router.get("/:userId", getNotifications);
-router.patch("/:notificationId/read", markNotificationAsRead);
-router.delete("/:id", deleteNotification);
-router.delete("/user/:userId", clearUserNotifications);
+router.get("/", apiAuth, getNotifications);
+router.patch("/:notificationId/read", apiAuth, markNotificationAsRead);
+router.delete("/user/all", apiAuth, clearUserNotifications);
+router.delete("/:id", apiAuth, deleteNotification);
 
 module.exports = router;

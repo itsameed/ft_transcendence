@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const apiAuth = require("../controllers/apiAuth");
 
 const {
     createGroup,
@@ -12,20 +13,20 @@ const {
     deleteGroup
 } = require("../controllers/groupController");
 
-router.post("/", createGroup);
+router.post("/", apiAuth, createGroup);
 
-router.post("/:groupId/members", addMemberToGroup);
+router.post("/:groupId/members", apiAuth, addMemberToGroup);
 
-router.delete("/:groupId/members/:userId", removeMemberFromGroup);
+router.delete("/:groupId/members/:userId", apiAuth, removeMemberFromGroup);
 
-router.get("/user/:userId", getUserGroups);
+router.get("/me", apiAuth, getUserGroups);
 
-router.get("/:groupId", getGroupById);
+router.get("/:groupId", apiAuth, getGroupById);
 
-router.delete("/:groupId/leave", leaveGroup);
+router.delete("/:groupId/leave", apiAuth, leaveGroup);
 
-router.patch("/:groupId", updateGroup);
+router.patch("/:groupId", apiAuth, updateGroup);
 
-router.delete("/:groupId", deleteGroup);
+router.delete("/:groupId", apiAuth, deleteGroup);
 
 module.exports = router;

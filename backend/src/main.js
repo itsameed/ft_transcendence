@@ -5,18 +5,14 @@ const mongoose = require('mongoose');
 const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo').default;
-// const { MongoTailableCursorError } = require('mongodb');
 const connectDB = require("./config/database.js");
 const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
 
-app.use(express.json());
-app.use(express.static("public"));
 ///////////////////////////////////////////////// Models Routes //////////////////////////////////////////////////
 
 const Group = require("./models/Schemas/Group");
-const chatRoutes = require("./routes/chatRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const conversationRoutes = require("./routes/conversationRoutes");
 const messageRoutes = require("./routes/messageRoutes");
@@ -40,19 +36,21 @@ const postExpense = require('./routes/post_routes/createExpense.js');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URL,
-    }),
-    cookie: {
-        secure: false,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-    }
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URL,
+  }),
+  cookie: {
+    secure: false,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  }
 }));
 
-// mongoose.connect(process.env.MONGO_URL);
+app.set("view engine", 'ejs');
+app.use(express.json());
+app.use(express.static("public"));
 app.use(express.urlencoded({extended: true}));
 app.use(express.static(`public`));
 app.use(cookieParser());
@@ -69,11 +67,9 @@ app.use('/MyGroups', Groups);
 // app.use(`/notifications`, Notif);
 app.use(`/createExpense`, postExpense);
 app.use(`/getExpenses`, getExpenses);
-app.set("view engine", 'ejs');
 app.use("/api/group-invitations", groupInvitationRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/friends", friendRoutes);
-app.use("/chat", chatRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
