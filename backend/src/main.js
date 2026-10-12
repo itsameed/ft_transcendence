@@ -24,7 +24,7 @@ const friendRoutes = require("./routes/friendRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const groupInvitationRoutes = require("./routes/groupInvitationRoutes");
 const FriendsList = require('./routes/get_routes/Friends.js');
-
+const GroupDetails = require('./routes/get_routes/GroupDetails');
 // Route Imports (with .js extensions)
 const Login = require('./routes/get_routes/login.js');
 const postLogin = require('./routes/post_routes/login.js');
@@ -54,6 +54,7 @@ app.use(session({
 
 // mongoose.connect(process.env.MONGO_URL);
 app.use(express.urlencoded({extended: true}));
+app.use('/GroupDetails', GroupDetails);
 app.use(express.static(`public`));
 app.use(cookieParser());
 app.use('/dashboard', Homepage);

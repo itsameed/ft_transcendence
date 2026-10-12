@@ -11,7 +11,7 @@ Home.get('/', Auth, async (req, res) => {
     console.dir(formattedGroups, {depth: null, colors: true});
     if (!req.cookies.has_visited)
     {
-        req.cookie('has_visited', "true", {maxAge: 365 * 24 * 60 * 60 * 1000});
+        res.cookie('has_visited', "true", {maxAge: 365 * 24 * 60 * 60 * 1000});
         res.render(`signup`);
     }
     else
