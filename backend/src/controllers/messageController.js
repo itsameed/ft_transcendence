@@ -1,15 +1,23 @@
 const Conversation = require("../models/Schemas/Conversation");
 const { createNotification } = require("../utils/notificationService");
 const Message = require("../models/Schemas/Message");
+const mongoose = require("mongoose");
 
 const sendMessage = async (req, res, next) => {
   try {
-    const { content, senderId } = req.body;
+    const { content } = req.body;
     const { conversationId } = req.params;
+    const senderId = req.user.id;
 
-    if (!content || !senderId || !content.trim()) {
+    if (typeof content !== "string" || !content.trim()) {
       return res.status(400).json({
-        message: "content and senderId are required"
+        message: "Message content is required"
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      return res.status(400).json({
+        message: "Invalid conversation ID"
       });
     }
 
@@ -34,7 +42,7 @@ const sendMessage = async (req, res, next) => {
     const message = await Message.create({
       conversationId,
       senderId,
-      content
+      content: content.trim()
     });
 
     await message.populate("senderId", "_id username");
@@ -46,28 +54,30 @@ const sendMessage = async (req, res, next) => {
     );
 
     for (const receiverId of receiverIds) {
-
       const notification = await createNotification({
         userId: receiverId,
-        senderId: senderId,
+        senderId,
         type: "CHAT_MESSAGE",
         title: "New message",
-        message: content
+        message: content.trim()
       });
 
-      io.to(`user:${receiverId}`).emit(
-        "newNotification",
-        notification
+      if (io) {
+        io.to(`user:${receiverId}`).emit(
+          "newNotification",
+          notification
+        );
+      }
+    }
+
+    if (io) {
+      io.to(`conversation:${conversationId}`).emit(
+        "newMessage",
+        message
       );
     }
 
-    io.to(`conversation:${conversationId}`).emit(
-      "newMessage",
-      message
-    );
-
     return res.status(201).json(message);
-
   } catch (error) {
     next(error);
   }
@@ -76,11 +86,11 @@ const sendMessage = async (req, res, next) => {
 const getMessages = async (req, res, next) => {
   try {
     const { conversationId } = req.params;
-    const { userId } = req.query;
+    const currentUserId = req.user.id;
 
-    if (!userId) {
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
       return res.status(400).json({
-        message: "userId is required"
+        message: "Invalid conversation ID"
       });
     }
 
@@ -93,7 +103,7 @@ const getMessages = async (req, res, next) => {
     }
 
     const isParticipant = conversation.participants.some(
-      (id) => id.toString() === userId
+      (id) => id.toString() === currentUserId
     );
 
     if (!isParticipant) {
@@ -108,8 +118,7 @@ const getMessages = async (req, res, next) => {
       .populate("senderId", "_id username")
       .sort({ createdAt: 1 });
 
-    res.status(200).json(messages);
-
+    return res.status(200).json(messages);
   } catch (error) {
     next(error);
   }

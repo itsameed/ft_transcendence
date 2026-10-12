@@ -8,22 +8,17 @@ const Notification = require("../models/Schemas/Notification");
 
 const createGroup = async (req, res, next) => {
   try {
-    const { name, createdBy } = req.body;
+    const { name } = req.body;
+    const createdBy = req.user.id;
 
-    if (!name || !createdBy) {
+    if (!name || !name.trim()) {
       return res.status(400).json({
-        message: "Name and createdBy are required"
-      });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(createdBy)) {
-      return res.status(400).json({
-        message: "Invalid user ID"
+        message: "Group name is required"
       });
     }
 
     const group = await Group.create({
-      name: name,
+      name: name.trim(),
       createdBy: createdBy,
       members: [
         {
@@ -54,8 +49,15 @@ const createGroup = async (req, res, next) => {
 
 const addMemberToGroup = async (req, res, next) => {
   try {
-    const { userId, addedBy } = req.body;
+    const { userId } = req.body;
+    const addedBy = req.user.id;
     const { groupId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        message: "Invalid user ID"
+      });
+    }
 
     const group = await Group.findById(groupId);
 
@@ -65,13 +67,13 @@ const addMemberToGroup = async (req, res, next) => {
       });
     }
 
-    const owner = group.members.find(
+    const isOwner = group.members.some(
       (member) =>
         member.userId.toString() === addedBy &&
         member.role === "owner"
     );
 
-    if (!owner) {
+    if (!isOwner) {
       return res.status(403).json({
         message: "Only the group owner can add members"
       });
@@ -91,7 +93,7 @@ const addMemberToGroup = async (req, res, next) => {
 
     if (alreadyMember) {
       return res.status(409).json({
-        message: "User is already a member of this group"
+        message: "User is already a member"
       });
     }
 
@@ -117,7 +119,6 @@ const addMemberToGroup = async (req, res, next) => {
       message: "Member added successfully",
       group
     });
-
   } catch (error) {
     next(error);
   }
@@ -126,7 +127,16 @@ const addMemberToGroup = async (req, res, next) => {
 const removeMemberFromGroup = async (req, res, next) => {
   try {
     const { groupId, userId } = req.params;
-    const { removedBy } = req.body;
+    const removedBy = req.user.id;
+
+    if (
+      !mongoose.Types.ObjectId.isValid(groupId) ||
+      !mongoose.Types.ObjectId.isValid(userId)
+    ) {
+      return res.status(400).json({
+        message: "Invalid ID"
+      });
+    }
 
     const group = await Group.findById(groupId);
 
@@ -136,42 +146,37 @@ const removeMemberFromGroup = async (req, res, next) => {
       });
     }
 
-    const owner = group.members.find(
+    const isOwner = group.members.some(
       (member) =>
         member.userId.toString() === removedBy &&
         member.role === "owner"
     );
 
-    if (!owner) {
+    if (!isOwner) {
       return res.status(403).json({
         message: "Only the group owner can remove members"
       });
     }
 
-    const memberExists = group.members.some(
+    const memberIndex = group.members.findIndex(
       (member) => member.userId.toString() === userId
     );
 
-    if (!memberExists) {
+    if (memberIndex === -1) {
       return res.status(404).json({
         message: "User is not a member of this group"
       });
     }
 
-    const memberToRemove = group.members.find(
-      (member) => member.userId.toString() === userId
-    );
+    const member = group.members[memberIndex];
 
-    if (memberToRemove.role === "owner") {
+    if (member.role === "owner") {
       return res.status(400).json({
         message: "The group owner cannot be removed"
       });
     }
 
-    group.members = group.members.filter(
-      (member) => member.userId.toString() !== userId
-    );
-
+    group.members.splice(memberIndex, 1);
     await group.save();
 
     if (group.conversationId) {
@@ -189,7 +194,6 @@ const removeMemberFromGroup = async (req, res, next) => {
       message: "Member removed successfully",
       group
     });
-
   } catch (error) {
     next(error);
   }
@@ -198,10 +202,17 @@ const removeMemberFromGroup = async (req, res, next) => {
 const getGroupById = async (req, res, next) => {
   try {
     const { groupId } = req.params;
+    const currentUserId = req.user.id;
+
+    if (!mongoose.Types.ObjectId.isValid(groupId)) {
+      return res.status(400).json({
+        message: "Invalid group ID"
+      });
+    }
 
     const group = await Group.findById(groupId)
-      .populate("createdBy", "username useremail")
-      .populate("members.userId", "username useremail");
+      .populate("createdBy")
+      .populate("members.userId");
 
     if (!group) {
       return res.status(404).json({
@@ -209,10 +220,21 @@ const getGroupById = async (req, res, next) => {
       });
     }
 
+    const isMember = group.members.some(
+      (member) =>
+        member.userId &&
+        member.userId._id.toString() === currentUserId
+    );
+
+    if (!isMember) {
+      return res.status(403).json({
+        message: "You are not a member of this group"
+      });
+    }
+
     return res.status(200).json({
       group
     });
-
   } catch (error) {
     next(error);
   }
@@ -220,19 +242,19 @@ const getGroupById = async (req, res, next) => {
 
 const getUserGroups = async (req, res, next) => {
   try {
-    const { userId } = req.params;
+    const currentUserId = req.user.id;
 
     const groups = await Group.find({
-      "members.userId": userId
+      "members.userId": currentUserId
     })
-      .populate("createdBy", "username useremail")
-      .populate("members.userId", "username useremail")
+      .populate("createdBy")
+      .populate("members.userId")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
+      count: groups.length,
       groups
     });
-
   } catch (error) {
     next(error);
   }
@@ -241,7 +263,13 @@ const getUserGroups = async (req, res, next) => {
 const leaveGroup = async (req, res, next) => {
   try {
     const { groupId } = req.params;
-    const { userId } = req.body;
+    const currentUserId = req.user.id;
+
+    if (!mongoose.Types.ObjectId.isValid(groupId)) {
+      return res.status(400).json({
+        message: "Invalid group ID"
+      });
+    }
 
     const group = await Group.findById(groupId);
 
@@ -251,15 +279,18 @@ const leaveGroup = async (req, res, next) => {
       });
     }
 
-    const member = group.members.find(
-      (member) => member.userId.toString() === userId
+    const memberIndex = group.members.findIndex(
+      (member) =>
+        member.userId.toString() === currentUserId
     );
 
-    if (!member) {
-      return res.status(404).json({
+    if (memberIndex === -1) {
+      return res.status(403).json({
         message: "You are not a member of this group"
       });
     }
+
+    const member = group.members[memberIndex];
 
     if (member.role === "owner") {
       return res.status(400).json({
@@ -267,10 +298,7 @@ const leaveGroup = async (req, res, next) => {
       });
     }
 
-    group.members = group.members.filter(
-      (member) => member.userId.toString() !== userId
-    );
-
+    group.members.splice(memberIndex, 1);
     await group.save();
 
     if (group.conversationId) {
@@ -278,7 +306,7 @@ const leaveGroup = async (req, res, next) => {
         group.conversationId,
         {
           $pull: {
-            participants: userId
+            participants: currentUserId
           }
         }
       );
@@ -287,7 +315,6 @@ const leaveGroup = async (req, res, next) => {
     return res.status(200).json({
       message: "You left the group successfully"
     });
-
   } catch (error) {
     next(error);
   }
@@ -296,9 +323,16 @@ const leaveGroup = async (req, res, next) => {
 const updateGroup = async (req, res, next) => {
   try {
     const { groupId } = req.params;
-    const { name, updatedBy } = req.body;
+    const { name } = req.body;
+    const updatedBy = req.user.id;
 
-    if (!name || !name.trim()) {
+    if (!mongoose.Types.ObjectId.isValid(groupId)) {
+      return res.status(400).json({
+        message: "Invalid group ID"
+      });
+    }
+
+    if (typeof name !== "string" || !name.trim()) {
       return res.status(400).json({
         message: "Group name is required"
       });
@@ -312,13 +346,13 @@ const updateGroup = async (req, res, next) => {
       });
     }
 
-    const owner = group.members.find(
+    const isOwner = group.members.some(
       (member) =>
         member.userId.toString() === updatedBy &&
         member.role === "owner"
     );
 
-    if (!owner) {
+    if (!isOwner) {
       return res.status(403).json({
         message: "Only the group owner can update the group"
       });
@@ -332,7 +366,6 @@ const updateGroup = async (req, res, next) => {
       message: "Group updated successfully",
       group
     });
-
   } catch (error) {
     next(error);
   }
@@ -341,7 +374,13 @@ const updateGroup = async (req, res, next) => {
 const deleteGroup = async (req, res, next) => {
   try {
     const { groupId } = req.params;
-    const { deletedBy } = req.body;
+    const deletedBy = req.user.id;
+
+    if (!mongoose.Types.ObjectId.isValid(groupId)) {
+      return res.status(400).json({
+        message: "Invalid group ID"
+      });
+    }
 
     const group = await Group.findById(groupId);
 
@@ -351,13 +390,13 @@ const deleteGroup = async (req, res, next) => {
       });
     }
 
-    const owner = group.members.find(
+    const isOwner = group.members.some(
       (member) =>
         member.userId.toString() === deletedBy &&
         member.role === "owner"
     );
 
-    if (!owner) {
+    if (!isOwner) {
       return res.status(403).json({
         message: "Only the group owner can delete the group"
       });
@@ -372,28 +411,29 @@ const deleteGroup = async (req, res, next) => {
         group.conversationId
       );
     }
+
     const invitations = await GroupInvitation.find({
-      groupId: groupId
-    });
+      groupId: group._id
+    }).select("_id");
 
     const invitationIds = invitations.map(
       (invitation) => invitation._id
     );
 
-    await Notification.deleteMany({
-      relatedId: { $in: invitationIds }
-    });
-
+    if (invitationIds.length > 0) {
+      await Notification.deleteMany({
+        relatedId: { $in: invitationIds }
+      });
+    }
     await GroupInvitation.deleteMany({
-      groupId: groupId
+      groupId: group._id
     });
 
-    await Group.findByIdAndDelete(groupId);
+    await Group.findByIdAndDelete(group._id);
 
     return res.status(200).json({
       message: "Group deleted successfully"
     });
-
   } catch (error) {
     next(error);
   }

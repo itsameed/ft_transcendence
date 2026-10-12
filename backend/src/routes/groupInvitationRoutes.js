@@ -1,4 +1,5 @@
 const express = require("express");
+const apiAuth = require("../controllers/apiAuth");
 
 const {
   sendGroupInvitation,
@@ -8,10 +9,10 @@ const {
 
 const router = express.Router();
 
-router.post("/:groupId", sendGroupInvitation);
+router.post("/:groupId", apiAuth, sendGroupInvitation);
 
-router.patch("/:invitationId/accept", acceptGroupInvitation);
+router.patch("/:invitationId/accept", apiAuth, acceptGroupInvitation);
 
-router.patch("/:invitationId/reject", rejectGroupInvitation);
+router.patch("/:invitationId/reject", apiAuth, rejectGroupInvitation);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const express = require("express");
+const apiAuth = require("../controllers/apiAuth");
 
 const router = express.Router();
 
@@ -11,16 +12,16 @@ const {
   removeFriend
 } = require("../controllers/friendController");
 
-router.post("/request", sendFriendRequest);
+router.post("/request", apiAuth, sendFriendRequest);
 
-router.patch("/request/:friendshipId/accept", acceptFriendRequest);
+router.patch("/request/:friendshipId/accept", apiAuth, acceptFriendRequest);
 
-router.patch("/request/:friendshipId/reject", rejectFriendRequest);
+router.patch("/request/:friendshipId/reject", apiAuth, rejectFriendRequest);
 
-router.get("/", getFriends);
+router.get("/", apiAuth, getFriends);
 
-router.get("/requests", getFriendRequests);
+router.get("/requests", apiAuth, getFriendRequests);
 
-router.delete("/", removeFriend);
+router.delete("/", apiAuth, removeFriend);
 
 module.exports = router;

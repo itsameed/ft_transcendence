@@ -2,25 +2,27 @@ const Notification = require("../models/Schemas/Notification");
 
 const getNotifications = async (req, res, next) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.id;
 
     const notifications = await Notification.find({ userId })
       .populate("senderId", "username")
       .sort({ createdAt: -1 });
 
-    res.json(notifications);
-
+    return res.status(200).json(notifications);
   } catch (error) {
     next(error);
   }
 };
 
-
 const markNotificationAsRead = async (req, res, next) => {
   try {
     const { notificationId } = req.params;
+    const userId = req.user.id;
 
-    const notification = await Notification.findById(notificationId);
+    const notification = await Notification.findOne({
+      _id: notificationId,
+      userId: userId
+    });
 
     if (!notification) {
       return res.status(404).json({
@@ -29,11 +31,9 @@ const markNotificationAsRead = async (req, res, next) => {
     }
 
     notification.isRead = true;
-
     await notification.save();
 
-    res.json(notification);
-
+    return res.status(200).json(notification);
   } catch (error) {
     next(error);
   }
@@ -41,44 +41,40 @@ const markNotificationAsRead = async (req, res, next) => {
 
 const deleteNotification = async (req, res, next) => {
   try {
+    const { id } = req.params;
+    const userId = req.user.id;
 
-    const notification =
-      await Notification.findByIdAndDelete(
-        req.params.id
-      );
+    const notification = await Notification.findOneAndDelete({
+      _id: id,
+      userId: userId
+    });
 
     if (!notification) {
-
       return res.status(404).json({
         message: "Notification not found"
       });
-
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Notification deleted successfully"
     });
-
   } catch (error) {
     next(error);
   }
 };
 
-
 const clearUserNotifications = async (req, res, next) => {
   try {
-
-    const { userId } = req.params;
+    const userId = req.user.id;
 
     const result = await Notification.deleteMany({
       userId: userId
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "All notifications deleted",
       deletedCount: result.deletedCount
     });
-
   } catch (error) {
     next(error);
   }
