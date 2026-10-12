@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
-const Group = require("../models/Group");
-const User = require("../models/User");
-const Conversation = require("../models/Conversation");
-const Message = require("../models/Message");
-const GroupInvitation = require("../models/GroupInvitation");
-const Notification = require("../models/Notification");
+const Group = require("../models/Schemas/Group");
+const User = require("../models/Schemas/User");
+const Conversation = require("../models/Schemas/Conversation");
+const Message = require("../models/Schemas/Message");
+const GroupInvitation = require("../models/Schemas/GroupInvitation");
+const Notification = require("../models/Schemas/Notification");
 
 const createGroup = async (req, res, next) => {
   try {

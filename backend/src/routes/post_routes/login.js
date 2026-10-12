@@ -19,7 +19,9 @@ PLogin.post(`/`, async (req, res) => {
     req.session.userId = user._id;
     req.session.username = user.fullName;
     const userId = req.session.userId;
+    console.log(req.session.userId);
     printLogsDate(`User with Id ${userId} Logged in at : `);
+    console.log("reached");
     return res.redirect(`Dashboard`);
 });
 

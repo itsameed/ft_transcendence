@@ -1,8 +1,8 @@
-const Conversation = require("../models/Conversation");
+const Conversation = require("../models/Schemas/Conversation");
 
 const createConversation = async (req, res, next) => {
   try {
-    const { userId } = req.body;
+    const { userId } = req.session.userId;
 
     if (!userId) {
       return res.status(400).json({

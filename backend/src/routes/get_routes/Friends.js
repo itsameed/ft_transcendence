@@ -5,7 +5,7 @@ const printLogsDate = require('../../utils/printLogs.js');
 const Friends = express.Router();
 
 Friends.get('/', Auth, (req, res) => {
-    const userId = req.session.useId;
+    const userId = req.session.userId;
     printLogsDate(`User with Id ${userId} viewed Friends list at : `);
     if (!req.cookies.has_visited)
     {

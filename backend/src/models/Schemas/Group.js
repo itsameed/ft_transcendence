@@ -1,16 +1,44 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const GroupSchema = new mongoose.Schema({
-    owner: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+const groupMemberSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
     },
-    groupName: {
-        type: String,
-        required: true,
-        trim: true,
-        minlength: [2, 'Group name must be at least 2 characters'],
+
+    role: {
+      type: String,
+      enum: ["owner", "member"],
+      default: "member"
+    },
+
+    joinedAt: {
+      type: Date,
+      default: Date.now
+    }
+  },
+  { _id: false }
+);
+
+const groupSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
+
+    members: {
+      type: [groupMemberSchema],
+      default: []
     },
     description: {
         type: String,
@@ -21,14 +49,16 @@ const GroupSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: `ExpenseSchema`,
     }],
-    members: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: `User`
-    }],
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    }
-});
 
-module.exports = mongoose.model(`Group`, GroupSchema);
+    conversationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Conversation",
+      default: null
+    }
+  },
+  {
+    timestamps: true
+  }
+);
+
+module.exports = mongoose.model("Group", groupSchema);

@@ -1,13 +1,14 @@
-const GroupInvitation = require("../models/GroupInvitation");
-const Group = require("../models/Group");
-const Conversation = require("../models/Conversation");
-const User = require("../models/User");
+const GroupInvitation = require("../models/Schemas/GroupInvitation");
+const Group = require("../models/Schemas/Group");
+const Conversation = require("../models/Schemas/Conversation");
+const User = require("../models/Schemas/User");
 const { createNotification } = require("../utils/notificationService");
 
 const sendGroupInvitation = async (req, res, next) => {
     try {
+        const invitedBy = req.session.userId;
         const { groupId } = req.params;
-        const { userId, invitedBy } = req.body;
+        const { userId } = req.body;
 
         if (!userId || !invitedBy) {
             return res.status(400).json({

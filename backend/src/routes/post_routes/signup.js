@@ -17,6 +17,8 @@ PSignup.post('/', async (req, res) => {
         console.log('user is being saved');
         await newUser.save();
         const userId = req.session.userId;
+        console.log("current user id is : ", userId);
+        console.log("new user id is : ", newUser._id);
         printLogsDate(`User with Id ${userId} Signed in at : `);
     }
     catch(error){

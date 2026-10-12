@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const Friendship = require("../models/Friendship");
-const User = require("../models/User");
+const Friendship = require("../models/Schemas/Friendship");
+const User = require("../models/Schemas/User");
 const { createNotification } = require("../utils/notificationService");
 
 const sendFriendRequest = async (req, res, next) => {

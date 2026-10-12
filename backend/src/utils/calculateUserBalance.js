@@ -5,9 +5,6 @@ const GroupSchema = require('../models/Schemas/Group');
 function calculateUserBalance(ExpenseArray, userId, groupName) {
     let userOwes = 0;
     let OwedToUser = 0;
-    // console.log(userId);
-    // console.log(`length of the coming expenses array is : ${ExpenseArray.length}`);
-    // console.log(`current user id is: ${userId}`);
     ExpenseArray.forEach(expense => {
         if (String(expense.payer) === String(userId)) {
             if(expense.splitMethod === 'equal') {
@@ -35,6 +32,7 @@ function calculateUserBalance(ExpenseArray, userId, groupName) {
             }
         }
     });
+
     return {
         groupName: groupName,
         userOwes: roundNearest(userOwes),
@@ -47,10 +45,12 @@ function calculateUserBalance(ExpenseArray, userId, groupName) {
 async function getUserBalance(userId)
 {
     const formattedGroups = [];
-    const userGroups = await GroupSchema.find({members: userId}).lean();
+    // const userGroups = await GroupSchema.find({members: userId}).lean();
+    const userGroups = await GroupSchema.find({ "members.userId": userId }).lean();
     for (let group of userGroups) {
         const expenses = await ExpenseSchema.find({group: group._id});
-        const balance = calculateUserBalance(expenses, userId, group.groupName);
+        console.log(expenses.description);
+        const balance = calculateUserBalance(expenses, userId, group.name);
         group.expenses = expenses;
         group.userTotalBalance = balance;
         formattedGroups.push(group.userTotalBalance);

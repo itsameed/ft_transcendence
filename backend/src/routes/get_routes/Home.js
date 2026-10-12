@@ -5,6 +5,7 @@ const Home = express.Router();
 
 Home.get('/', Auth, async (req, res) => {
     const userId = req.session.userId;
+    console.log(userId);
     const formattedGroups = await getUserBalance(userId);
     console.log("this is the current user's balance : ");
     console.dir(formattedGroups, {depth: null, colors: true});

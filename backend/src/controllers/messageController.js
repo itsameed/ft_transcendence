@@ -1,6 +1,6 @@
-const Conversation = require("../models/Conversation");
+const Conversation = require("../models/Schemas/Conversation");
 const { createNotification } = require("../utils/notificationService");
-const Message = require("../models/Message");
+const Message = require("../models/Schemas/Message");
 
 const sendMessage = async (req, res, next) => {
   try {

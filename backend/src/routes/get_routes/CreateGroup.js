@@ -1,6 +1,6 @@
 const express = require('express');
 const Auth = require('../../controllers/middleware.js');
-const GroupSchema = require('../../models/Schemas/Group.js');
+const GroupSchema = require('../../models/Schemas/sldjkfne.js');
 const printLogsDate = require('../../utils/printLogs.js');
 
 const CreateGroup = express.Router();
