@@ -10,6 +10,14 @@ const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
 
+
+app.set("view engine", 'ejs');
+app.use(express.json());
+app.use(express.static("public"));
+app.use(express.urlencoded({extended: true}));
+app.use(express.static(`public`));
+app.use(cookieParser());
+
 ///////////////////////////////////////////////// Models Routes //////////////////////////////////////////////////
 
 const Group = require("./models/Schemas/Group");
@@ -19,7 +27,7 @@ const messageRoutes = require("./routes/messageRoutes");
 const friendRoutes = require("./routes/friendRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const groupInvitationRoutes = require("./routes/groupInvitationRoutes");
-const FriendsList = require('./routes/get_routes/Friends.js');
+const FriendsList = require('./routes/get_routes/FriendsList');
 const GroupDetails = require('./routes/get_routes/GroupDetails');
 // Route Imports (with .js extensions)
 const Login = require('./routes/get_routes/login.js');
@@ -33,6 +41,8 @@ const postCreateGroup = require('./routes/post_routes/createGroup.js');
 const getCreateGroup = require('./routes/get_routes/CreateGroup.js');
 const getExpenses = require('./routes/get_routes/Expenses.js');
 const postExpense = require('./routes/post_routes/createExpense.js');
+const GroupTotalExpenses = require('./routes/get_routes/GroupTotalExpenses');
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use(session({
@@ -48,14 +58,14 @@ app.use(session({
   }
 }));
 
-app.set("view engine", 'ejs');
-app.use(express.json());
-app.use(express.static("public"));
-app.use(express.urlencoded({extended: true}));
-app.use('/GroupDetails', GroupDetails);
-app.use(express.static(`public`));
-app.use(cookieParser());
+
+
+
+//////////////////////////// Routes use ////////////////////////////////////////
+
 app.use('/dashboard', Homepage);
+app.use('/', Homepage);
+app.use('/GroupDetails', GroupDetails);
 app.use('/login', Login);
 app.use('/login', postLogin);
 app.use(`/signup`, postSignup);
@@ -65,15 +75,17 @@ app.use(`/CreateGroup`, postCreateGroup);
 app.use(`/CreateGroup`, getCreateGroup);
 app.use('/notifications', Notif);
 app.use('/MyGroups', Groups);
-// app.use(`/notifications`, Notif);
 app.use(`/createExpense`, postExpense);
 app.use(`/getExpenses`, getExpenses);
+app.use('/MyGroups/GroupTotalExpenses', GroupTotalExpenses);
 app.use("/api/group-invitations", groupInvitationRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
+
+////////////////////////////////////////////////////////////////////////////
 app.use((err, req, res, next) => {
   if (err.name !== "CastError") {
     console.error(err);

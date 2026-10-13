@@ -20,7 +20,7 @@ function returnOthersShares(expense, username) {
             console.log("here is the username : ", participant.user.username);
             if (participant.user.username !== username){
                 users.push({
-                    youOwes: participant.user.username,
+                    OwesYou: participant.user.username,
                     amount: participant.amount,
                 });
             }
@@ -72,8 +72,6 @@ async function getGroupExpenses(groupId, userId) {
         return ExpenseArray;
     for (let expense of Expenses) {
         let userShare = 0;
-        // const payerName = expense.payer?.username || "Unknown";
-        // console.log("the payer name is : ", payerName);
         // CASE 1: Current user paid for the expense (User is owed money / Positive Balance)
         if (String(expense.payer._id) === String(userId)) {
             if (expense.splitMethod === 'equal') {

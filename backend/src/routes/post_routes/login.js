@@ -21,7 +21,6 @@ PLogin.post(`/`, async (req, res) => {
     const userId = req.session.userId;
     console.log(req.session.userId);
     printLogsDate(`User with Id ${userId} Logged in at : `);
-    console.log("reached");
     return res.redirect(`Dashboard`);
 });
 

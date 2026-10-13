@@ -28,9 +28,7 @@ PSignup.post('/', async (req, res) => {
         else
             console.log("An error occurred while saving the user");
     }
-    // await newUser.save();
     console.log("Received signup data :", req.body);
-    // res.send("Data Received successfully");
     return res.redirect(`Dashboard`);
 });
 
