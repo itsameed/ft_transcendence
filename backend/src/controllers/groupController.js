@@ -211,8 +211,8 @@ const getGroupById = async (req, res, next) => {
     }
 
     const group = await Group.findById(groupId)
-      .populate("createdBy")
-      .populate("members.userId");
+      .populate("createdBy", "username email")
+      .populate("members.userId", "username email");
 
     if (!group) {
       return res.status(404).json({
@@ -247,8 +247,8 @@ const getUserGroups = async (req, res, next) => {
     const groups = await Group.find({
       "members.userId": currentUserId
     })
-      .populate("createdBy")
-      .populate("members.userId")
+      .populate("createdBy", "username email")
+      .populate("members.userId", "username email")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
