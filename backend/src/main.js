@@ -10,31 +10,13 @@ const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
 
-// ===== AI Imports =====
-const AIChat = require('./routes/ai/chat.js');
-const AIGroup = require('./models/Schemas/Group');
 
 app.set("view engine", 'ejs');
-app.set('views', path.join(__dirname, '..', 'views'));
 app.use(express.json());
 app.use(express.static("public"));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended: true}));
 app.use(express.static(`public`));
 app.use(cookieParser());
-
-// ===== Session (must be BEFORE AI routes) =====
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URL,
-  }),
-  cookie: {
-    secure: false,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  }
-}));
 
 ///////////////////////////////////////////////// Models Routes //////////////////////////////////////////////////
 
@@ -64,6 +46,22 @@ const Logout = require('./routes/get_routes/Logout');
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URL,
+  }),
+  cookie: {
+    secure: false,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  }
+}));
+
+
+
+
 //////////////////////////// Routes use ////////////////////////////////////////
 
 app.use('/dashboard', Homepage);
@@ -88,38 +86,6 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use('auth/logout', Logout);
-
-// ===== AI Routes =====
-app.use('/api', AIChat);
-
-// ===== AI Chat Page (per-group) =====
-app.get('/chat/group/:groupId', async (req, res) => {
-    if (!req.session?.userId) {
-        return res.redirect('/login');
-    }
-
-    try {
-        const group = await AIGroup.findOne({
-            _id: req.params.groupId,
-            $or: [
-                { createdBy: req.session.userId },
-                { 'members.userId': req.session.userId }
-            ]
-        }).lean();
-
-        if (!group) {
-            return res.status(404).send('Group not found or access denied');
-        }
-
-        res.render('groupChat', {
-            groupId: group._id.toString(),
-            groupName: group.name
-        });
-    } catch (err) {
-        console.error('Group chat error:', err);
-        res.status(500).send('Error loading group');
-    }
-});
 
 ////////////////////////////////////////////////////////////////////////////
 app.use((err, req, res, next) => {
