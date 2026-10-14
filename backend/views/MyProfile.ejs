@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SplitTogether — Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #10B981;
+    --primary-dark: #0D9668;
+    --primary-tint: #E7F8F1;
+    --dark: #0F172A;
+    --dark-2: #16213A;
+    --gray: #64748B;
+    --gray-light: #94A3B8;
+    --light: #F1F5F9;
+    --danger: #EF4444;
+    --danger-tint: #FEEEEE;
+    --warning: #F59E0B;
+    --border: #E7EAEF;
+    --white: #FFFFFF;
+
+    --h1: 24px;
+    --h2: 20px;
+    --h3: 16px;
+    --body: 14px;
+    --small: 12px;
+
+    --sidebar-w: 232px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--white);
+    color: var(--dark);
+    font-size: var(--body);
+    line-height: 1.5;
+  }
+
+  button { font-family: inherit; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  .app { display: flex; min-height: 100%; }
+
+  /* ================= SIDEBAR ================= */
+
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--dark);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 14px 22px;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .logo { display: flex; align-items: center; gap: 9px; padding: 0 8px; margin-bottom: 28px; }
+
+  .logo-mark {
+    width: 30px; height: 30px; border-radius: 8px; background: var(--primary);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .logo-mark svg { width: 16px; height: 16px; }
+  .logo-text { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
+  .logo-text .together { color: var(--primary); }
+
+  .nav { display: flex; flex-direction: column; gap: 3px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 11px; width: 100%;
+    padding: 10px 12px; border: none; background: none; border-radius: 9px;
+    color: #B9C2D0; font-size: var(--body); font-weight: 500; text-align: left;
+    cursor: pointer; transition: background 0.15s ease, color 0.15s ease;
+  }
+  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: var(--white); }
+  .nav-item.active { background: var(--primary); color: var(--white); font-weight: 600; }
+
+  .nav-badge {
+    margin-left: auto; background: var(--danger); color: var(--white);
+    font-size: 11px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center; padding: 0 5px;
+  }
+
+  .sidebar-spacer { flex: 1; }
+
+  .sidebar-user {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+    padding: 18px 8px 0; border-top: 1px solid rgba(255,255,255,0.09);
+    background: none; border-left: none; border-right: none; border-bottom: none;
+    color: inherit; text-align: left; cursor: pointer; width: 100%;
+  }
+  .sidebar-user:hover .sidebar-user-name { color: var(--primary); }
+
+  .avatar {
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--white); flex-shrink: 0;
+    background: linear-gradient(135deg, #10B981, #0D9668);
+    background-size: cover; background-position: center;
+  }
+
+  .sidebar-user .avatar { width: 46px; height: 46px; font-size: 16px; box-shadow: 0 0 0 3px rgba(16,185,129,0.45); }
+  .sidebar-user-name { font-size: var(--body); font-weight: 600; line-height: 1.2; transition: color 0.15s ease; }
+  .sidebar-user-handle { font-size: var(--small); color: var(--gray-light); }
+
+  /* ================= CONTENT ================= */
+
+  .content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 16px; padding: 18px 36px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 5;
+    background: rgba(255,255,255,0.92); backdrop-filter: blur(8px);
+  }
+
+  .mobile-logo { display: none; }
+
+  .search { position: relative; flex: 1; max-width: 460px; }
+  .search svg {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    width: 17px; height: 17px; color: var(--gray); pointer-events: none;
+  }
+  .search input {
+    width: 100%; padding: 10px 14px 10px 40px; border: 1.5px solid var(--border);
+    border-radius: 11px; background: var(--light); font-family: inherit; font-size: var(--body);
+    color: var(--dark); transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .search input::placeholder { color: var(--gray-light); }
+  .search input:focus { outline: none; background: var(--white); border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+
+  .icon-btn {
+    position: relative; width: 40px; height: 40px; border-radius: 11px;
+    border: 1px solid var(--border); background: var(--white); color: var(--dark);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .icon-btn:hover { background: var(--light); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .icon-btn .dot {
+    position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--danger); border: 1.5px solid var(--white);
+  }
+
+  .topbar .avatar { width: 40px; height: 40px; font-size: 14px; box-shadow: 0 0 0 2px var(--primary); }
+
+  .main { padding: 30px 36px 70px; max-width: 1040px; width: 100%; }
+
+  .page-title { font-size: var(--h1); font-weight: 700; margin: 0 0 4px; }
+  .page-sub { margin: 0 0 24px; color: var(--gray); }
+
+  /* ================= PROFILE HEADER ================= */
+
+  .profile-card {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 18px;
+    background: var(--white);
+  }
+
+  .cover {
+    height: 130px;
+    background: linear-gradient(165deg, var(--dark) 0%, var(--dark-2) 50%, #0B3B33 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .cover svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  .profile-body {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    padding: 0 28px 24px;
+    margin-top: -46px;
+    flex-wrap: wrap;
+    position: relative;
+  }
+
+  .avatar-wrap { position: relative; flex-shrink: 0; }
+
+  .avatar-wrap .avatar {
+    width: 96px; height: 96px; font-size: 36px;
+    border: 4px solid var(--white);
+    box-shadow: 0 8px 22px -8px rgba(15,23,42,0.4);
+  }
+
+  .avatar-edit {
+    position: absolute; right: -2px; bottom: 2px;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--primary); color: var(--white);
+    border: 3px solid var(--white);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+  }
+  .avatar-edit:hover { background: var(--primary-dark); }
+  .avatar-edit svg { width: 14px; height: 14px; }
+
+  .identity { flex: 1; min-width: 200px; padding-top: 52px; }
+  .identity h2 { margin: 0; font-size: var(--h1); font-weight: 700; line-height: 1.2; }
+  .identity .handle { color: var(--gray); margin: 2px 0 8px; }
+
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--gray); font-size: 13px; }
+  .meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .meta svg { width: 14px; height: 14px; }
+
+  .profile-actions { display: flex; gap: 10px; padding-top: 52px; flex-wrap: wrap; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 10px 18px; border-radius: 10px; font-size: var(--body); font-weight: 600;
+    cursor: pointer; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .btn svg { width: 15px; height: 15px; }
+  .btn-primary { background: var(--primary); color: var(--white); border: 1.5px solid var(--primary); }
+  .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+  .btn-ghost { background: var(--white); color: var(--dark); border: 1.5px solid var(--border); }
+  .btn-ghost:hover { background: var(--light); }
+  .btn-danger { background: var(--white); color: var(--danger); border: 1.5px solid #F8C9C9; }
+  .btn-danger:hover { background: var(--danger-tint); }
+
+  /* ================= STATS ================= */
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+
+  .stat {
+    border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; background: var(--white);
+  }
+  .stat .label { font-size: 12.5px; color: var(--gray); margin: 0 0 4px; }
+  .stat .value { font-size: var(--h1); font-weight: 700; margin: 0; line-height: 1.2; }
+  .stat .value.neg { color: var(--danger); }
+  .stat .value.pos { color: var(--primary-dark); }
+
+  /* ================= PANELS ================= */
+
+  .columns { display: grid; grid-template-columns: 1.25fr 1fr; gap: 18px; align-items: start; }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+
+  .panel { border: 1px solid var(--border); border-radius: 16px; padding: 22px; background: var(--white); }
+  .panel h3 { margin: 0 0 2px; font-size: var(--h3); font-weight: 700; }
+  .panel .desc { margin: 0 0 18px; color: var(--gray); font-size: 13px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: var(--small); font-weight: 600; margin-bottom: 6px; }
+  .field .hint { font-size: var(--small); color: var(--gray); margin: 5px 0 0; }
+
+  .field input, .field select {
+    width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-family: inherit; font-size: var(--body); color: var(--dark); background: var(--white);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+  .field input[aria-invalid="true"] { border-color: var(--danger); }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .input-prefix { position: relative; }
+  .input-prefix span {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--gray); pointer-events: none;
+  }
+  .input-prefix input { padding-left: 28px; }
+
+  .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+
+  .form-error { color: var(--danger); font-size: 13px; min-height: 20px; margin: 0 0 10px; }
+
+  /* toggles */
+
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .toggle-row:last-of-type { border-bottom: none; }
+  .toggle-row strong { display: block; font-weight: 600; font-size: var(--body); }
+  .toggle-row small { color: var(--gray); font-size: 12.5px; }
+
+  .switch {
+    position: relative; width: 42px; height: 24px; border-radius: 999px; flex-shrink: 0;
+    border: none; background: #CBD5E1; cursor: pointer; transition: background 0.18s ease; padding: 0;
+  }
+  .switch::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.25); transition: transform 0.18s ease;
+  }
+  .switch[aria-checked="true"] { background: var(--primary); }
+  .switch[aria-checked="true"]::after { transform: translateX(18px); }
+
+  .danger-zone { border-color: #F8C9C9; }
+  .danger-zone .row { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .danger-zone p { margin: 0; color: var(--gray); font-size: 13px; max-width: 320px; }
+
+  /* ================= MODAL + TOAST ================= */
+
+  .backdrop {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.55);
+    display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 40;
+  }
+  .backdrop[hidden] { display: none; }
+  .modal {
+    width: 100%; max-width: 400px; background: var(--white); border-radius: 16px; padding: 24px;
+    box-shadow: 0 30px 70px -20px rgba(0,0,0,0.5);
+  }
+  .modal h2 { margin: 0 0 6px; font-size: var(--h2); font-weight: 700; }
+  .modal p { margin: 0 0 20px; color: var(--gray); }
+  .modal .actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px);
+    background: var(--dark); color: var(--white); padding: 11px 18px; border-radius: 11px;
+    font-size: var(--body); font-weight: 500; opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease; z-index: 60;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  .mobile-nav { display: none; }
+
+  /* ================= RESPONSIVE ================= */
+
+  @media (max-width: 960px) {
+    .columns { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 860px) {
+    .sidebar { display: none; }
+    .topbar { padding: 12px 16px; gap: 10px; }
+    .mobile-logo { display: flex; margin: 0; padding: 0; }
+    .search { max-width: none; }
+    .main { padding: 22px 16px 120px; }
+    .page-title { font-size: var(--h2); }
+    .profile-body { padding: 0 18px 20px; }
+    .identity, .profile-actions { padding-top: 8px; }
+    .profile-actions { width: 100%; }
+    .profile-actions .btn { flex: 1; }
+
+    .mobile-nav {
+      display: flex; position: fixed; left: 0; right: 0; bottom: 0; background: var(--white);
+      border-top: 1px solid var(--border); padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+      justify-content: space-around; z-index: 10;
+    }
+    .mobile-nav button {
+      display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none;
+      color: var(--gray); font-size: 11px; font-weight: 600; padding: 4px 12px; cursor: pointer; position: relative;
+    }
+    .mobile-nav button svg { width: 20px; height: 20px; }
+    .mobile-nav button.active { color: var(--primary-dark); }
+    .mobile-nav .dot { position: absolute; top: 1px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); border: 1.5px solid var(--white); }
+  }
+
+  @media (max-width: 520px) {
+    .field-row { grid-template-columns: 1fr; gap: 0; }
+    .topbar .icon-btn { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="3" stroke="white" stroke-width="1.8"/><circle cx="16" cy="8" r="3" stroke="white" stroke-width="1.8"/><path d="M3 20c0-3.3 2.2-5.5 5-5.5s5 2.2 5 5.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/><path d="M11 20c0-3.3 2.2-5.5 5-5.5s5 2.2 5 5.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </span>
+      <span class="logo-text">Split<span class="together">Together</span></span>
+    </div>
+
+    <nav class="nav" aria-label="Main">
+      <button class="nav-item" data-nav="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9"/></svg>
+        Home
+      </button>
+      <button class="nav-item" data-nav="groups">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2 20c0-3 2.5-5 6-5s6 2 6 5"/><path d="M10 20c0-3 2.5-5 6-5s6 2 6 5"/></svg>
+        My Groups
+      </button>
+      <button class="nav-item" data-nav="notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 4-2 5-2 7h16c0-2-2-3-2-7"/><path d="M9.5 20a2.5 2.5 0 005 0"/></svg>
+        Notifications
+        <span class="nav-badge">3</span>
+      </button>
+      <button class="nav-item" data-nav="friends">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5c1.7.4 3 2 3 3.9 0 1.9-1.3 3.5-3 3.9"/><path d="M18 14.3c1.9.5 3.5 2.4 3.5 4.7"/></svg>
+        Friends
+      </button>
+    </nav>
+
+    <div class="sidebar-spacer"></div>
+
+    <button class="sidebar-user" type="button" aria-label="Your profile (current page)" aria-current="page">
+      <span class="avatar js-avatar" aria-hidden="true">A</span>
+      <span>
+        <span class="sidebar-user-name js-display-name" style="display:block;">Aidix</span>
+        <span class="sidebar-user-handle js-handle">@aidix</span>
+      </span>
+    </button>
+  </aside>
+
+  <!-- ============ CONTENT ============ -->
+  <div class="content">
+
+    <header class="topbar">
+      <span class="logo mobile-logo">
+        <span class="logo-mark">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="3" stroke="white" stroke-width="1.8"/><circle cx="16" cy="8" r="3" stroke="white" stroke-width="1.8"/><path d="M3 20c0-3.3 2.2-5.5 5-5.5s5 2.2 5 5.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/><path d="M11 20c0-3.3 2.2-5.5 5-5.5s5 2.2 5 5.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </span>
+      </span>
+
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg>
+        <input type="search" placeholder="Search…" aria-label="Search" autocomplete="off">
+      </div>
+
+      <div class="topbar-right">
+        <button class="icon-btn" aria-label="Notifications, 3 unread">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 4-2 5-2 7h16c0-2-2-3-2-7"/><path d="M9.5 20a2.5 2.5 0 005 0"/></svg>
+          <span class="dot"></span>
+        </button>
+        <span class="avatar js-avatar" role="img" aria-label="Your avatar">A</span>
+      </div>
+    </header>
+
+    <main class="main">
+
+      <h1 class="page-title">My Profile</h1>
+      <p class="page-sub">Manage your personal details and how Splitify works for you.</p>
+
+      <!-- ---------- profile header ---------- -->
+      <section class="profile-card" aria-label="Profile summary">
+        <div class="cover" aria-hidden="true">
+          <svg viewBox="0 0 800 130" preserveAspectRatio="xMidYMax slice">
+            <circle cx="690" cy="38" r="26" fill="#F59E0B" opacity="0.14"/>
+            <path d="M-10 130 L120 54 L200 100 L300 34 L400 96 L520 44 L640 100 L810 40 L810 130 Z" fill="#0F4A3F" opacity="0.9"/>
+            <path d="M-10 130 L90 84 L190 118 L290 76 L400 120 L520 82 L650 122 L810 80 L810 130 Z" fill="#14574A"/>
+          </svg>
+        </div>
+
+        <div class="profile-body">
+          <div class="avatar-wrap">
+            <span class="avatar js-avatar" id="avatar-large" role="img" aria-label="Your avatar">A</span>
+            <button class="avatar-edit" type="button" id="avatar-btn" aria-label="Change profile photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5"/></svg>
+            </button>
+            <input type="file" id="avatar-file" accept="image/*" hidden>
+          </div>
+
+          <div class="identity">
+            <h2 class="js-display-name">Aidix</h2>
+            <p class="handle js-handle">@aidix</p>
+            <div class="meta">
+              <span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6" stroke-linecap="round"/></svg>
+                <span class="js-email">aidix@example.com</span>
+              </span>
+              <span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke-linecap="round"/></svg>
+                Member since September 2026
+              </span>
+            </div>
+          </div>
+
+          <div class="profile-actions">
+            <button class="btn btn-ghost" type="button" id="edit-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16z" stroke-linejoin="round"/></svg>
+              Edit profile
+            </button>
+            <button class="btn btn-danger" type="button" id="logout-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Log out
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- stats ---------- -->
+      <section class="stats" aria-label="Your stats">
+        <div class="stat"><p class="label">Groups</p><p class="value">4</p></div>
+        <div class="stat"><p class="label">Friends</p><p class="value">12</p></div>
+        <div class="stat"><p class="label">Expenses added</p><p class="value">28</p></div>
+        <div class="stat"><p class="label">Net balance</p><p class="value neg">-130 DH</p></div>
+      </section>
+
+      <!-- ---------- forms ---------- -->
+      <div class="columns">
+
+        <section class="panel" aria-labelledby="info-title">
+          <h3 id="info-title">Personal information</h3>
+          <p class="desc">This is how you appear to friends and group members.</p>
+
+          <form id="info-form" novalidate>
+            <div class="field">
+              <label for="display-name">Display name</label>
+              <input id="display-name" type="text" required maxlength="30" autocomplete="nickname">
+            </div>
+
+            <div class="field">
+              <label for="username">Username</label>
+              <div class="input-prefix">
+                <span>@</span>
+                <input id="username" type="text" required maxlength="20" autocomplete="username" aria-describedby="username-hint">
+              </div>
+              <p class="hint" id="username-hint">3–20 characters: letters, numbers, dots or underscores.</p>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="email">Email address</label>
+                <input id="email" type="email" required autocomplete="email">
+              </div>
+              <div class="field">
+                <label for="phone">Phone (optional)</label>
+                <input id="phone" type="tel" placeholder="+212 6 00 00 00 00" autocomplete="tel">
+              </div>
+            </div>
+
+            <p class="form-error" id="info-error" role="alert"></p>
+
+            <div class="form-actions">
+              <button class="btn btn-ghost" type="button" id="info-reset">Cancel</button>
+              <button class="btn btn-primary" type="submit">Save changes</button>
+            </div>
+          </form>
+        </section>
+
+        <div class="stack">
+
+          <section class="panel" aria-labelledby="pref-title">
+            <h3 id="pref-title">Preferences</h3>
+            <p class="desc">Choose what you hear about and how amounts are shown.</p>
+
+            <div class="field">
+              <label for="currency">Currency</label>
+              <select id="currency">
+                <option value="DH" selected>Moroccan dirham (DH)</option>
+                <option value="EUR">Euro (EUR)</option>
+                <option value="USD">US dollar (USD)</option>
+              </select>
+            </div>
+
+            <div class="toggle-row">
+              <div><strong id="t1">Push notifications</strong><small>New expenses and payments</small></div>
+              <button class="switch" role="switch" aria-checked="true" aria-labelledby="t1"></button>
+            </div>
+            <div class="toggle-row">
+              <div><strong id="t2">Email notifications</strong><small>Reminders when you owe money</small></div>
+              <button class="switch" role="switch" aria-checked="false" aria-labelledby="t2"></button>
+            </div>
+            <div class="toggle-row">
+              <div><strong id="t3">Weekly summary</strong><small>A recap of your balances every Monday</small></div>
+              <button class="switch" role="switch" aria-checked="true" aria-labelledby="t3"></button>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="sec-title">
+            <h3 id="sec-title">Security</h3>
+            <p class="desc">Use a strong password you don't use anywhere else.</p>
+
+            <form id="password-form" novalidate>
+              <div class="field">
+                <label for="pw-current">Current password</label>
+                <input id="pw-current" type="password" autocomplete="current-password">
+              </div>
+              <div class="field">
+                <label for="pw-new">New password</label>
+                <input id="pw-new" type="password" autocomplete="new-password" aria-describedby="pw-hint">
+                <p class="hint" id="pw-hint">At least 8 characters, with a number or symbol.</p>
+              </div>
+              <div class="field">
+                <label for="pw-confirm">Confirm new password</label>
+                <input id="pw-confirm" type="password" autocomplete="new-password">
+              </div>
+
+              <p class="form-error" id="pw-error" role="alert"></p>
+
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Update password</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel danger-zone" aria-labelledby="danger-title">
+            <h3 id="danger-title">Delete account</h3>
+            <div class="row">
+              <p>Permanently remove your account and leave all groups. This can't be undone.</p>
+              <button class="btn btn-danger" type="button" id="delete-btn">Delete account</button>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- mobile bottom nav -->
+<nav class="mobile-nav" aria-label="Main (mobile)">
+  <button data-nav="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9"/></svg>
+    Home
+  </button>
+  <button data-nav="groups">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2 20c0-3 2.5-5 6-5s6 2 6 5"/><path d="M10 20c0-3 2.5-5 6-5s6 2 6 5"/></svg>
+    Groups
+  </button>
+  <button data-nav="notifications">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 4-2 5-2 7h16c0-2-2-3-2-7"/><path d="M9.5 20a2.5 2.5 0 005 0"/></svg>
+    Alerts
+    <span class="dot"></span>
+  </button>
+  <button class="active" data-nav="profile" aria-current="page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" stroke-linecap="round"/></svg>
+    Profile
+  </button>
+</nav>
+
+<!-- confirm modal (log out / delete) -->
+<div class="backdrop" id="confirm-modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <h2 id="confirm-title">Are you sure?</h2>
+    <p id="confirm-text"></p>
+    <div class="actions">
+      <button class="btn btn-ghost" type="button" id="confirm-cancel">Cancel</button>
+      <button class="btn btn-primary" type="button" id="confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  /* ---------- state (demo values — replace with data from your server) ---------- */
+
+  const saved = {
+    displayName: 'Aidix',
+    username: 'aidix',
+    email: 'aidix@example.com',
+    phone: ''
+  };
+
+  let avatarUrl = null;
+
+  /* ---------- helpers ---------- */
+
+  const $ = (id) => document.getElementById(id);
+
+  let toastTimer;
+  function toast(message) {
+    const t = $('toast');
+    t.textContent = message;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  function setInvalid(input, bad) {
+    if (bad) input.setAttribute('aria-invalid', 'true');
+    else input.removeAttribute('aria-invalid');
+  }
+
+  /* ---------- paint saved values into the page ---------- */
+
+  function paint() {
+    document.querySelectorAll('.js-display-name').forEach(n => { n.textContent = saved.displayName; });
+    document.querySelectorAll('.js-handle').forEach(n => { n.textContent = '@' + saved.username; });
+    document.querySelectorAll('.js-email').forEach(n => { n.textContent = saved.email; });
+
+    document.querySelectorAll('.js-avatar').forEach(a => {
+      if (avatarUrl) {
+        a.style.backgroundImage = 'url("' + avatarUrl + '")';
+        a.textContent = '';
+      } else {
+        a.style.backgroundImage = '';
+        a.textContent = saved.displayName.charAt(0).toUpperCase();
+      }
+    });
+  }
+
+  function fillForm() {
+    $('display-name').value = saved.displayName;
+    $('username').value = saved.username;
+    $('email').value = saved.email;
+    $('phone').value = saved.phone;
+    $('info-error').textContent = '';
+    ['display-name', 'username', 'email'].forEach(id => setInvalid($(id), false));
+  }
+
+  /* ---------- personal info form ---------- */
+
+  $('info-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const displayName = $('display-name').value.trim();
+    const username = $('username').value.trim().replace(/^@/, '');
+    const email = $('email').value.trim();
+    const phone = $('phone').value.trim();
+
+    const nameBad = displayName.length < 1;
+    const userBad = !/^[A-Za-z0-9_.]{3,20}$/.test(username);
+    const emailBad = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    setInvalid($('display-name'), nameBad);
+    setInvalid($('username'), userBad);
+    setInvalid($('email'), emailBad);
+
+    if (nameBad)  { $('info-error').textContent = 'Please enter a display name.'; $('display-name').focus(); return; }
+    if (userBad)  { $('info-error').textContent = 'Username must be 3–20 characters: letters, numbers, dots or underscores.'; $('username').focus(); return; }
+    if (emailBad) { $('info-error').textContent = 'Please enter a valid email address.'; $('email').focus(); return; }
+
+    $('info-error').textContent = '';
+
+    /* TODO (backend): send these values to your server, e.g.
+       fetch('/profile', { method: 'POST', headers: {'Content-Type': 'application/json'},
+                           body: JSON.stringify({ displayName, username, email, phone }) }) */
+    Object.assign(saved, { displayName, username, email, phone });
+    paint();
+    toast('Profile updated');
+  });
+
+  $('info-reset').addEventListener('click', fillForm);
+
+  $('edit-btn').addEventListener('click', () => {
+    $('display-name').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    $('display-name').focus();
+  });
+
+  /* ---------- avatar upload (preview only, stays in the browser) ---------- */
+
+  $('avatar-btn').addEventListener('click', () => $('avatar-file').click());
+
+  $('avatar-file').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) { toast('Please choose an image file'); return; }
+    if (file.size > 5 * 1024 * 1024)     { toast('Image must be under 5 MB'); return; }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      avatarUrl = reader.result;
+      paint();
+      toast('Photo updated');
+      /* TODO (backend): upload `file` to your server, e.g. with FormData + fetch('/profile/avatar') */
+    };
+    reader.readAsDataURL(file);
+  });
+
+  /* ---------- toggles ---------- */
+
+  document.querySelectorAll('.switch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      const on = sw.getAttribute('aria-checked') !== 'true';
+      sw.setAttribute('aria-checked', String(on));
+    });
+  });
+
+  $('currency').addEventListener('change', (e) => toast('Currency set to ' + e.target.value));
+
+  /* ---------- password form ---------- */
+
+  $('password-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const current = $('pw-current').value;
+    const next = $('pw-new').value;
+    const confirm = $('pw-confirm').value;
+    const err = $('pw-error');
+
+    ['pw-current', 'pw-new', 'pw-confirm'].forEach(id => setInvalid($(id), false));
+
+    if (!current) { setInvalid($('pw-current'), true); err.textContent = 'Enter your current password.'; $('pw-current').focus(); return; }
+
+    const strong = next.length >= 8 && (/[0-9]/.test(next) || /[^A-Za-z0-9]/.test(next));
+    if (!strong) { setInvalid($('pw-new'), true); err.textContent = 'New password needs 8+ characters with a number or symbol.'; $('pw-new').focus(); return; }
+
+    if (next !== confirm) { setInvalid($('pw-confirm'), true); err.textContent = 'The two new passwords don\'t match.'; $('pw-confirm').focus(); return; }
+
+    err.textContent = '';
+    /* TODO (backend): POST the passwords to your server over HTTPS; the server must verify the
+       current password and store only a hash of the new one. */
+    e.target.reset();
+    toast('Password updated');
+  });
+
+  /* ---------- confirm modal: log out / delete ---------- */
+
+  const modal = $('confirm-modal');
+  let pendingAction = null;
+  let lastFocus = null;
+
+  function askConfirm(title, text, okLabel, action) {
+    lastFocus = document.activeElement;
+    $('confirm-title').textContent = title;
+    $('confirm-text').textContent = text;
+    $('confirm-ok').textContent = okLabel;
+    pendingAction = action;
+    modal.hidden = false;
+    $('confirm-cancel').focus();
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+    pendingAction = null;
+    if (lastFocus) lastFocus.focus();
+  }
+
+  $('logout-btn').addEventListener('click', () => {
+    askConfirm('Log out?', 'You\'ll need to log in again to see your groups.', 'Log out', () => {
+      /* TODO (backend): clear the session, e.g. fetch('/logout', { method: 'POST' }).then(() => location.href = '/') */
+      toast('Logged out (demo)');
+    });
+  });
+
+  $('delete-btn').addEventListener('click', () => {
+    askConfirm('Delete your account?', 'This permanently removes your account and can\'t be undone.', 'Delete account', () => {
+      /* TODO (backend): call your delete-account endpoint */
+      toast('Account deletion is disabled in this demo');
+    });
+  });
+
+  $('confirm-cancel').addEventListener('click', closeModal);
+  $('confirm-ok').addEventListener('click', () => {
+    const action = pendingAction;
+    closeModal();
+    if (action) action();
+  });
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+
+  /* ---------- nav highlight ---------- */
+
+  document.querySelectorAll('[data-nav]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.nav;
+      document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === target));
+    });
+  });
+
+  /* ---------- init ---------- */
+
+  fillForm();
+  paint();
+</script>
+
+</body>
+</html>
