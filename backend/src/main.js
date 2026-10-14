@@ -27,7 +27,7 @@ const messageRoutes = require("./routes/messageRoutes");
 const friendRoutes = require("./routes/friendRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const groupInvitationRoutes = require("./routes/groupInvitationRoutes");
-const FriendsList = require('./routes/get_routes/FriendsList');
+const FriendsList = require('./routes/friendRoutes.js');
 const GroupDetails = require('./routes/get_routes/GroupDetails');
 // Route Imports (with .js extensions)
 const Login = require('./routes/get_routes/login.js');
@@ -42,6 +42,7 @@ const getCreateGroup = require('./routes/get_routes/CreateGroup.js');
 const getExpenses = require('./routes/get_routes/Expenses.js');
 const postExpense = require('./routes/post_routes/createExpense.js');
 const GroupTotalExpenses = require('./routes/get_routes/GroupTotalExpenses');
+const Logout = require('./routes/get_routes/Logout');
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -66,10 +67,10 @@ app.use(session({
 app.use('/dashboard', Homepage);
 app.use('/', Homepage);
 app.use('/GroupDetails', GroupDetails);
-app.use('/login', Login);
-app.use('/login', postLogin);
-app.use(`/signup`, postSignup);
-app.use(`/signup`, Signup);
+app.use('auth/login', Login);
+app.use('auth/login', postLogin);
+app.use(`auth/signup`, postSignup);
+app.use(`auth/signup`, Signup);
 app.use('/Friends', FriendsList);
 app.use(`/CreateGroup`, postCreateGroup);
 app.use(`/CreateGroup`, getCreateGroup);
@@ -84,6 +85,7 @@ app.use("/api/friends", friendRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
+app.use('auth/logout', Logout);
 
 ////////////////////////////////////////////////////////////////////////////
 app.use((err, req, res, next) => {
