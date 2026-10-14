@@ -1,17 +1,33 @@
+const User = require("../models/Schemas/User");
 
-function apiAuth(req, res, next) {
-    if (!req.session?.userId) {
-        return res.status(401).json({
-            message: "Authentication required"
-        });
+async function apiAuth(req, res, next) {
+    try {
+        if (!req.session?.userId) {
+            return res.status(401).json({
+                message: "Authentication required"
+            });
+        }
+
+        const user = await User.findById(req.session.userId)
+            .select("_id username role");
+
+        if (!user) {
+            req.session.destroy(() => {});
+            return res.status(401).json({
+                message: "User no longer exists"
+            });
+        }
+
+        req.user = {
+            id: user._id.toString(),
+            username: user.username,
+            role: user.role
+        };
+
+        return next();
+    } catch (error) {
+        return next(error);
     }
-
-    req.user = {
-        id: req.session.userId.toString(),
-        username: req.session.username
-    };
-
-    return next();
 }
 
 module.exports = apiAuth;

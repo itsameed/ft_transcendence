@@ -8,6 +8,7 @@ const createNotification = async ({
     message,
     relatedId = null
 }) => {
+    try {
 
     const notification = await Notification.create({
         userId,
@@ -22,6 +23,10 @@ const createNotification = async ({
     await notification.populate("senderId", "username");
 
     return notification;
+    } catch (error) {
+        console.error("Error creating notification:", error);
+        throw error;
+    }
 };
 
 module.exports = {

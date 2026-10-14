@@ -3,6 +3,7 @@ const ExpenseSchema = require('../models/Schemas/Expenses');
 const GroupSchema = require('../models/Schemas/Group');
 
 function calculateUserBalance(ExpenseArray, userId, group) {
+    try {
     let userOwes = 0;
     let OwedToUser = 0;
     // console.log("this is the group length : ", group.length);
@@ -40,11 +41,16 @@ function calculateUserBalance(ExpenseArray, userId, group) {
         OwedToUser: roundNearest(OwedToUser),
         NetBalance: roundNearest(OwedToUser - userOwes),
     };
+    } catch (error) {
+        console.error("Error calculating user balance:", error);
+        throw error;
+    }
 }
 
 
 async function getUserBalance(userId)
 {
+    try {
     const formattedGroups = [];
     // const userGroups = await GroupSchema.find({members: userId}).lean();
     const userGroups = await GroupSchema.find({ "members.userId": userId }).lean();
@@ -59,6 +65,10 @@ async function getUserBalance(userId)
         // console.log(`in the group ${group.groupName} here's the current user's Balance : `, balance);
     }
     return formattedGroups;
+    } catch (error) {
+        console.error("Error getting user balance:", error);
+        throw error;
+    }
 }
 
 module.exports = getUserBalance;
