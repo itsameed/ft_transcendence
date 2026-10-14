@@ -14,8 +14,13 @@ PLogin.post(`/`, async (req, res) => {
     if (!user)
         return res.status(404).send(`Invalid credentials . please try again !`);
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!user || !isMatch)
+    if (!isMatch)
         return res.status(401).send(`Invalid credentials . please try again !`);
+    if (user.status === "suspended") {
+        return res.status(403).json({
+            message: "Your account is suspended"
+        });
+    }
     req.session.userId = user._id;
     req.session.username = user.fullName;
     const userId = req.session.userId;
