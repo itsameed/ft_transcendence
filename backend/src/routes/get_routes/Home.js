@@ -15,7 +15,7 @@ Home.get('/', Auth, async (req, res) => {
         res.render(`signup`);
     }
     else
-        res.render('Dashboard', {formattedGroups});
+        res.send({formattedGroups});
 })
 
 module.exports = Home;
