@@ -43,7 +43,8 @@ const getExpenses = require('./routes/get_routes/Expenses.js');
 const postExpense = require('./routes/post_routes/createExpense.js');
 const GroupTotalExpenses = require('./routes/get_routes/GroupTotalExpenses');
 const Logout = require('./routes/get_routes/Logout');
-
+const Myprofile = require('./routes/get_routes/MyProfile');
+const MyProfile = require('./routes/get_routes/MyProfile');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use(session({
@@ -67,6 +68,7 @@ app.use(session({
 app.use('/dashboard', Homepage);
 app.use('/', Homepage);
 app.use('/GroupDetails', GroupDetails);
+app.use('/MyProfile', MyProfile);
 app.use('auth/login', Login);
 app.use('auth/login', postLogin);
 app.use(`auth/signup`, postSignup);
