@@ -11,6 +11,9 @@ PSignup.post('/', async (req, res) => {
         username: req.body.fullName,
         email: req.body.email,
         password: hashedPass,
+        bio: req.body.bio,
+        phoneNumber: req.body.phoneNumber,
+        gender: req.body.gender,
         // _id: req.sessionID,
     });
     try{

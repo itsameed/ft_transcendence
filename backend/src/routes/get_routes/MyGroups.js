@@ -6,7 +6,7 @@ const getGroupData = require(`../../utils/getGroupsData`);
 
 const MyGroups = express.Router();
 
-MyGroups.get('/', Auth, (req, res) => {
+MyGroups.get('/', Auth, async (req, res) => {
     if (!req.cookies.has_visited)
     {
         req.cookies('has_visited', 'true', {maxAge: 365 * 24 * 60 * 60 * 1000});
@@ -14,8 +14,8 @@ MyGroups.get('/', Auth, (req, res) => {
     }
     else
     {
-        const groupData= getGroupData(req.session.userId);
-        res.render('MyGroups', {groupData});
+        const groupData = await getGroupData(req.session.userId);
+        res.send({groupData});
     }
     const userId = req.session.userId;
     printLogsDate(`User with Id ${userId} viewed Groups list at : `);
