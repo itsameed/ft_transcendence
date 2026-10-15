@@ -1,8 +1,8 @@
 const express = require('express');
-const Logout = express.Router();
-const Auth = require('../../controllers/middleware');
+const router = express.Router();
+const requireAuth = require('../../controllers/middleware');
 
-Logout.get('/', Auth, (req,  res) => {
+router.get('/', requireAuth, (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             console.log(err);
@@ -14,4 +14,4 @@ Logout.get('/', Auth, (req,  res) => {
     })
 });
 
-module.exports = Logout;
+module.exports = router;

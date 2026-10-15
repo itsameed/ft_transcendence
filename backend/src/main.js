@@ -28,22 +28,22 @@ const friendRoutes = require("./routes/friendRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const groupInvitationRoutes = require("./routes/groupInvitationRoutes");
 // const FriendsList = require('./routes/friendRoutes.js');
-const GroupDetails = require('./routes/get_routes/GroupDetails');
+const groupDetailsRouter = require('./routes/get_routes/GroupDetails');
 // Route Imports (with .js extensions)
-const Login = require('./routes/get_routes/login.js');
+const loginPageRouter = require('./routes/get_routes/login.js');
 const postLogin = require('./routes/post_routes/login.js');
 const postSignup = require('./routes/post_routes/signup.js');
 // const Notif = require('./routes/get_routes/Notifications.js');
-const Groups = require('./routes/get_routes/MyGroups.js');
-const Homepage = require('./routes/get_routes/Home.js');
-const Signup = require('./routes/get_routes/signup.js');
+const userGroupsRouter = require('./routes/get_routes/MyGroups.js');
+const dashboardRouter = require('./routes/get_routes/Home.js');
+const signupPageRouter = require('./routes/get_routes/signup.js');
 // const postCreateGroup = require('./routes/post_routes/createGroup.js');
 // const getCreateGroup = require('./routes/get_routes/CreateGroup.js');
-const getExpenses = require('./routes/get_routes/Expenses.js');
-const postExpense = require('./routes/post_routes/createExpense.js');
-const GroupTotalExpenses = require('./routes/get_routes/GroupTotalExpenses');
-const Logout = require('./routes/get_routes/Logout');
-const MyProfile = require('./routes/get_routes/MyProfile');
+const expensesRouter = require('./routes/get_routes/Expenses.js');
+const createExpenseRouter = require('./routes/post_routes/createExpense.js');
+const groupTotalExpensesRouter = require('./routes/get_routes/GroupTotalExpenses');
+const logoutRouter = require('./routes/get_routes/Logout');
+const myProfileRouter = require('./routes/get_routes/MyProfile');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use(session({
@@ -64,29 +64,29 @@ app.use(session({
 
 //////////////////////////// Routes use ////////////////////////////////////////
 
-app.use('/dashboard', Homepage);
-app.use('/', Homepage);
-app.use('/GroupDetails', GroupDetails);
-app.use('/MyProfile', MyProfile);
-app.use('/auth/login', Login);
+app.use('/dashboard', dashboardRouter);
+app.use('/', dashboardRouter);
+app.use('/group-details', groupDetailsRouter);
+app.use('/my-profile', myProfileRouter);
+app.use('/auth/login', loginPageRouter);
 app.use('/auth/login', postLogin);
 app.use(`/auth/signup`, postSignup);
-app.use(`/auth/signup`, Signup);
+app.use('/auth/signup', signupPageRouter);
 // app.use('/Friends', FriendsList);
 // app.use(`/CreateGroup`, postCreateGroup);
 // app.use(`/CreateGroup`, getCreateGroup);
 // app.use('/notifications', Notif);
-app.use('/MyGroups', Groups);
-app.use(`/createExpense`, postExpense);
-app.use(`/getExpenses`, getExpenses);
-app.use('/MyGroups/GroupTotalExpenses', GroupTotalExpenses);
+app.use('/my-groups', userGroupsRouter);
+app.use('/expenses', createExpenseRouter);
+app.use('/expenses', expensesRouter);
+app.use('/my-groups/total-expenses', groupTotalExpensesRouter);
 app.use("/api/group-invitations", groupInvitationRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
-app.use('/auth/logout', Logout);
+app.use('/auth/logout', logoutRouter);
 
 ////////////////////////////////////////////////////////////////////////////
 app.use((err, req, res, next) => {

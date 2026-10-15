@@ -1,10 +1,10 @@
 const express = require('express');
-const MyProfile = express.Router();
-const Auth = require('../../controllers/middleware');
-const getUserInfos = require('../../utils/getUserInfos');
+const router = express.Router();
+const requireAuth = require('../../controllers/middleware');
+const getUserInfo = require('../../utils/getUserInfos');
 
-MyProfile.get('/', Auth, async (req, res) => {
-    res.send(await getUserInfos(req.session.userId));
+router.get('/', requireAuth, async (req, res) => {
+    res.send(await getUserInfo(req.session.userId));
 });
 
-module.exports = MyProfile;
+module.exports = router;

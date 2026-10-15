@@ -1,10 +1,10 @@
 const express = require('express');
-const Auth = require('../../controllers/middleware.js');
+const requireAuth = require('../../controllers/middleware.js');
 const printLogsDate = require('../../utils/printLogs.js');
 
-const Notifications = express.Router();
+const router = express.Router();
 
-Notifications.get('/', Auth, (req, res) => {
+router.get('/', requireAuth, (req, res) => {
     if(!req.cookies.has_visited)
     {
         req.cookies('has_visited', 'true', {maxAge: 365 * 424 * 60 * 60 * 1000});
@@ -16,4 +16,4 @@ Notifications.get('/', Auth, (req, res) => {
     printLogsDate(`User with Id ${userId} viewed Notifications list at : `);
 });
 
-module.exports = Notifications;
+module.exports = router;

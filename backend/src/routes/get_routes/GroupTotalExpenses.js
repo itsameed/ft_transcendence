@@ -1,14 +1,13 @@
 const express = require('express');
-const Auth = require('../../controllers/middleware');
-const GroupTotalExpenses = express.Router();
-const GroupTotalExpensesFunc = require('../../utils/GroupTotalExpenses');
+const requireAuth = require('../../controllers/middleware');
+const router = express.Router();
+const calculateGroupTotalExpenses = require('../../utils/GroupTotalExpenses');
 
-GroupTotalExpenses.get('/', Auth, async (req, res) => {
-    console.log("here is the url :", req.originalUrl);  
+router.get('/', requireAuth, async (req, res) => {
     const userId = req.session.userId;
-    const GroupInfos = await GroupTotalExpensesFunc(req.groupId, userId);
-    console.dir(GroupInfos, {colors: true});
-    res.send({GroupInfos});
-})
+    const groupInfo = await calculateGroupTotalExpenses(req.groupId, userId);
+    console.dir(groupInfo, {colors: true});
+    res.send({ GroupInfos: groupInfo });
+});
 
-module.exports = GroupTotalExpenses;
+module.exports = router;

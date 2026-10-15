@@ -1,13 +1,12 @@
 const express = require('express');
-const Auth = require('../../controllers/middleware.js');
-const GroupSchema = require('../../models/Schemas/sldjkfne.js');
+const requireAuth = require('../../controllers/middleware.js');
 const printLogsDate = require('../../utils/printLogs.js');
 
-const CreateGroup = express.Router();
+const router = express.Router();
 
 
 
-CreateGroup.get('/', Auth, async (req, res) =>
+router.get('/', requireAuth, async (req, res) =>
 {
     printLogsDate(`User with Id : ${req.session.userId} Attempted creating a group at :`);
     res.render('CreateGroup');
@@ -26,4 +25,4 @@ CreateGroup.get('/', Auth, async (req, res) =>
 //     });
 // })
 
-module.exports = CreateGroup;
+module.exports = router;
