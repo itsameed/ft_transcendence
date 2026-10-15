@@ -1,0 +1,360 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(10, 10, 9, 0.42);
+  backdrop-filter: blur(4px);
+  animation: fade 0.2s ease-out;
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: min(860px, calc(100vh - 48px));
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  animation: pop 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 0;
+}
+.header h2 {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+.close:hover {
+  color: var(--text);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 20px 0;
+  overflow-y: auto;
+}
+
+.amount {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  padding: 12px 0 4px;
+  cursor: text;
+}
+.amount input {
+  max-width: 100%;
+  min-width: 1.5ch;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  text-align: right;
+}
+.amount input::placeholder {
+  color: var(--text-3);
+  opacity: 0.6;
+}
+.amount span {
+  color: var(--text-3);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.input,
+.field select,
+.field input,
+.shareInput label {
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  outline: 0;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input:focus,
+.field select:focus,
+.field input:focus,
+.shareInput label:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 -20px;
+  padding: 0 20px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 520;
+  white-space: nowrap;
+}
+.chip:hover {
+  color: var(--text);
+}
+.chipOn {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.chipOn:hover {
+  color: var(--accent);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.field > span {
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-weight: 560;
+}
+.field select,
+.field input {
+  width: 100%;
+  min-width: 0;
+}
+
+.splitHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+.splitHead h3 {
+  font-size: 15px;
+  font-weight: 620;
+}
+
+.segmented {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.segmented button {
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-weight: 560;
+}
+.segmented .segOn {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--border);
+}
+
+.members {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 6px 8px;
+  border-radius: 12px;
+}
+.member:hover {
+  background: var(--surface-2);
+}
+.memberOff > :not(.check) {
+  opacity: 0.45;
+}
+
+.check {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--on-accent);
+  transition: background 0.15s, border-color 0.15s;
+}
+.checkOn {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.memberName {
+  flex: 1;
+  font-weight: 560;
+}
+.memberName em {
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.share {
+  color: var(--text-2);
+  font-weight: 560;
+}
+
+.shareInput {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.shareInput small {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.shareInput label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  width: 112px;
+  padding: 0 10px;
+}
+.shareInput input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.shareInput span {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.summary {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--neg-soft);
+  color: var(--neg-text);
+  font-size: 13px;
+  font-weight: 560;
+  text-align: center;
+}
+.summary[data-ok='true'] {
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
+.footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0 -20px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+@media (max-width: 640px) {
+  .backdrop {
+    place-items: end stretch;
+    padding: 0;
+  }
+  .sheet {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 24px 24px 0 0;
+    animation: slideUp 0.36s cubic-bezier(0.2, 0.9, 0.3, 1.05);
+  }
+  .fields {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fields > :first-child {
+    grid-column: 1 / -1;
+  }
+  .footer {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  }
+  .footer button {
+    flex: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+}
