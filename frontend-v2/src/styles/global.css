@@ -1,0 +1,175 @@
+/* ------------------------------------------------------------------
+   Design tokens
+   Every color in the app comes from here. Light is the default,
+   dark follows the OS unless the user picks a theme in the top bar
+   (which sets data-theme on <html>).
+------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  --bg: #f5f5f2;
+  --surface: #ffffff;
+  --surface-2: #f2f2ee;
+  --surface-3: #e8e8e3;
+  --border: rgba(17, 17, 16, 0.08);
+  --border-strong: rgba(17, 17, 16, 0.14);
+
+  --text: #111110;
+  --text-2: #55544e;
+  --text-3: #8a8982;
+
+  --accent: #0f766e;
+  --accent-hover: #0c625b;
+  --accent-soft: #e2f1ee;
+  --on-accent: #ffffff;
+
+  /* Money direction. "pos" = someone owes you, "neg" = you owe. */
+  --pos: #11916a;
+  --pos-text: #0b7353;
+  --pos-soft: #e3f4ec;
+  --neg: #e34948;
+  --neg-text: #bf2f2e;
+  --neg-soft: #fbe9e8;
+
+  --grid: #e6e5df;
+  --axis: #c3c2b7;
+
+  --shadow-sm: 0 1px 2px rgba(17, 17, 16, 0.04);
+  --shadow-md: 0 1px 2px rgba(17, 17, 16, 0.04), 0 8px 24px rgba(17, 17, 16, 0.06);
+  --shadow-lg: 0 24px 64px rgba(17, 17, 16, 0.18);
+
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 20px;
+
+  --font: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #0e0e0d;
+    --surface: #181817;
+    --surface-2: #20201e;
+    --surface-3: #2a2a27;
+    --border: rgba(255, 255, 255, 0.07);
+    --border-strong: rgba(255, 255, 255, 0.13);
+    --text: #f0efec;
+    --text-2: #c3c2b7;
+    --text-3: #8f8e86;
+    --accent: #2bb3a3;
+    --accent-hover: #3cc4b4;
+    --accent-soft: #15302d;
+    --on-accent: #06201d;
+    --pos: #199e70;
+    --pos-text: #45cf98;
+    --pos-soft: #12291f;
+    --neg: #e66767;
+    --neg-text: #f28a8a;
+    --neg-soft: #301818;
+    --grid: #2a2a27;
+    --axis: #3a3a36;
+    --shadow-sm: none;
+    --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.02);
+    --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.6);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0e0e0d;
+  --surface: #181817;
+  --surface-2: #20201e;
+  --surface-3: #2a2a27;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.13);
+  --text: #f0efec;
+  --text-2: #c3c2b7;
+  --text-3: #8f8e86;
+  --accent: #2bb3a3;
+  --accent-hover: #3cc4b4;
+  --accent-soft: #15302d;
+  --on-accent: #06201d;
+  --pos: #199e70;
+  --pos-text: #45cf98;
+  --pos-soft: #12291f;
+  --neg: #e66767;
+  --neg-text: #f28a8a;
+  --neg-soft: #301818;
+  --grid: #2a2a27;
+  --axis: #3a3a36;
+  --shadow-sm: none;
+  --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.02);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.6);
+}
+
+/* ------------------------------------------------------------------
+   Base
+------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
