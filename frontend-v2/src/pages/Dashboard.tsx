@@ -63,7 +63,7 @@ export function Dashboard() {
               <BalanceHero summary={summarize(friendBalances)} />
             </div>
             <div className={styles.groups}>
-              <GroupsGrid groups={groups} users={users} now={NOW} />
+              <GroupsGrid groups={groups} now={NOW} />
             </div>
             <div className={styles.activity}>
               <ActivityFeed items={activity} users={users} groups={groups} me={ME} now={NOW} />

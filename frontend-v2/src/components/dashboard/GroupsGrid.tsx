@@ -1,77 +1,43 @@
-import { ChevronRight, Plus } from 'lucide-react'
-import type { Group, User } from '../../types'
+import type { Group } from '../../types'
 import { dateRange, daysUntil, money } from '../../lib/format'
-import { AvatarStack } from '../ui/Avatar'
-import { Button } from '../ui/Button'
-import { Card } from '../ui/Card'
 import styles from './GroupsGrid.module.css'
 
-const kindLabel = { trip: 'Trip', home: 'Household', event: 'Recurring', other: 'Group' }
-
-function badge(group: Group, now: Date): { text: string; tone: 'accent' | 'muted' } | null {
-  if (!group.startDate || !group.endDate) return null
-  const start = daysUntil(group.startDate, now)
-  const end = daysUntil(group.endDate, now)
-  if (start > 0) return { text: `In ${start} days`, tone: 'accent' }
-  if (end >= 0) return { text: 'Happening now', tone: 'accent' }
-  return { text: 'Trip ended', tone: 'muted' }
+/** One quiet line of context under the group name. */
+function describe(group: Group, now: Date): string {
+  const people = `${group.memberIds.length} people`
+  if (!group.startDate || !group.endDate) return people
+  const range = dateRange(group.startDate, group.endDate)
+  const startsIn = daysUntil(group.startDate, now)
+  if (startsIn > 0) return `${range} · in ${startsIn} days`
+  if (daysUntil(group.endDate, now) >= 0) return `${range} · happening now`
+  return `${range} · ${people}`
 }
 
-interface Props {
-  groups: Group[]
-  users: Record<string, User>
-  now: Date
-}
-
-export function GroupsGrid({ groups, users, now }: Props) {
+export function GroupsGrid({ groups, now }: { groups: Group[]; now: Date }) {
   return (
-    <Card
-      title="Your groups"
-      subtitle={`${groups.length} active`}
-      action={
-        <Button size="sm" variant="ghost" icon={<Plus />}>
-          New group
-        </Button>
-      }
-    >
-      <div className={styles.grid}>
-        {groups.map((g) => {
-          const b = badge(g, now)
-          const dir = g.yourBalance > 0 ? 'pos' : g.yourBalance < 0 ? 'neg' : 'zero'
-          return (
-            <a key={g.id} href="#" className={styles.group}>
-              <div className={styles.top}>
-                <span className={styles.emoji} aria-hidden>{g.emoji}</span>
-                <div className={styles.titles}>
-                  <strong>{g.name}</strong>
-                  <span>
-                    {kindLabel[g.kind]}
-                    {g.startDate && g.endDate ? ` · ${dateRange(g.startDate, g.endDate)}` : ` · ${g.memberIds.length} people`}
-                  </span>
-                </div>
-                {b && (
-                  <span className={styles.badge} data-tone={b.tone}>
-                    {b.text}
-                  </span>
-                )}
-              </div>
-
-              <div className={styles.balance} data-dir={dir}>
-                <span>{dir === 'pos' ? 'You are owed' : dir === 'neg' ? 'You owe' : 'Settled up'}</span>
-                {dir !== 'zero' && <strong>{money(g.yourBalance)}</strong>}
-              </div>
-
-              <div className={styles.bottom}>
-                <AvatarStack users={g.memberIds.map((id) => users[id])} size={26} />
-                <span className={styles.total}>
-                  {money(g.totalSpent)} total
-                  <ChevronRight size={15} />
-                </span>
-              </div>
-            </a>
-          )
-        })}
-      </div>
-    </Card>
+    <div className={styles.grid}>
+      {groups.map((g) => {
+        const tone = g.yourBalance > 0 ? 'owed' : g.yourBalance < 0 ? 'owe' : 'settled'
+        return (
+          <a key={g.id} href="#" className={styles.tile}>
+            <span className={styles.emoji} aria-hidden>
+              {g.emoji}
+            </span>
+            <span className={styles.titles}>
+              <strong>{g.name}</strong>
+              <span>{describe(g, now)}</span>
+            </span>
+            <span className={styles.balance}>
+              <span>{tone === 'owed' ? 'You’re owed' : tone === 'owe' ? 'You owe' : 'All settled up'}</span>
+              {tone !== 'settled' && (
+                <strong className="tabular" data-tone={tone}>
+                  {money(g.yourBalance)}
+                </strong>
+              )}
+            </span>
+          </a>
+        )
+      })}
+    </div>
   )
 }
