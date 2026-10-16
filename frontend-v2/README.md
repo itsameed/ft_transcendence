@@ -16,14 +16,15 @@ npm run dev      # http://localhost:5174
 | `src/data/mock.ts` | Fake data. **Replace these exports with API calls** when you wire the backend |
 | `src/lib/balances.ts` | Pure balance math: totals, "you lent / you borrowed", even split with exact cents |
 | `src/lib/format.ts` | Money/date formatting. Change `CURRENCY` here |
-| `src/styles/global.css` | Design tokens (colors, radius, shadows) for light + dark |
+| `src/styles/global.css` | Design tokens for light + dark. Mostly neutral; `--owed` / `--owe` are the only hues |
 | `src/pages/Dashboard.tsx` | Assembles the page and holds local state (new expenses, toasts, dialog) |
-| `src/components/dashboard/*` | Balance hero, friend balances chart, groups, activity feed, spending, add-expense dialog |
+| `src/components/dashboard/*` | Balance overview, group tiles, recent activity, add-expense dialog |
+| `src/components/ui/*` | Small building blocks: Button, Card, Section, Avatar, Toast |
 
 ## Hooks for the backend
 
 - `AddExpenseModal` → `onSave(expense, group)`: POST the expense here instead of only updating local state.
-- `FriendBalances` → `onRemind` / `onPay`: currently just show a toast.
-- `Settle up` in the top bar scrolls to the balances card.
+- `BalanceOverview` → `onSettle` / `onRemind`: currently just show a toast.
+- The dashboard shows the 5 most recent activity items (`ACTIVITY_PREVIEW` in `Dashboard.tsx`).
 
 Shortcut: press `n` anywhere to add an expense.
