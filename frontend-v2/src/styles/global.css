@@ -1,44 +1,38 @@
 /* ------------------------------------------------------------------
    Design tokens
-   Every color in the app comes from here. Light is the default,
-   dark follows the OS unless the user picks a theme in the top bar
-   (which sets data-theme on <html>).
+   A quiet, mostly neutral palette. The only hues are two muted tones
+   for money direction, and the words on screen always say the
+   direction too, so color is never the only signal.
+   Light is the default, dark follows the OS unless the user picks a
+   theme in the top bar (which sets data-theme on <html>).
 ------------------------------------------------------------------- */
 :root {
   color-scheme: light;
 
-  --bg: #f5f5f2;
+  --bg: #f7f7f5;
   --surface: #ffffff;
-  --surface-2: #f2f2ee;
-  --surface-3: #e8e8e3;
-  --border: rgba(17, 17, 16, 0.08);
-  --border-strong: rgba(17, 17, 16, 0.14);
+  --surface-2: #f3f3f0;
+  --surface-3: #eaeae6;
+  --border: rgba(24, 24, 22, 0.07);
+  --border-strong: rgba(24, 24, 22, 0.13);
 
-  --text: #111110;
-  --text-2: #55544e;
-  --text-3: #8a8982;
+  --text: #1b1b19;
+  --text-2: #5c5b55;
+  --text-3: #6e6d66;
 
-  --accent: #0f766e;
-  --accent-hover: #0c625b;
-  --accent-soft: #e2f1ee;
-  --on-accent: #ffffff;
+  --primary: #1b1b19;
+  --primary-hover: #34342f;
+  --on-primary: #ffffff;
 
-  /* Money direction. "pos" = someone owes you, "neg" = you owe. */
-  --pos: #11916a;
-  --pos-text: #0b7353;
-  --pos-soft: #e3f4ec;
-  --neg: #e34948;
-  --neg-text: #bf2f2e;
-  --neg-soft: #fbe9e8;
+  /* Money direction: someone owes you / you owe someone. */
+  --owed: #3a7254;
+  --owe: #a2563b;
 
-  --grid: #e6e5df;
-  --axis: #c3c2b7;
+  --shadow-pop: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.08);
+  --shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.18);
+  --scrim: rgba(20, 20, 18, 0.32);
 
-  --shadow-sm: 0 1px 2px rgba(17, 17, 16, 0.04);
-  --shadow-md: 0 1px 2px rgba(17, 17, 16, 0.04), 0 8px 24px rgba(17, 17, 16, 0.06);
-  --shadow-lg: 0 24px 64px rgba(17, 17, 16, 0.18);
-
-  --radius-sm: 8px;
+  --radius-sm: 10px;
   --radius: 14px;
   --radius-lg: 20px;
 
@@ -48,59 +42,45 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
-    --bg: #0e0e0d;
-    --surface: #181817;
-    --surface-2: #20201e;
-    --surface-3: #2a2a27;
+    --bg: #121211;
+    --surface: #1a1a19;
+    --surface-2: #222220;
+    --surface-3: #2b2b29;
     --border: rgba(255, 255, 255, 0.07);
-    --border-strong: rgba(255, 255, 255, 0.13);
-    --text: #f0efec;
-    --text-2: #c3c2b7;
-    --text-3: #8f8e86;
-    --accent: #2bb3a3;
-    --accent-hover: #3cc4b4;
-    --accent-soft: #15302d;
-    --on-accent: #06201d;
-    --pos: #199e70;
-    --pos-text: #45cf98;
-    --pos-soft: #12291f;
-    --neg: #e66767;
-    --neg-text: #f28a8a;
-    --neg-soft: #301818;
-    --grid: #2a2a27;
-    --axis: #3a3a36;
-    --shadow-sm: none;
-    --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.02);
-    --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.6);
+    --border-strong: rgba(255, 255, 255, 0.12);
+    --text: #ecebe7;
+    --text-2: #a8a79f;
+    --text-3: #8a8982;
+    --primary: #ecebe7;
+    --primary-hover: #ffffff;
+    --on-primary: #121211;
+    --owed: #8fbf9f;
+    --owe: #dc9a80;
+    --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.5);
+    --shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.6);
+    --scrim: rgba(0, 0, 0, 0.55);
   }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #0e0e0d;
-  --surface: #181817;
-  --surface-2: #20201e;
-  --surface-3: #2a2a27;
+  --bg: #121211;
+  --surface: #1a1a19;
+  --surface-2: #222220;
+  --surface-3: #2b2b29;
   --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.13);
-  --text: #f0efec;
-  --text-2: #c3c2b7;
-  --text-3: #8f8e86;
-  --accent: #2bb3a3;
-  --accent-hover: #3cc4b4;
-  --accent-soft: #15302d;
-  --on-accent: #06201d;
-  --pos: #199e70;
-  --pos-text: #45cf98;
-  --pos-soft: #12291f;
-  --neg: #e66767;
-  --neg-text: #f28a8a;
-  --neg-soft: #301818;
-  --grid: #2a2a27;
-  --axis: #3a3a36;
-  --shadow-sm: none;
-  --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.02);
-  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.6);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --text: #ecebe7;
+  --text-2: #a8a79f;
+  --text-3: #8a8982;
+  --primary: #ecebe7;
+  --primary-hover: #ffffff;
+  --on-primary: #121211;
+  --owed: #8fbf9f;
+  --owe: #dc9a80;
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.6);
+  --scrim: rgba(0, 0, 0, 0.55);
 }
 
 /* ------------------------------------------------------------------
@@ -124,7 +104,7 @@ body {
   color: var(--text);
   font-family: var(--font);
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: 'cv11', 'ss01';
 }
@@ -148,7 +128,7 @@ button {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--text);
   outline-offset: 2px;
 }
 
