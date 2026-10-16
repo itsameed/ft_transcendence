@@ -1,4 +1,4 @@
-// Adjectives - 100 elements
+// Adjectives - 95 elements
 const adjectives = [
     'Happy', 'Swift', 'Cool', 'Brave', 'Clever',
     'Mighty', 'Lucky', 'Wild', 'Calm', 'Bright',
@@ -21,7 +21,7 @@ const adjectives = [
     'Sunny', 'Cloudy', 'Stormy', 'Windy', 'Rainy'
 ];
 
-// Colors - 100 elements
+// Colors - 85 elements
 const colors = [
     'Red', 'Blue', 'Green', 'Yellow', 'Orange',
     'Purple', 'Pink', 'Brown', 'Black', 'White',
@@ -42,7 +42,7 @@ const colors = [
     'Flame', 'Fire', 'Ice', 'Frost', 'Mist'
 ];
 
-// Animals - 100 elements
+// Animals - 90 elements
 const animals = [
     'Tiger', 'Fox', 'Eagle', 'Wolf', 'Panda',
     'Lion', 'Hawk', 'Bear', 'Dragon', 'Phoenix',
