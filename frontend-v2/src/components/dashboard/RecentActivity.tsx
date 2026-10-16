@@ -73,7 +73,7 @@ export function RecentActivity({ items, users, groups, me, now }: Props) {
                 <strong>{r.title}</strong>
                 <span>{r.detail}</span>
                 <span className={styles.compactMeta}>
-                  {r.group.name} · {r.day}
+                  {r.day} · {r.group.name}
                 </span>
               </span>
               <span className={styles.group}>

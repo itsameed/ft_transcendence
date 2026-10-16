@@ -93,10 +93,14 @@ function Column({ title, tone, total, rows, users, empty, action, actionLabel, o
         <ul className={styles.rows}>
           {rows.map(({ userId, amount }) => {
             const user = users[userId]
+            const [first, ...rest] = user.name.split(' ')
             return (
               <li key={userId} className={styles.row}>
                 <Avatar user={user} size={34} />
-                <span className={styles.name}>{user.name}</span>
+                <span className={styles.name}>
+                  {first}
+                  {rest.length > 0 && <span className={styles.lastName}> {rest.join(' ')}</span>}
+                </span>
                 <span className={`${styles.amount} tabular`}>{money(amount)}</span>
                 <Button size="sm" variant="secondary" className={styles.action} onClick={() => onAction(user, Math.abs(amount))} aria-label={actionLabel(user)}>
                   {action}

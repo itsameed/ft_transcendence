@@ -127,6 +127,13 @@
   }
 }
 
+/* Phones: first names only, so names don't get cut off next to the buttons. */
+@container (max-width: 420px) {
+  .lastName {
+    display: none;
+  }
+}
+
 @container (max-width: 400px) {
   .row {
     gap: 12px;
