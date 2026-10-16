@@ -7,6 +7,10 @@ const User = mongoose.model('User', new mongoose.Schema({
         unique: true,
         trim: true
     },
+    displayName: {
+        type: String,
+        trim: true,
+    },
     email: {
         type: String,
         required: true,

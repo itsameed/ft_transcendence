@@ -56,8 +56,10 @@ function returnUserDebts(expense, username) {
 
 
 
-async function getGroupExpenses(groupId, userId) {
+async function getGroupExpenses(req, res, next) {
     try {
+    const userId = req.session.userId;
+    const groupId = '6accfbad416c4259988ceb63';
     let ExpenseArray = [];
 
     const Expenses = await ExpenseSchema.find({ group: groupId })
@@ -125,7 +127,7 @@ async function getGroupExpenses(groupId, userId) {
         }
     }
 
-    return ExpenseArray;
+    return res.render('Dashboard', {ExpenseArray});
     } catch (error) {
         console.error("Error getting group expenses:", error);
         throw error;

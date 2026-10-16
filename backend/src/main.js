@@ -1,8 +1,8 @@
 require('dotenv/config');
 const express = require('express');
 const cookieParser = require('cookie-parser');
-const mongoose = require('mongoose');
-const path = require('path');
+// const mongoose = require('mongoose');
+// const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo').default;
 const connectDB = require("./config/database.js");
@@ -28,22 +28,20 @@ const friendRoutes = require("./routes/friendRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const groupInvitationRoutes = require("./routes/groupInvitationRoutes");
 // const FriendsList = require('./routes/friendRoutes.js');
-const groupDetailsRouter = require('./routes/get_routes/GroupDetails');
+const groupDetailsRouter = require('./routes/GroupDetails');
 // Route Imports (with .js extensions)
-const loginPageRouter = require('./routes/get_routes/login.js');
-const postLogin = require('./routes/post_routes/login.js');
-const postSignup = require('./routes/post_routes/signup.js');
-// const Notif = require('./routes/get_routes/Notifications.js');
-const userGroupsRouter = require('./routes/get_routes/MyGroups.js');
-const dashboardRouter = require('./routes/get_routes/Home.js');
-const signupPageRouter = require('./routes/get_routes/signup.js');
-// const postCreateGroup = require('./routes/post_routes/createGroup.js');
-// const getCreateGroup = require('./routes/get_routes/CreateGroup.js');
-const expensesRouter = require('./routes/get_routes/Expenses.js');
-const createExpenseRouter = require('./routes/post_routes/createExpense.js');
-const groupTotalExpensesRouter = require('./routes/get_routes/GroupTotalExpenses');
-const logoutRouter = require('./routes/get_routes/Logout');
-const myProfileRouter = require('./routes/get_routes/MyProfile');
+const loginPageRouter = require('./routes/login.js');
+// const Notif = require('./routes/Notifications.js');
+const userGroupsRouter = require('./routes/groupRoutes.js');
+const dashboardRouter = require('./routes/Home.js');
+const signupPageRouter = require('./routes/signup.js');
+const groupCreationRouter = require('./routes/CreateGroup.js');
+const settlementsRouter = require('./routes/Settlement.js');
+const expensesRouter = require('./routes/Expenses.js');
+const groupTotalExpensesRouter = require('./routes/GroupTotalExpenses.js');
+const logoutRouter = require('./routes/Logout.js');
+const myProfileRouter = require('./routes/MyProfile.js');
+const editProfile = require('./routes/EditProfile.js');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use(session({
@@ -68,17 +66,19 @@ app.use('/dashboard', dashboardRouter);
 app.use('/', dashboardRouter);
 app.use('/group-details', groupDetailsRouter);
 app.use('/my-profile', myProfileRouter);
+app.use('/profile/edit', editProfile);
 app.use('/auth/login', loginPageRouter);
-app.use('/auth/login', postLogin);
-app.use(`/auth/signup`, postSignup);
 app.use('/auth/signup', signupPageRouter);
 // app.use('/Friends', FriendsList);
-// app.use(`/CreateGroup`, postCreateGroup);
-// app.use(`/CreateGroup`, getCreateGroup);
+app.use('/groups/create', groupCreationRouter);
+app.use('/settlements', settlementsRouter);
+app.use('/settlements/addSettlement', settlementsRouter);
+
 // app.use('/notifications', Notif);
 app.use('/my-groups', userGroupsRouter);
-app.use('/expenses', createExpenseRouter);
 app.use('/expenses', expensesRouter);
+app.use('/createExpense', expensesRouter);
+
 app.use('/my-groups/total-expenses', groupTotalExpensesRouter);
 app.use("/api/group-invitations", groupInvitationRoutes);
 app.use("/api/groups", groupRoutes);

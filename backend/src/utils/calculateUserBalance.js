@@ -48,8 +48,9 @@ function calculateUserBalance(ExpenseArray, userId, group) {
 }
 
 
-async function getUserBalance(userId)
+async function getUserBalance(req, res, next)
 {
+    const userId = req.session.userId;
     try {
     const formattedGroups = [];
     // const userGroups = await GroupSchema.find({members: userId}).lean();
@@ -64,7 +65,7 @@ async function getUserBalance(userId)
         formattedGroups.push(group.userTotalBalance);
         // console.log(`in the group ${group.groupName} here's the current user's Balance : `, balance);
     }
-    return formattedGroups;
+    return res.render('Dashboard', {formattedGroups});
     } catch (error) {
         console.error("Error getting user balance:", error);
         throw error;

@@ -1,8 +1,4 @@
-const express = require('express');
-const router = express.Router();
-const requireAuth = require('../../controllers/middleware');
-
-router.get('/', requireAuth, (req, res) => {
+async function destroySession(req, res, next) {
     req.session.destroy((err) => {
         if (err) {
             console.log(err);
@@ -12,6 +8,7 @@ router.get('/', requireAuth, (req, res) => {
 
         res.redirect('/login');
     })
-});
+    next();
+}
 
-module.exports = router;
+module.exports = destroySession;

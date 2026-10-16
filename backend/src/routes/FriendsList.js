@@ -1,6 +1,6 @@
 // const express = require('express');
-// const Auth = require('../../controllers/middleware.js');
-// const printLogsDate = require('../../utils/printLogs.js');
+// const Auth = require('../controllers/middleware.js');
+// const printLogsDate = require('../utils/printLogs.js');
 
 // const Friends = express.Router();
 

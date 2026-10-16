@@ -2,9 +2,10 @@ const GroupSchema = require('../models/Schemas/Group');
 const ExpenseSchema = require('../models/Schemas/Expenses');
 const UserSchema = require('../models/Schemas/User');
 
-async function GroupTotalExpenses (groupId, userId) {
+async function GroupTotalExpenses (req, res, next) {
     try {
-    groupId = '6accfbad416c4259988ceb63';
+    const userId = req.session.userId;
+    const groupId = '6accfbad416c4259988ceb63';
     
     const currentGroup = await GroupSchema.findById(groupId).populate("members.userId");
     const currentUser = await UserSchema.findById(userId);
@@ -61,10 +62,10 @@ async function GroupTotalExpenses (groupId, userId) {
         }
     }
 
-    return {
+    return res.render('Dashboard', {
         groupName: currentGroup.name,
         members: membersBalances
-    };
+    });
     } catch (error) {
         console.error("Error calculating group total expenses:", error);
         throw error;

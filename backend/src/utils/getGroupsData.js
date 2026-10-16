@@ -10,9 +10,10 @@ function returnGroups(group) {
     }
 }
 
-async function getGroupsData(userId)
+async function getGroupsData(req, res, next)
 {
     try {
+    const userId = req.session.userId;
     let GroupsInfos = [];
     console.log(userId);
     const Groups = await GroupSchema.find({'members.userId': userId}).populate('members');
@@ -22,7 +23,7 @@ async function getGroupsData(userId)
     for (let group of Groups) {
         GroupsInfos.push(returnGroups(group));
     }
-    return GroupsInfos;
+    return res.render(GroupsInfos);
     } catch (error) {
         console.error("Error getting groups data:", error);
         throw error;

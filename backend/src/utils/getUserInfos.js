@@ -4,7 +4,8 @@ const ExpenseSchema = require('../models/Schemas/Expenses');
 const calculateAllExpenses = require('./calculateAllExpenses');
 const getFriendsCount = require('./getFriendsCount');
 
-async function getUserInfos(userId) {
+async function getUserInfos(req, res, next) {
+    const userId = req.session.userId;
     const currentUser = await UserSchema.findById(userId);
     const Groups = await GroupSchema.find({"members.userId": userId});
     const Expenses = await ExpenseSchema.find({participants: userId});
@@ -18,7 +19,7 @@ async function getUserInfos(userId) {
         day: 'numeric',
         year: 'numeric'
     });
-    return {
+    return res.render('my-profile', {
         username: currentUser.username,
         email: currentUser.email,
         joinedAt: formattedDate,
@@ -26,7 +27,7 @@ async function getUserInfos(userId) {
         FriendsCount: FriendsCount,
         numberOfGroups: Groups.length,
         numberOfExpenses: Expenses.length,
-    };
+    });
 }
 
 module.exports = getUserInfos;
