@@ -1,8 +1,7 @@
-import { Check, X } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { Check, ChevronDown, X } from 'lucide-react'
+import { useEffect, useMemo, useState, type ReactNode, type SelectHTMLAttributes } from 'react'
 import type { Category, Expense, Group, User } from '../../types'
 import { splitEvenly } from '../../lib/balances'
-import { categoryIcon } from '../../lib/categories'
 import { CURRENCY, categoryLabel, firstName, money } from '../../lib/format'
 import { Avatar } from '../ui/Avatar'
 import { Button } from '../ui/Button'
@@ -22,8 +21,32 @@ interface Props {
 
 const CATEGORIES = Object.keys(categoryLabel) as Category[]
 
+const SPLIT_MODES: [SplitMode, string][] = [
+  ['equal', 'Equally'],
+  ['exact', 'Exact'],
+  ['percent', 'Percent'],
+]
+
 const toDateInput = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className={styles.field}>
+      <span>{label}</span>
+      {children}
+    </label>
+  )
+}
+
+function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <span className={styles.select}>
+      <select {...props} />
+      <ChevronDown size={16} aria-hidden />
+    </span>
+  )
+}
 
 export function AddExpenseModal({ open, onClose, onSave, groups, users, me, today }: Props) {
   const [amount, setAmount] = useState('')
@@ -116,11 +139,22 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
 
   const name = (id: string) => (id === me ? 'You' : users[id].name)
 
+  const summary =
+    included.length === 0
+      ? 'Pick at least one person to split with.'
+      : mode === 'equal'
+        ? `Split between ${included.length} ${included.length === 1 ? 'person' : 'people'} · ${money(total / included.length || 0)} each`
+        : balanced
+          ? 'Everything is assigned.'
+          : mode === 'exact'
+            ? `${money(Math.abs(remaining))} ${remaining > 0 ? 'left to assign' : 'more than the total'}`
+            : `${Math.abs(Math.round(remaining * 100) / 100)}% ${remaining > 0 ? 'left to assign' : 'over 100%'}`
+
   return (
     <div className={styles.backdrop} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="add-expense-title">
         <header className={styles.header}>
-          <h2 id="add-expense-title">Add an expense</h2>
+          <h2 id="add-expense-title">New expense</h2>
           <button className={styles.close} onClick={onClose} aria-label="Close">
             <X size={18} />
           </button>
@@ -148,137 +182,112 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
 
           <input
             className={styles.input}
-            placeholder="What was it for? e.g. Dinner at the riad"
+            placeholder="What was it for?"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             aria-label="Description"
           />
 
-          <div className={styles.chips} role="radiogroup" aria-label="Category">
-            {CATEGORIES.map((c) => {
-              const Icon = categoryIcon[c]
-              return (
-                <button
-                  type="button"
-                  key={c}
-                  role="radio"
-                  aria-checked={category === c}
-                  className={`${styles.chip} ${category === c ? styles.chipOn : ''}`}
-                  onClick={() => setCategory(c)}
-                >
-                  <Icon size={14} />
-                  {categoryLabel[c]}
-                </button>
-              )
-            })}
-          </div>
-
           <div className={styles.fields}>
-            <label className={styles.field}>
-              <span>Group</span>
-              <select value={groupId} onChange={(e) => changeGroup(e.target.value)}>
+            <Field label="Group">
+              <Select value={groupId} onChange={(e) => changeGroup(e.target.value)}>
                 {groups.map((g) => (
                   <option key={g.id} value={g.id}>
-                    {g.emoji} {g.name}
+                    {g.name}
                   </option>
                 ))}
-              </select>
-            </label>
-            <label className={styles.field}>
-              <span>Paid by</span>
-              <select value={paidBy} onChange={(e) => setPaidBy(e.target.value)}>
+              </Select>
+            </Field>
+            <Field label="Paid by">
+              <Select value={paidBy} onChange={(e) => setPaidBy(e.target.value)}>
                 {group.memberIds.map((id) => (
                   <option key={id} value={id}>
                     {name(id)}
                   </option>
                 ))}
-              </select>
-            </label>
-            <label className={styles.field}>
-              <span>Date</span>
+              </Select>
+            </Field>
+            <Field label="Category">
+              <Select value={category} onChange={(e) => setCategory(e.target.value as Category)}>
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {categoryLabel[c]}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Date">
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </label>
+            </Field>
           </div>
 
-          <div className={styles.splitHead}>
-            <h3>Split</h3>
-            <div className={styles.segmented} role="tablist" aria-label="Split method">
-              {(
-                [
-                  ['equal', 'Equally'],
-                  ['exact', 'Exact amounts'],
-                  ['percent', 'Percentages'],
-                ] as const
-              ).map(([m, label]) => (
-                <button
-                  type="button"
-                  key={m}
-                  role="tab"
-                  aria-selected={mode === m}
-                  className={mode === m ? styles.segOn : ''}
-                  onClick={() => {
-                    setMode(m)
-                    setCustom({})
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <ul className={styles.members}>
-            {group.memberIds.map((id) => {
-              const on = included.includes(id)
-              return (
-                <li key={id} className={`${styles.member} ${on ? '' : styles.memberOff}`}>
+          <div className={styles.split}>
+            <div className={styles.splitHead}>
+              <h3>Split</h3>
+              <div className={styles.segmented} role="tablist" aria-label="Split method">
+                {SPLIT_MODES.map(([m, label]) => (
                   <button
                     type="button"
-                    role="checkbox"
-                    aria-checked={on}
-                    aria-label={`Include ${name(id)}`}
-                    className={`${styles.check} ${on ? styles.checkOn : ''}`}
-                    onClick={() => toggle(id)}
+                    key={m}
+                    role="tab"
+                    aria-selected={mode === m}
+                    className={mode === m ? styles.segOn : ''}
+                    onClick={() => {
+                      setMode(m)
+                      setCustom({})
+                    }}
                   >
-                    {on && <Check size={13} strokeWidth={3} />}
+                    {label}
                   </button>
-                  <Avatar user={users[id]} size={30} />
-                  <span className={styles.memberName}>
-                    {id === me ? 'You' : firstName(users[id].name)}
-                    {id === paidBy && <em>paid</em>}
-                  </span>
-                  {on && mode === 'equal' && <span className={`${styles.share} tabular`}>{money(shares[id] ?? 0)}</span>}
-                  {on && mode !== 'equal' && (
-                    <span className={styles.shareInput}>
-                      {mode === 'percent' && <small className="tabular">{money(shares[id] ?? 0)}</small>}
-                      <label>
-                        <input
-                          inputMode="decimal"
-                          placeholder="0"
-                          value={custom[id] ?? ''}
-                          onChange={(e) => setCustom((prev) => ({ ...prev, [id]: e.target.value.replace(/[^\d.]/g, '') }))}
-                          aria-label={`${name(id)} share`}
-                        />
-                        <span>{mode === 'percent' ? '%' : CURRENCY}</span>
-                      </label>
-                    </span>
-                  )}
-                  {!on && <span className={styles.share}>not included</span>}
-                </li>
-              )
-            })}
-          </ul>
+                ))}
+              </div>
+            </div>
 
-          <div className={styles.summary} data-ok={mode === 'equal' || balanced}>
-            {included.length === 0
-              ? 'Pick at least one person'
-              : mode === 'equal'
-                ? `${included.length} people · ${money(total / included.length || 0)} each`
-                : balanced
-                  ? 'Adds up — nice.'
-                  : mode === 'exact'
-                    ? `${money(Math.abs(remaining))} ${remaining > 0 ? 'left to assign' : 'over the total'}`
-                    : `${Math.abs(Math.round(remaining * 100) / 100)}% ${remaining > 0 ? 'left to assign' : 'over 100%'}`}
+            <ul className={styles.members}>
+              {group.memberIds.map((id) => {
+                const on = included.includes(id)
+                return (
+                  <li key={id} className={`${styles.member} ${on ? '' : styles.memberOff}`}>
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={on}
+                      aria-label={`Include ${name(id)}`}
+                      className={`${styles.check} ${on ? styles.checkOn : ''}`}
+                      onClick={() => toggle(id)}
+                    >
+                      {on && <Check size={13} strokeWidth={3} />}
+                    </button>
+                    <Avatar user={users[id]} size={30} />
+                    <span className={styles.memberName}>
+                      {id === me ? 'You' : firstName(users[id].name)}
+                      {id === paidBy && <em>paid</em>}
+                    </span>
+                    {on && mode === 'equal' && <span className={`${styles.share} tabular`}>{money(shares[id] ?? 0)}</span>}
+                    {on && mode !== 'equal' && (
+                      <span className={styles.shareInput}>
+                        {mode === 'percent' && <small className="tabular">{money(shares[id] ?? 0)}</small>}
+                        <label>
+                          <input
+                            inputMode="decimal"
+                            placeholder="0"
+                            value={custom[id] ?? ''}
+                            onChange={(e) => setCustom((prev) => ({ ...prev, [id]: e.target.value.replace(/[^\d.]/g, '') }))}
+                            aria-label={`${name(id)} share`}
+                          />
+                          <span>{mode === 'percent' ? '%' : CURRENCY}</span>
+                        </label>
+                      </span>
+                    )}
+                    {!on && <span className={styles.share}>Not included</span>}
+                  </li>
+                )
+              })}
+            </ul>
+
+            <p className={styles.summary} data-warn={included.length === 0 || (mode !== 'equal' && !balanced)} aria-live="polite">
+              {summary}
+            </p>
           </div>
 
           <footer className={styles.footer}>
