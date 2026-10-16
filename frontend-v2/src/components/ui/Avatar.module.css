@@ -13,13 +13,3 @@
   letter-spacing: 0.02em;
   user-select: none;
 }
-
-.stack {
-  display: inline-flex;
-}
-.stack > * {
-  box-shadow: 0 0 0 2px var(--surface);
-}
-.stack > * + * {
-  margin-left: -5px;
-}

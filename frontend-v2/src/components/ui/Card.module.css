@@ -14,18 +14,3 @@
     padding: 20px;
   }
 }
-
-.legacyHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 20px 20px 4px;
-}
-.legacyHeader h2 {
-  font-size: 15px;
-  font-weight: 600;
-}
-.legacyHeader p {
-  color: var(--text-3);
-  font-size: 13px;
-}

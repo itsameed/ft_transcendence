@@ -1,4 +1,4 @@
-import type { Activity, CategorySpend, FriendBalance, Group, User } from '../types'
+import type { Activity, FriendBalance, Group, User } from '../types'
 
 // Everything here is fake. Replace each export with a fetch to your API.
 
@@ -175,15 +175,6 @@ export const recentActivity: Activity[] = [
   },
 ]
 
-/** Your share of spending this month, by category. */
-export const monthlySpend: CategorySpend[] = [
-  { category: 'lodging', amount: 1020 },
-  { category: 'groceries', amount: 742 },
-  { category: 'food', amount: 515 },
-  { category: 'activities', amount: 350 },
-  { category: 'transport', amount: 245 },
-  { category: 'utilities', amount: 180 },
-]
 
 /** Pretend "today", so relative dates in the mock always read sensibly. */
 export const NOW = new Date('2026-10-16T12:00:00')

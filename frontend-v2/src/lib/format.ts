@@ -14,10 +14,6 @@ export function money(value: number, opts: { signed?: boolean } = {}): string {
   return `${sign}${abs} ${CURRENCY}`
 }
 
-export function compactMoney(value: number): string {
-  return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value)
-}
-
 export function firstName(fullName: string): string {
   return fullName.split(' ')[0]
 }
@@ -37,10 +33,6 @@ export function relativeDay(iso: string, now: Date): string {
   if (diff === 1) return 'Yesterday'
   if (diff > 1 && diff < 7) return date.toLocaleDateString('en-US', { weekday: 'long' })
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
-
-export function time(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 }
 
 export function dateRange(start: string, end: string): string {

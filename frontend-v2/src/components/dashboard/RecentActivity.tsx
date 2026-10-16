@@ -1,4 +1,5 @@
 import { ArrowLeftRight } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { Activity, Group, User } from '../../types'
 import { yourEffect } from '../../lib/balances'
 import { categoryIcon } from '../../lib/categories'
@@ -16,7 +17,7 @@ interface Props {
 
 interface Row {
   id: string
-  icon: React.ReactNode
+  icon: ReactNode
   title: string
   detail: string
   group: Group

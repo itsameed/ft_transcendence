@@ -70,9 +70,3 @@ export interface FriendBalance {
   /** Positive: they owe you. Negative: you owe them. */
   amount: number
 }
-
-export interface CategorySpend {
-  category: Category
-  /** Your share only, not what you paid up front. */
-  amount: number
-}
