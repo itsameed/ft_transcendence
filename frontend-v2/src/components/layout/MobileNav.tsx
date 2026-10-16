@@ -6,7 +6,7 @@ export function MobileNav({ onAdd }: { onAdd: () => void }) {
   const [first, second, ...rest] = NAV
   const item = ({ label, icon: Icon, active }: (typeof NAV)[number]) => (
     <a key={label} href="#" className={`${styles.item} ${active ? styles.active : ''}`}>
-      <Icon size={20} />
+      <Icon size={20} strokeWidth={1.75} />
       <span>{label}</span>
     </a>
   )
@@ -15,7 +15,7 @@ export function MobileNav({ onAdd }: { onAdd: () => void }) {
       {item(first)}
       {item(second)}
       <button className={styles.fab} onClick={onAdd} aria-label="Add expense">
-        <Plus size={24} strokeWidth={2.4} />
+        <Plus size={22} strokeWidth={2.2} />
       </button>
       {rest.map(item)}
     </nav>

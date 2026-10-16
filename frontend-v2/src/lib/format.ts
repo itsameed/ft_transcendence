@@ -65,3 +65,10 @@ export const categoryLabel: Record<Category, string> = {
   utilities: 'Bills & utilities',
   other: 'Other',
 }
+
+export function greeting(now: Date): string {
+  const hour = now.getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 18) return 'Good afternoon'
+  return 'Good evening'
+}

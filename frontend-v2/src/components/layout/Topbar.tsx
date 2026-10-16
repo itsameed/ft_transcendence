@@ -1,4 +1,5 @@
-import { Bell, HandCoins, Moon, Plus, Search, Sun } from 'lucide-react'
+import { Moon, Plus, Sun } from 'lucide-react'
+import { greeting } from '../../lib/format'
 import { Button } from '../ui/Button'
 import { Logo } from './Sidebar'
 import styles from './Topbar.module.css'
@@ -9,38 +10,27 @@ interface Props {
   dark: boolean
   onToggleTheme: () => void
   onAdd: () => void
-  onSettle: () => void
 }
 
-export function Topbar({ firstName, today, dark, onToggleTheme, onAdd, onSettle }: Props) {
+export function Topbar({ firstName, today, dark, onToggleTheme, onAdd }: Props) {
   return (
     <header className={styles.topbar}>
-      <div className={styles.mobileLogo}>
+      <div className={styles.mobileBrand}>
         <Logo />
       </div>
+
       <div className={styles.greeting}>
-        <p className={styles.date}>{today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-        <h1>Hey {firstName} 👋</h1>
+        <h1>
+          {greeting(today)}, {firstName}
+        </h1>
+        <p>{today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
       </div>
 
       <div className={styles.actions}>
-        <label className={styles.search}>
-          <Search size={16} />
-          <span className="visually-hidden">Search</span>
-          <input placeholder="Search expenses, friends…" />
-          <kbd>/</kbd>
-        </label>
         <button className={styles.iconButton} onClick={onToggleTheme} aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
-          {dark ? <Sun size={18} /> : <Moon size={18} />}
+          {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
         </button>
-        <button className={styles.iconButton} aria-label="Notifications, 2 unread">
-          <Bell size={18} />
-          <span className={styles.dot} />
-        </button>
-        <Button variant="secondary" icon={<HandCoins />} onClick={onSettle} className={styles.hideSm}>
-          Settle up
-        </Button>
-        <Button variant="primary" icon={<Plus />} onClick={onAdd} className={styles.hideSm}>
+        <Button variant="primary" icon={<Plus />} onClick={onAdd} className={styles.add} title="Add expense (N)">
           Add expense
         </Button>
       </div>

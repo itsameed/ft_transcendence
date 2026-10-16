@@ -45,7 +45,7 @@ export function Dashboard() {
 
   return (
     <div className={styles.app}>
-      <Sidebar me={me} groups={groups} />
+      <Sidebar me={me} />
 
       <main className={styles.main}>
         <Topbar
@@ -54,7 +54,6 @@ export function Dashboard() {
           dark={dark}
           onToggleTheme={toggle}
           onAdd={() => setAdding(true)}
-          onSettle={() => balancesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
         />
 
         <div className={styles.grid}>
