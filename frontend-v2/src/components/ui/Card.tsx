@@ -2,26 +2,29 @@ import type { ReactNode } from 'react'
 import styles from './Card.module.css'
 
 interface Props {
+  children: ReactNode
+  className?: string
+  /** Turn off when the content handles its own padding (e.g. full-width list rows). */
+  padded?: boolean
+  /** @deprecated legacy header props, removed once every section uses <Section>. */
   title?: string
   subtitle?: string
   action?: ReactNode
-  children: ReactNode
-  className?: string
 }
 
-export function Card({ title, subtitle, action, children, className }: Props) {
+export function Card({ children, className, padded = true, title, subtitle, action }: Props) {
   return (
-    <section className={[styles.card, className].filter(Boolean).join(' ')}>
+    <div className={[styles.card, padded && styles.padded, className].filter(Boolean).join(' ')}>
       {(title || action) && (
-        <header className={styles.header}>
+        <header className={styles.legacyHeader}>
           <div>
-            {title && <h2 className={styles.title}>{title}</h2>}
-            {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+            {title && <h2>{title}</h2>}
+            {subtitle && <p>{subtitle}</p>}
           </div>
           {action}
         </header>
       )}
       {children}
-    </section>
+    </div>
   )
 }
