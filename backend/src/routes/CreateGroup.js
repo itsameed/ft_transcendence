@@ -1,7 +1,7 @@
 const express = require('express');
 const requireAuth = require('../middleware/requireAuth');
 const Group = require('../models/Schemas/Group');
-const printLogsDate = require('../utils/printLogs');
+const printLogsDate = require('../controllers/printLogs');
 
 const router = express.Router();
 

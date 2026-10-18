@@ -1,6 +1,6 @@
-const UserSchema = require('../models/Schemas/User');
+const UserSchema = require('../models/Schemas/User.js');
 const bcrypt = require('bcrypt');
-const printLogsDate = require('../utils/printLogs.js');
+const printLogsDate = require('./printLogs.js');
 const { uniqueNamesGenerator } = require('unique-names-generator');
 const { adjectives, colors, animals } = require('../models/DisplayNames/displayNames.js');
 

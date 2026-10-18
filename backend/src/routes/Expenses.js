@@ -1,7 +1,7 @@
 const express = require('express');
 const requireAuth = require('../middleware/requireAuth.js');
-const printLogsDate = require('../utils/printLogs.js');
-const createExpense = require('../utils/createExpense');
+const printLogsDate = require('../controllers/printLogs.js');
+const createExpense = require('../controllers/createExpense.js');
 const router = express.Router();
 
 router.get('/', requireAuth, (req, res) => {

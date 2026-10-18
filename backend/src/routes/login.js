@@ -1,6 +1,6 @@
 const express = require('express');
-const printLogsDate = require('../utils/printLogs');
-const loginAuth = require('../utils/LoginAuth');
+const printLogsDate = require('../controllers/printLogs');
+const loginAuth = require('../controllers/LoginAuth');
 const router = express.Router();
 
 router.get('/', (req, res) => {

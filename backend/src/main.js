@@ -1,8 +1,6 @@
 require('dotenv/config');
 const express = require('express');
 const cookieParser = require('cookie-parser');
-// const mongoose = require('mongoose');
-// const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo').default;
 const connectDB = require("./config/database.js");
@@ -20,19 +18,15 @@ app.use(cookieParser());
 
 ///////////////////////////////////////////////// Models Routes //////////////////////////////////////////////////
 
-const Group = require("./models/Schemas/Group");
 const notificationRoutes = require("./routes/notificationRoutes");
 const conversationRoutes = require("./routes/conversationRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const friendRoutes = require("./routes/friendRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const groupInvitationRoutes = require("./routes/groupInvitationRoutes");
-// const FriendsList = require('./routes/friendRoutes.js');
 const groupDetailsRouter = require('./routes/GroupDetails');
-// Route Imports (with .js extensions)
 const loginPageRouter = require('./routes/login.js');
-// const Notif = require('./routes/Notifications.js');
-const userGroupsRouter = require('./routes/groupRoutes.js');
+// const userGroupsRouter = require('./routes/groupRoutes.js');
 const dashboardRouter = require('./routes/Home.js');
 const signupPageRouter = require('./routes/signup.js');
 const groupCreationRouter = require('./routes/CreateGroup.js');
@@ -75,7 +69,7 @@ app.use('/settlements', settlementsRouter);
 app.use('/settlements/addSettlement', settlementsRouter);
 
 // app.use('/notifications', Notif);
-app.use('/my-groups', userGroupsRouter);
+app.use('/my-groups', groupRoutes);
 app.use('/expenses', expensesRouter);
 app.use('/createExpense', expensesRouter);
 

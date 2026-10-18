@@ -1,5 +1,5 @@
 const express = require('express');
-const loadNewUser = require('../utils/loadNewUser');
+const loadNewUser = require('../controllers/loadNewUser');
 const router = express.Router();
 const requireAuth = require('../middleware/requireAuth');
 const cookieAuth = require('../middleware/cookieAuth');
