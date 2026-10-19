@@ -8,7 +8,7 @@ function Auth(req, res, next) {
     if (!req.session?.userId)
     {
         console.log("new user");
-        return res.redirect(`/signup`);
+        return res.redirect(`/auth/signup`);
     }
     return next();
 }

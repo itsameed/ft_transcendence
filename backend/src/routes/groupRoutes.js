@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const apiAuth = require("../controllers/apiAuth");
+const apiAuth = require("../middleware/apiAuth");
 
 const {
     createGroup,

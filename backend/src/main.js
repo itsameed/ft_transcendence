@@ -36,6 +36,7 @@ const groupTotalExpensesRouter = require('./routes/GroupTotalExpenses.js');
 const logoutRouter = require('./routes/Logout.js');
 const myProfileRouter = require('./routes/MyProfile.js');
 const editProfile = require('./routes/EditProfile.js');
+const adminRoutes = require("./routes/adminRoutes");
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use(session({
@@ -80,6 +81,7 @@ app.use("/api/friends", friendRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
+app.use("/api/admin", adminRoutes);
 app.use('/auth/logout', logoutRouter);
 
 ////////////////////////////////////////////////////////////////////////////
