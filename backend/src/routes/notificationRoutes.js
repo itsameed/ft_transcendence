@@ -1,5 +1,5 @@
 const express = require("express");
-const apiAuth = require("../controllers/apiAuth");
+const apiAuth = require("../middleware/apiAuth");
 
 const {
   getNotifications,

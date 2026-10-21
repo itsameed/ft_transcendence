@@ -9,7 +9,7 @@ function Auth(req, res, next) {
     {
         console.log("user has no session");
         console.log("new user");
-        return res.redirect(`/signup`);
+        return res.redirect(`/auth/signup`);
     }
     return next();
 }
