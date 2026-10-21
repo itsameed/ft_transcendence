@@ -1,6 +1,8 @@
 const UserSchema = require('../models/Schemas/User.js');
 const bcrypt = require('bcrypt');
 const printLogsDate = require('./printLogs.js');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { uniqueNamesGenerator } = require('unique-names-generator');
 const { adjectives, colors, animals } = require('../models/DisplayNames/displayNames.js');
 
@@ -15,16 +17,24 @@ async function loadNewUser(req, res, next) {
             dictionaries: [adjectives, colors, animals]
         });
     }
+    const existedUser = await UserSchema.findOne({email});
+    if (existedUser) {
+        return res.status(400).json({error: "Email already registered"});
+    }
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationTokenExpires = Date.now() + (24 * 60 * 60 * 1000);
         const newUser = await User.create({
             username: fullName,
             displayName,
             email,
             password: hashedPassword,
             bio,
-            phoneNumber,
             gender,
+            isVerified: false,
+            verificationToken,
+            verificationTokenExpires,
         });
 
         req.session.userId = newUser._id;

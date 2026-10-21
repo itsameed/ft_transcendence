@@ -23,8 +23,12 @@ const User = mongoose.model('User', new mongoose.Schema({
         required: true
     },
     bio: String,
-    phoneNumber: String,
     gender: String,
+    googleId: String,
+    avatar: String,
+    isVerified: { type: Boolean, default: false },
+    verificationToken: String,
+    verificationTokenExpires: Date,
     joinedAt: {
         type: Date,
         default: Date.now,

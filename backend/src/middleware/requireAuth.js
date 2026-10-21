@@ -7,6 +7,7 @@ function Auth(req, res, next) {
     // console.log(req.session.userId);
     if (!req.session?.userId)
     {
+        console.log("user has no session");
         console.log("new user");
         return res.redirect(`/signup`);
     }

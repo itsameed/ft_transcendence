@@ -6,6 +6,7 @@ const cookieAuth = require('../middleware/cookieAuth');
 
 router.get('/', (req, res) => {
     // console.log("sdff");
+    console.log('reached here');
     res.render(`signup`);
 });
 

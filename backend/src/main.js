@@ -3,6 +3,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const MongoStore = require('connect-mongo').default;
+const passport = require('./middleware/googleAuth');
 const connectDB = require("./config/database.js");
 const app = express();
 const http = require("http");
@@ -36,6 +37,7 @@ const groupTotalExpensesRouter = require('./routes/GroupTotalExpenses.js');
 const logoutRouter = require('./routes/Logout.js');
 const myProfileRouter = require('./routes/MyProfile.js');
 const editProfile = require('./routes/EditProfile.js');
+const googleAuth = require('./routes/googleAuth');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use(session({
@@ -52,10 +54,11 @@ app.use(session({
 }));
 
 
-
+app.use(passport.initialize());
+app.use(passport.session());
 
 //////////////////////////// Routes use ////////////////////////////////////////
-
+app.use('/auth/google', googleAuth);
 app.use('/dashboard', dashboardRouter);
 app.use('/', dashboardRouter);
 app.use('/group-details', groupDetailsRouter);
