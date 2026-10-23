@@ -1,10 +1,9 @@
 require('dotenv/config');
 const express = require('express');
 const cookieParser = require('cookie-parser');
-const mongoose = require('mongoose');
-const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo').default;
+const passport = require('./middleware/googleAuth');
 const connectDB = require("./config/database.js");
 const app = express();
 const http = require("http");
@@ -20,30 +19,26 @@ app.use(cookieParser());
 
 ///////////////////////////////////////////////// Models Routes //////////////////////////////////////////////////
 
-const Group = require("./models/Schemas/Group");
 const notificationRoutes = require("./routes/notificationRoutes");
 const conversationRoutes = require("./routes/conversationRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const friendRoutes = require("./routes/friendRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const groupInvitationRoutes = require("./routes/groupInvitationRoutes");
-// const FriendsList = require('./routes/friendRoutes.js');
-const groupDetailsRouter = require('./routes/get_routes/GroupDetails');
-// Route Imports (with .js extensions)
-const loginPageRouter = require('./routes/get_routes/login.js');
-const postLogin = require('./routes/post_routes/login.js');
-const postSignup = require('./routes/post_routes/signup.js');
-// const Notif = require('./routes/get_routes/Notifications.js');
-const userGroupsRouter = require('./routes/get_routes/MyGroups.js');
-const dashboardRouter = require('./routes/get_routes/Home.js');
-const signupPageRouter = require('./routes/get_routes/signup.js');
-// const postCreateGroup = require('./routes/post_routes/createGroup.js');
-// const getCreateGroup = require('./routes/get_routes/CreateGroup.js');
-const expensesRouter = require('./routes/get_routes/Expenses.js');
-const createExpenseRouter = require('./routes/post_routes/createExpense.js');
-const groupTotalExpensesRouter = require('./routes/get_routes/GroupTotalExpenses');
-const logoutRouter = require('./routes/get_routes/Logout');
-const myProfileRouter = require('./routes/get_routes/MyProfile');
+const groupDetailsRouter = require('./routes/GroupDetails');
+const loginPageRouter = require('./routes/login.js');
+// const userGroupsRouter = require('./routes/groupRoutes.js');
+const dashboardRouter = require('./routes/Home.js');
+const signupPageRouter = require('./routes/signup.js');
+const groupCreationRouter = require('./routes/CreateGroup.js');
+const settlementsRouter = require('./routes/Settlement.js');
+const expensesRouter = require('./routes/Expenses.js');
+const groupTotalExpensesRouter = require('./routes/GroupTotalExpenses.js');
+const logoutRouter = require('./routes/Logout.js');
+const myProfileRouter = require('./routes/MyProfile.js');
+const editProfile = require('./routes/EditProfile.js');
+const googleAuth = require('./routes/googleAuth');
+const adminRoutes = require("./routes/adminRoutes");
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use(session({
@@ -60,25 +55,28 @@ app.use(session({
 }));
 
 
-
+app.use(passport.initialize());
+app.use(passport.session());
 
 //////////////////////////// Routes use ////////////////////////////////////////
-
+app.use('/auth/google', googleAuth);
 app.use('/dashboard', dashboardRouter);
 app.use('/', dashboardRouter);
 app.use('/group-details', groupDetailsRouter);
 app.use('/my-profile', myProfileRouter);
+app.use('/profile/edit', editProfile);
 app.use('/auth/login', loginPageRouter);
-app.use('/auth/login', postLogin);
-app.use(`/auth/signup`, postSignup);
 app.use('/auth/signup', signupPageRouter);
 // app.use('/Friends', FriendsList);
-// app.use(`/CreateGroup`, postCreateGroup);
-// app.use(`/CreateGroup`, getCreateGroup);
+app.use('/groups/create', groupCreationRouter);
+app.use('/settlements', settlementsRouter);
+app.use('/settlements/addSettlement', settlementsRouter);
+
 // app.use('/notifications', Notif);
-app.use('/my-groups', userGroupsRouter);
-app.use('/expenses', createExpenseRouter);
+app.use('/my-groups', groupRoutes);
 app.use('/expenses', expensesRouter);
+app.use('/createExpense', expensesRouter);
+
 app.use('/my-groups/total-expenses', groupTotalExpensesRouter);
 app.use("/api/group-invitations", groupInvitationRoutes);
 app.use("/api/groups", groupRoutes);
@@ -86,6 +84,7 @@ app.use("/api/friends", friendRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
+app.use("/api/admin", adminRoutes);
 app.use('/auth/logout', logoutRouter);
 
 ////////////////////////////////////////////////////////////////////////////
