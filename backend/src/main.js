@@ -2,14 +2,12 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const express = require('express');
 const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const MongoStore = require('connect-mongo').default;
 const passport = require('./middleware/googleAuth');
 const connectDB = require("./config/database.js");
 const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
-
+const sessionMiddleware = require('./middleware/session');
 
 app.set("view engine", 'ejs');
 app.use(express.json());
@@ -42,18 +40,7 @@ const googleAuth = require('./routes/googleAuth');
 const adminRoutes = require("./routes/adminRoutes");
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URL,
-  }),
-  cookie: {
-    secure: false,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  }
-}));
+app.use(sessionMiddleware);
 
 
 app.use(passport.initialize());

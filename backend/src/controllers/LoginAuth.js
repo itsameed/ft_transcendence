@@ -1,5 +1,6 @@
 const UserSchema = require('../models/Schemas/User');
 const bcrypt = require('bcrypt');
+const printLogsDate = require('../controllers/printLogs');
 
 async function loginAuth(req, res, next) {
     const { email, password } = req.body;
