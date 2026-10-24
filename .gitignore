@@ -34,3 +34,9 @@ Thumbs.db
 
 
 practice
+
+#Ide
+.vscode/
+.claude/
+.devcontainer/
+.editorconfig
