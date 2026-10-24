@@ -14,7 +14,7 @@ async function loadNewUser(req, res, next) {
     let { fullName, displayName, email, password, bio, phoneNumber, gender } = req.body;
     // console.log();
     if (!fullName || !email || !password) {
-        return res.status(400).send('username, email, and password are required.');
+        return res.status(400).json('username, email, and password are required.');
     }
     if (!displayName) {
         displayName = uniqueNamesGenerator({
