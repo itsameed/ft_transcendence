@@ -24,6 +24,7 @@
     "livereload": "^0.10.3",
     "mongodb": "^7.6.0",
     "mongoose": "^9.10.0",
+    "multer": "^2.4.0",
     "nodemailer": "^10.1.7",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",

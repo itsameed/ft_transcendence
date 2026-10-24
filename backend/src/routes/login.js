@@ -1,5 +1,4 @@
 const express = require('express');
-const printLogsDate = require('../controllers/printLogs');
 const loginAuth = require('../controllers/LoginAuth');
 const router = express.Router();
 
