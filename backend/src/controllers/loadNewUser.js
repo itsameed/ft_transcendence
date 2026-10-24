@@ -47,10 +47,10 @@ async function loadNewUser(req, res, next) {
         return res.redirect('/dashboard');
     } catch (error) {
         if (error.code === 11000) {
-            return res.status(409).send('This email or username is already registered.');
+            return res.status(409).json({ message: 'This email or username is already registered.' });
         }
         console.error('Error while attempting to create a user:', error);
-        return res.status(500).send('Unable to create the account. Please try again.');
+        return res.status(500).json({ message: 'Unable to create the account. Please try again.' });
     }
 }
 

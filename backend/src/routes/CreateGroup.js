@@ -13,7 +13,7 @@ router.get('/', requireAuth, (req, res) => {
 router.post('/', requireAuth, async (req, res) => {
     const { groupName, groupDesc = '' } = req.body;
     if (!groupName || !groupName.trim()) {
-        return res.status(400).send('A group name is required.');
+        return res.status(400).json({ message: 'A group name is required.' });
     }
 
     try {
@@ -27,7 +27,7 @@ router.post('/', requireAuth, async (req, res) => {
         return res.redirect('/my-groups');
     } catch (error) {
         console.error('Error while creating a group:', error);
-        return res.status(500).send('Unable to create the group.');
+        return res.status(500).json({ message: 'Unable to create the group.' });
     }
 });
 

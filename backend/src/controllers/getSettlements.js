@@ -12,7 +12,7 @@ async function getSettlements(req, res, next) {
         return res.status(200).json({ settlements });
     } catch (error) {
         console.error('Error while retrieving settlements:', error);
-        return res.status(500).send('Unable to retrieve settlements.');
+        return res.status(500).json({ message: 'Unable to retrieve settlements.' });
     }
 }
 
