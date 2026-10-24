@@ -44,7 +44,7 @@ async function loadNewUser(req, res, next) {
         // req.session.userId = newUser._id;
         // req.session.username = newUser.username;
         printLogsDate(`User with Id ${newUser._id} signed up at : `);
-        return res.redirect('/dashboard');
+        return res.status(201).json({ message: 'User created successfully.', userId: newUser._id ,username: newUser.username, displayName: newUser.displayName, email: newUser.email, bio: newUser.bio, gender: newUser.gender});
     } catch (error) {
         if (error.code === 11000) {
             return res.status(409).json({ message: 'This email or username is already registered.' });
