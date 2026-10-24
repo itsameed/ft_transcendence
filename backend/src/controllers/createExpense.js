@@ -30,7 +30,7 @@ async function createExpense(req, res, next) {
             customSplit,
         });
         printLogsDate(`User with Id ${req.session.userId} created an expense at : `);
-        return res.redirect('/dashboard');
+        return res.json({ message: 'Expense created successfully.' });
     } catch (error) {
         console.error('Error while attempting to save the expense:', error);
         return res.status(500).json({ message: 'Unable to save the expense.' });

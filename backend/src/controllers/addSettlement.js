@@ -17,7 +17,7 @@ async function addSettlement(req, res, next) {
             amount: settlementAmount,
         });
         printLogsDate(`User with Id ${req.session.userId} created a settlement at : `);
-        return res.redirect('/dashboard');
+        return res.json({ message: 'Settlement created successfully.' });
     } catch (error) {
         console.error('Error while saving the settlement:', error);
         return res.status(500).json({message:'Unable to save the settlement.'});

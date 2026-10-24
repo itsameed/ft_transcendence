@@ -10,7 +10,7 @@ router.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
         req.session.userId = req.user._id;
-        res.redirect('/');
+        res.json({ message: 'Google authentication successful.' });
     }
 );
 
