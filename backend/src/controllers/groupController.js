@@ -260,11 +260,6 @@ const getUserGroups = async (req, res, next) => {
   }
 };
 
-{
-  4,
-  groups [];
-}
-
 const leaveGroup = async (req, res, next) => {
   try {
     const { groupId } = req.params;
