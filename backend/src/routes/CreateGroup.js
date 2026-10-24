@@ -24,7 +24,7 @@ router.post('/', requireAuth, async (req, res) => {
             members: [{ userId: req.session.userId, role: 'owner' }],
         });
         printLogsDate(`User with Id ${req.session.userId} created a group at : `);
-        return res.redirect('/my-groups');
+        return res.json({ message: 'Group created successfully.' });
     } catch (error) {
         console.error('Error while creating a group:', error);
         return res.status(500).json({ message: 'Unable to create the group.' });

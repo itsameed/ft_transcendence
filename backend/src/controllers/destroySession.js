@@ -6,7 +6,7 @@ async function destroySession(req, res, next) {
         }
         res.clearCookie('connect.sid');
 
-        res.redirect('/login');
+        res.json({ message: 'Logged out successfully.' });
     })
     next();
 }
