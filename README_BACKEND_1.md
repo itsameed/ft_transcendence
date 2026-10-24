@@ -142,3 +142,19 @@ Socket.IO is attached to the same server. These are socket events, not HTTP endp
 - `GET /profile/edit` references `User` without importing it in `EditProfile.js`.
 - `GET /group-details` and `GET /my-groups/total-expenses` currently use a hard-coded group ID rather than a frontend-supplied group ID.
 - `src/routes/updateExpense.js`, the older `FriendsList` route, and other route files not mounted by `src/main.js` are not active endpoints in this catalog.
+
+```
+FRONTEND EXPECTS                            CURRENT BACKEND
+┌───────────────────────────────┐           ┌───────────────────────────────┐
+│ id             (string)       │  ◄──map── │ _id            (ObjectId)     │
+│ name           (string)       │  ◄─────── │ name           (string)       │
+│ emoji          (string)       │  ◄──MISSING                             │
+│ kind           (trip/home/...)│  ◄──MISSING                             │
+│ startDate      (Date/string)  │  ◄──MISSING                             │
+│ endDate        (Date/string)  │  ◄──MISSING                             │
+│ memberIds      [UserId]       │  ◄──map── │ members        [{userId}]     │
+│ totalSpent     (number)       │  ◄──calc─ (not stored, computed from exp) │
+│ yourBalance    (number)       │  ◄──calc─ (not stored, computed per user) │
+│ lastActivityAt (string)       │  ◄──map── │ updatedAt      (timestamp)    │
+└───────────────────────────────┘           └───────────────────────────────┘
+```

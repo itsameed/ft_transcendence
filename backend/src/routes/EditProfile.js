@@ -12,3 +12,5 @@ router.get('/', requireAuth, async (req, res, next) => {
 router.patch('/', requireAuth, cookieAuth, editUserProfile);
 
 module.exports = router;
+
+

@@ -29,7 +29,14 @@ const groupSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
-
+    kind: {
+      type:String,
+      required: true,
+      default: "other",
+    },
+    emoji: {
+      type: String,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
