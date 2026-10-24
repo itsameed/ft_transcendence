@@ -1,0 +1,14 @@
+.activity__amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.92rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity__amount-sub {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-3);
+}

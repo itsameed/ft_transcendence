@@ -1,0 +1,29 @@
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sections size themselves against this container, not the viewport. */
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 44px 48px 72px;
+  container-type: inline-size;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+@media (max-width: 860px) {
+  .main {
+    padding: 20px 16px 120px;
+  }
+  .content {
+    gap: 32px;
+  }
+}

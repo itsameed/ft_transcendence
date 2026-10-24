@@ -1,0 +1,63 @@
+.spending {
+  display: flex;
+  flex-direction: column;
+}
+
+.spending__amount {
+  margin: 0.25rem 0 0;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.spending__change {
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.chart {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  min-height: 140px;
+  margin-top: 1.25rem;
+}
+
+.chart__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.chart__bar {
+  width: 100%;
+  max-width: 34px;
+  height: var(--h);
+  border-radius: 8px;
+  background: var(--fill-strong);
+  transform-origin: bottom;
+  animation: bar-grow 0.7s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  animation-delay: calc(var(--i) * 40ms + 150ms);
+}
+
+.chart__bar.is-current {
+  background: linear-gradient(180deg, #5ac8fa, var(--accent));
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.chart__label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+}

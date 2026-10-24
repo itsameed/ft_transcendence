@@ -1,0 +1,158 @@
+/* macOS-style floating glass sidebar on desktop, iOS tab bar on phones. */
+.sidebar {
+  position: sticky;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: calc(100dvh - 24px);
+  padding: 1rem 0.75rem;
+  border-radius: var(--radius-xl);
+}
+
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.sidebar__logo {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: #fff;
+  background: linear-gradient(160deg, #5ac8fa, var(--accent));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.sidebar__name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.sidebar__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 0;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text-2);
+  background: transparent;
+  cursor: pointer;
+}
+
+.sidebar__item:hover {
+  background: var(--fill);
+  color: var(--text);
+}
+
+.sidebar__item[aria-current='page'] {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  font-weight: 600;
+}
+
+.sidebar__badge {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+  color: #fff;
+  background: var(--red);
+}
+
+.sidebar__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.sidebar__me {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem;
+  border-radius: 14px;
+  background: var(--fill);
+}
+
+.sidebar__me-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.sidebar__me-sub {
+  font-size: 0.75rem;
+  color: var(--text-3);
+}
+
+/* Phone: becomes a floating tab bar at the bottom */
+@media (max-width: 760px) {
+  .sidebar {
+    position: fixed;
+    inset: auto 12px max(12px, env(safe-area-inset-bottom)) 12px;
+    z-index: 10;
+    flex-direction: row;
+    height: auto;
+    padding: 6px;
+    border-radius: 999px;
+    /* thicker material: it floats over busy content */
+    background: color-mix(in srgb, var(--card-solid) 78%, transparent);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar__brand,
+  .sidebar__footer {
+    display: none;
+  }
+
+  .sidebar__list {
+    flex: 1;
+    flex-direction: row;
+    justify-content: space-around;
+  }
+
+  .sidebar__list li {
+    flex: 1;
+  }
+
+  .sidebar__item {
+    position: relative;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0.45rem 0.25rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+  }
+
+  .sidebar__badge {
+    position: absolute;
+    top: 2px;
+    right: calc(50% - 20px);
+    min-width: 16px;
+    padding: 0 4px;
+    font-size: 0.62rem;
+  }
+}

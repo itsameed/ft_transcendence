@@ -1,0 +1,144 @@
+.summary {
+  padding: 32px 32px 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.label {
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.net {
+  margin-top: 6px;
+  font-size: 44px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.meta {
+  max-width: 52ch;
+  margin-top: 12px;
+  color: var(--text-3);
+  font-size: 13.5px;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.column {
+  min-width: 0;
+  padding: 24px 32px 20px;
+}
+
+.column + .column {
+  border-left: 1px solid var(--border);
+}
+
+.columnHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.columnHead h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.columnHead > span {
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.dot[data-tone='owe'] {
+  background: var(--owe);
+}
+.dot[data-tone='owed'] {
+  background: var(--owed);
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 62px;
+}
+
+.row + .row {
+  border-top: 1px solid var(--border);
+}
+
+.name {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.amount {
+  font-weight: 600;
+}
+
+.action {
+  min-width: 84px;
+}
+
+.empty {
+  padding: 18px 0;
+  color: var(--text-3);
+}
+
+@container (max-width: 760px) {
+  .summary {
+    padding: 24px 20px 22px;
+  }
+  .net {
+    font-size: 38px;
+  }
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .column {
+    padding: 20px 20px 12px;
+  }
+  .column + .column {
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+}
+
+/* Phones: first names only, so names don't get cut off next to the buttons. */
+@container (max-width: 420px) {
+  .lastName {
+    display: none;
+  }
+}
+
+@container (max-width: 400px) {
+  .row {
+    gap: 12px;
+  }
+  .action {
+    min-width: 0;
+  }
+}
