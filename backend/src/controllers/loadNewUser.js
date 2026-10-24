@@ -23,7 +23,7 @@ async function loadNewUser(req, res, next) {
     }
     const existedUser = await UserSchema.findOne({email});
     if (existedUser) {
-        return res.status(400).json({error: "Email already registered"});
+        return res.status(400).json({message: "Email already registered"});
     }
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
