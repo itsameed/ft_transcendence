@@ -47,25 +47,24 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 //////////////////////////// Routes use ////////////////////////////////////////
+// Auth routes
 app.use('/auth/google', googleAuth);
-app.use('/dashboard', dashboardRouter);
-app.use('/', dashboardRouter);
-app.use('/group-details', groupDetailsRouter);
-app.use('/my-profile', myProfileRouter);
-app.use('/profile/edit', editProfile);
 app.use('/auth/login', loginPageRouter);
 app.use('/auth/signup', signupPageRouter);
-// app.use('/Friends', FriendsList);
-app.use('/groups/create', groupCreationRouter);
-app.use('/settlements', settlementsRouter);
-app.use('/settlements/addSettlement', settlementsRouter);
+app.use('/auth/logout', logoutRouter);
 
-// app.use('/notifications', Notif);
-app.use('/my-groups', groupRoutes);
-app.use('/expenses', expensesRouter);
-app.use('/createExpense', expensesRouter);
-
-app.use('/my-groups/total-expenses', groupTotalExpensesRouter);
+// API routes
+app.use('/api/dashboard', dashboardRouter);
+app.use('/api/my-profile', myProfileRouter);
+app.use('/api/profile/edit', editProfile);
+app.use('/api/group-details', groupDetailsRouter);
+app.use('/api/groups/create', groupCreationRouter);
+app.use('/api/settlements', settlementsRouter);
+app.use('/api/settlements/addSettlement', settlementsRouter);
+app.use('/api/my-groups', groupRoutes);
+app.use('/api/expenses', expensesRouter);
+app.use('/api/createExpense', expensesRouter);
+app.use('/api/my-groups/total-expenses', groupTotalExpensesRouter);
 app.use("/api/group-invitations", groupInvitationRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/friends", friendRoutes);
@@ -73,7 +72,10 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/admin", adminRoutes);
-app.use('/auth/logout', logoutRouter);
+
+// Fallback legacy support
+app.use('/dashboard', dashboardRouter);
+app.use('/my-profile', myProfileRouter);
 
 ////////////////////////////////////////////////////////////////////////////
 app.use((err, req, res, next) => {
