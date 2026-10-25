@@ -9,7 +9,7 @@ function Auth(req, res, next) {
     {
         console.log("user has no session");
         console.log("new user");
-        return res.json({ message: 'Authentication required.' });
+        return res.status(401).json({ message: 'Authentication required.' });
     }
     return next();
 }
