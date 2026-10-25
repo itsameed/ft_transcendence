@@ -106,7 +106,7 @@ These routes render EJS pages or process browser forms. They use the session coo
 
 | Method and path | Auth | Frontend data | Result |
 | --- | --- | --- | --- |
-| `GET /` and `GET /dashboard` | `requireAuth`, `cookieAuth` | None | Runs `calculateUserBalance` and renders `Dashboard`. |
+| `GET /` and `GET /dashboard` | `requireAuth`, `cookieAuth` | None | Returns recent group balances and recent debts as JSON; see the user dashboard data response below. |
 | `GET /group-details` | `requireAuth` | No request data | Runs `getGroupExpenses` and renders `Dashboard`. The current utility uses a hard-coded group ID. |
 | `GET /my-profile` | `requireAuth`, `cookieAuth` | No request data | Loads profile and statistics and renders `my-profile`. |
 | `GET /profile/edit` | `requireAuth` | No request data | Intended to render the edit profile page. |
@@ -120,6 +120,89 @@ These routes render EJS pages or process browser forms. They use the session coo
 | `GET /my-groups/total-expenses` | `requireAuth` | No request data | Runs `GroupTotalExpenses` and renders `Dashboard`; current utility uses a hard-coded group ID. |
 
 The duplicate settlement mount means `/settlements/addSettlement` is an additional alias to the same router's root GET and POST handlers; it is not a separate settlement-ID endpoint.
+
+## User dashboard data response
+
+The handler in `src/controllers/getAllUserInfos.js`, mounted at `GET /` and `GET /dashboard`, returns up to four recent group balances and recent debts for the authenticated user:
+
+```json
+{
+	"groups": {
+		"userRecentGroups": [
+			{
+				"groupId": "670000000000000000000002",
+				"name": "Apartment Rent",
+				"createdAt": "2026-10-25 15:29:04",
+				"membersCount": 3,
+				"balance": -400
+			},
+			{
+				"groupId": "670000000000000000000004",
+				"name": "Concert Tickets",
+				"createdAt": "2026-10-25 15:29:04",
+				"membersCount": 3,
+				"balance": -30
+			},
+			{
+				"groupId": "670000000000000000000001",
+				"name": "Paris Trip",
+				"createdAt": "2026-10-25 15:29:04",
+				"membersCount": 3,
+				"balance": -150
+			},
+			{
+				"groupId": "670000000000000000000003",
+				"name": "Groceries",
+				"createdAt": "2026-10-25 15:29:04",
+				"membersCount": 3,
+				"balance": 40
+			}
+		]
+	},
+	"debts": {
+		"userRecentDebts": {
+			"totalYouOwe": 630,
+			"youOwe": [
+				{
+					"user": {
+						"_id": "6adcb8c05b8ce769b2bfdfc1",
+						"username": "ggg"
+					},
+					"totalAmount": 120,
+					"lastExpense": "2026-10-23T20:00:00.000Z"
+				},
+				{
+					"user": {
+						"_id": "6addf060781bf3f910e26a11",
+						"username": "fofo"
+					},
+					"totalAmount": 510,
+					"lastExpense": "2026-10-21T18:00:00.000Z"
+				}
+			],
+			"totalOweYou": 90,
+			"oweYou": [
+				{
+					"user": {
+						"_id": "6adcb8c05b8ce769b2bfdfc1",
+						"username": "ggg"
+					},
+					"totalAmount": 60,
+					"lastExpense": "2026-10-22T15:00:00.000Z"
+				},
+				{
+					"user": {
+						"_id": "6addf060781bf3f910e26a11",
+						"username": "fofo"
+					},
+					"totalAmount": 30,
+					"lastExpense": "2026-10-22T15:00:00.000Z"
+				}
+			]
+		}
+	}
+}
+```
 
 ## Socket.IO
 

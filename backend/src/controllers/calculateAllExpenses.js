@@ -1,6 +1,5 @@
 const roundDown = (num) => Math.floor(num);
 const ExpenseSchema = require(`../models/Schemas/Expenses`);
-const Settlement = require("../models/Schemas/Settlement");
 const SettlementSchema = require(`../models/Schemas/Settlement`);
 
 async function calculateAllExpenses(userId) {

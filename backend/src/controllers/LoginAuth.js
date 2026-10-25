@@ -27,6 +27,7 @@ async function loginAuth(req, res, next) {
         req.session.username = user.username;
         printLogsDate(`User with Id ${user._id} logged in at : `);
         return res.status(200).json({ message: 'Login successful.', userId: user._id, username: user.username, displayName: user.displayName, email: user.email, bio: user.bio, gender: user.gender });
+        // return res.redirect('Dashboard');
     } catch (error) {
         console.error('Error while attempting to log in:', error);
         return res.status(500).json({ message: 'Unable to log in. Please try again.' });
