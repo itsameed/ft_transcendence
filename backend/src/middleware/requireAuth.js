@@ -1,0 +1,17 @@
+function Auth(req, res, next) {
+    // const date = new Date();
+    // const currentTime = date.toLocaleDateString();
+    // process.stdout.write("user attempted getting at : ")
+    // console.log(currentTime);
+    // // console.log("ggg");
+    // console.log(req.session.userId);
+    if (!req.session?.userId)
+    {
+        console.log("user has no session");
+        console.log("new user");
+        return res.status(401).json({ message: 'Authentication required.' });
+    }
+    return next();
+}
+
+module.exports = Auth;

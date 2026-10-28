@@ -1,0 +1,372 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  padding: 24px;
+  background: var(--scrim);
+  animation: fade 0.2s ease-out;
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  width: min(540px, 100%);
+  min-width: 0;
+  max-height: min(880px, calc(100vh - 48px));
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow-modal);
+  animation: pop 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 28px 0;
+}
+
+.header h2 {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-right: -6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-3);
+}
+.close:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 4px 28px 0;
+  overflow-y: auto;
+}
+
+/* The body scrolls; its children must keep their size instead of squashing. */
+.body > * {
+  flex-shrink: 0;
+}
+
+.amount {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  padding: 20px 0 4px;
+  cursor: text;
+}
+
+.amount input {
+  max-width: 100%;
+  min-width: 1.5ch;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 52px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  text-align: right;
+}
+.amount input::placeholder {
+  color: var(--text-3);
+  opacity: 0.5;
+}
+
+.amount span {
+  color: var(--text-3);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.input,
+.field input,
+.select select,
+.shareInput label {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  outline: 0;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input:focus,
+.field input:focus,
+.select select:focus,
+.shareInput label:focus-within {
+  border-color: var(--text-3);
+  box-shadow: 0 0 0 3px var(--surface-3);
+}
+
+.input::placeholder {
+  color: var(--text-3);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field > span {
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.field input {
+  width: 100%;
+  min-width: 0;
+}
+
+.select {
+  position: relative;
+  display: block;
+}
+
+.select select {
+  width: 100%;
+  padding-right: 38px;
+  appearance: none;
+  text-overflow: ellipsis;
+}
+
+.select svg {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  color: var(--text-3);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.split {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.splitHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.splitHead h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.segmented {
+  display: flex;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.segmented button {
+  height: 30px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.segmented .segOn {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px var(--border);
+}
+
+.members {
+  display: flex;
+  flex-direction: column;
+  margin: 0 -8px;
+  padding: 0;
+  list-style: none;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 6px 8px;
+  border-radius: 12px;
+}
+
+.memberOff > :not(.check) {
+  opacity: 0.45;
+}
+
+.check {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--on-primary);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.checkOn {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.memberName {
+  flex: 1;
+  min-width: 0;
+  font-weight: 500;
+}
+
+.memberName em {
+  margin-left: 8px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.share {
+  color: var(--text-2);
+}
+
+.shareInput {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shareInput small {
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+.shareInput label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 116px;
+  height: 38px;
+  padding: 0 12px;
+}
+
+.shareInput input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.shareInput span {
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+.summary {
+  padding: 4px 0 2px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+.summary[data-warn='true'] {
+  color: var(--owe);
+}
+
+.footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 4px -28px 0;
+  padding: 16px 28px 22px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+@media (max-width: 640px) {
+  .backdrop {
+    place-items: end stretch;
+    padding: 0;
+  }
+  .sheet {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 22px 22px 0 0;
+    animation: slideUp 0.34s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  .header {
+    padding: 20px 20px 0;
+  }
+  .body {
+    padding: 4px 20px 0;
+  }
+  .amount input {
+    font-size: 44px;
+  }
+  .footer {
+    margin: 4px -20px 0;
+    padding: 14px 20px calc(18px + env(safe-area-inset-bottom));
+  }
+  .footer button {
+    flex: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+}

@@ -1,0 +1,35 @@
+.region {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 60;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 550;
+  box-shadow: var(--shadow-lg);
+  animation: rise 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  white-space: nowrap;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+}
+
+@media (max-width: 860px) {
+  .region {
+    bottom: 96px;
+  }
+}

@@ -1,5 +1,5 @@
 const Conversation = require("../models/Schemas/Conversation");
-const { createNotification } = require("../utils/notificationService");
+const { createNotification } = require("./notificationService");
 const Message = require("../models/Schemas/Message");
 const mongoose = require("mongoose");
 

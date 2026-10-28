@@ -1,0 +1,65 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.mobileBrand {
+  display: none;
+}
+
+.greeting h1 {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.greeting p {
+  margin-top: 4px;
+  color: var(--text-3);
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-2);
+  transition: background 0.15s, color 0.15s;
+}
+
+.iconButton:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+@media (max-width: 860px) {
+  .mobileBrand {
+    display: block;
+    width: 100%;
+    margin-left: -12px;
+  }
+  .greeting {
+    flex: 1;
+    min-width: 0;
+  }
+  .greeting h1 {
+    font-size: 22px;
+  }
+  .add {
+    display: none;
+  }
+}

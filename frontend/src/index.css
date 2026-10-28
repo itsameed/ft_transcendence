@@ -1,0 +1,283 @@
+/* ───────────── Design tokens ─────────────
+   Every color/size lives here. Components only use these variables,
+   so light/dark mode is just a different set of values. */
+:root {
+  color-scheme: light;
+
+  --accent: #007aff;
+  --green: #28a745;
+  --red: #ff3b30;
+
+  --text: #1d1d1f;
+  --text-2: rgb(60 60 67 / 0.72);
+  --text-3: rgb(60 60 67 / 0.5);
+  --separator: rgb(60 60 67 / 0.12);
+  --fill: rgb(120 120 128 / 0.1);
+  --fill-strong: rgb(120 120 128 / 0.18);
+
+  --bg: #f2f2f7;
+  --glass: rgb(255 255 255 / 0.62);
+  --glass-border: rgb(255 255 255 / 0.7);
+  --card-solid: #fff;
+
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 26px;
+
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 2px 4px rgb(0 0 0 / 0.05), 0 16px 40px rgb(0 0 0 / 0.1);
+
+  font: 100%/1.5 -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --accent: #0a84ff;
+    --green: #30d158;
+    --red: #ff453a;
+
+    --text: #f5f5f7;
+    --text-2: rgb(235 235 245 / 0.7);
+    --text-3: rgb(235 235 245 / 0.45);
+    --separator: rgb(84 84 88 / 0.5);
+    --fill: rgb(120 120 128 / 0.2);
+    --fill-strong: rgb(120 120 128 / 0.32);
+
+    --bg: #000;
+    --glass: rgb(36 36 40 / 0.55);
+    --glass-border: rgb(255 255 255 / 0.1);
+    --card-solid: #1c1c1e;
+
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
+    --shadow-lg: 0 2px 4px rgb(0 0 0 / 0.3), 0 16px 40px rgb(0 0 0 / 0.5);
+  }
+}
+
+/* ───────────── Base ───────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* Soft colorful wallpaper so the glass has something to refract */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(40% 50% at 10% 0%, color-mix(in srgb, #5ac8fa 35%, transparent), transparent),
+    radial-gradient(35% 45% at 90% 10%, color-mix(in srgb, #bf5af2 25%, transparent), transparent),
+    radial-gradient(45% 50% at 70% 100%, color-mix(in srgb, #ff9f0a 18%, transparent), transparent);
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 1.25rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 12px 20px 12px 12px;
+}
+
+@media (max-width: 760px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+  }
+}
+
+/* ───────────── Glass material (Liquid Glass approximation) ───────────── */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow), inset 0 1px 0 rgb(255 255 255 / 0.25);
+  transition: transform 300ms cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 300ms ease;
+}
+
+/* ───────────── Card ───────────── */
+.card {
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+}
+
+.card__header,
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.card__title,
+.section-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.section-title {
+  font-size: 1.35rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+/* ───────────── Buttons ───────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 40px;
+  padding: 0 1.1rem;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn--primary {
+  color: #fff;
+  background: var(--accent);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.btn--tinted {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.btn--small {
+  height: 30px;
+  padding: 0 0.85rem;
+  font-size: 0.8rem;
+}
+
+.link-btn {
+  padding: 0;
+  border: 0;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--accent);
+  background: none;
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+/* Instant feedback on press (pointer-down), not on release */
+.pressable {
+  transition: transform 300ms cubic-bezier(0.2, 0.9, 0.3, 1), background-color 150ms ease, box-shadow 300ms ease;
+}
+
+.pressable:active {
+  transform: scale(0.96);
+  transition-duration: 80ms;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+/* ───────────── List rows (iOS table style) ───────────── */
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list__row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0;
+}
+
+.list__row + .list__row {
+  border-top: 0.5px solid var(--separator);
+}
+
+.list__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.list__title {
+  overflow: hidden;
+  font-size: 0.92rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list__title strong {
+  font-weight: 600;
+}
+
+.list__sub {
+  font-size: 0.8rem;
+  color: var(--text-3);
+}
+
+/* ───────────── Semantic tones ───────────── */
+.tone-positive { color: var(--green); }
+.tone-negative { color: var(--red); }
+.tone-neutral { color: var(--text-3); }
+
+.tone-bg-positive {
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 16%, transparent);
+}
+.tone-bg-negative {
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 16%, transparent);
+}
+
+/* ───────────── Accessibility preferences ───────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--card-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .glass {
+    background: var(--card-solid);
+    border-color: var(--text-3);
+  }
+}

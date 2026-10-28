@@ -1,15 +1,13 @@
-require('dotenv/config');
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const express = require('express');
 const cookieParser = require('cookie-parser');
-const mongoose = require('mongoose');
-const path = require('path');
-const session = require('express-session');
-const MongoStore = require('connect-mongo').default;
+const passport = require('./middleware/googleAuth');
 const connectDB = require("./config/database.js");
 const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
-
+const sessionMiddleware = require('./middleware/session');
 
 app.set("view engine", 'ejs');
 app.use(express.json());
@@ -20,74 +18,64 @@ app.use(cookieParser());
 
 ///////////////////////////////////////////////// Models Routes //////////////////////////////////////////////////
 
-const Group = require("./models/Schemas/Group");
 const notificationRoutes = require("./routes/notificationRoutes");
 const conversationRoutes = require("./routes/conversationRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const friendRoutes = require("./routes/friendRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const groupInvitationRoutes = require("./routes/groupInvitationRoutes");
-const FriendsList = require('./routes/friendRoutes.js');
-const GroupDetails = require('./routes/get_routes/GroupDetails');
-// Route Imports (with .js extensions)
-const Login = require('./routes/get_routes/login.js');
-const postLogin = require('./routes/post_routes/login.js');
-const postSignup = require('./routes/post_routes/signup.js');
-const Notif = require('./routes/get_routes/Notifications.js');
-const Groups = require('./routes/get_routes/MyGroups.js');
-const Homepage = require('./routes/get_routes/Home.js');
-const Signup = require('./routes/get_routes/signup.js');
-const postCreateGroup = require('./routes/post_routes/createGroup.js');
-const getCreateGroup = require('./routes/get_routes/CreateGroup.js');
-const getExpenses = require('./routes/get_routes/Expenses.js');
-const postExpense = require('./routes/post_routes/createExpense.js');
-const GroupTotalExpenses = require('./routes/get_routes/GroupTotalExpenses');
-const Logout = require('./routes/get_routes/Logout');
-const Myprofile = require('./routes/get_routes/MyProfile');
-const MyProfile = require('./routes/get_routes/MyProfile');
+const groupDetailsRouter = require('./routes/GroupDetails');
+const loginPageRouter = require('./routes/login.js');
+// const userGroupsRouter = require('./routes/groupRoutes.js');
+const dashboardRouter = require('./routes/Home.js');
+const signupPageRouter = require('./routes/signup.js');
+const groupCreationRouter = require('./routes/CreateGroup.js');
+const settlementsRouter = require('./routes/Settlement.js');
+const expensesRouter = require('./routes/Expenses.js');
+const groupTotalExpensesRouter = require('./routes/GroupTotalExpenses.js');
+const logoutRouter = require('./routes/Logout.js');
+const myProfileRouter = require('./routes/MyProfile.js');
+const editProfile = require('./routes/EditProfile.js');
+const googleAuth = require('./routes/googleAuth');
+const adminRoutes = require("./routes/adminRoutes");
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URL,
-  }),
-  cookie: {
-    secure: false,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  }
-}));
+app.use(sessionMiddleware);
 
 
-
+app.use(passport.initialize());
+app.use(passport.session());
 
 //////////////////////////// Routes use ////////////////////////////////////////
+// Auth routes
+app.use('/auth/google', googleAuth);
+app.use('/auth/login', loginPageRouter);
+app.use('/auth/signup', signupPageRouter);
+app.use('/auth/logout', logoutRouter);
 
-app.use('/dashboard', Homepage);
-app.use('/', Homepage);
-app.use('/GroupDetails', GroupDetails);
-app.use('/MyProfile', MyProfile);
-app.use('auth/login', Login);
-app.use('auth/login', postLogin);
-app.use(`auth/signup`, postSignup);
-app.use(`auth/signup`, Signup);
-app.use('/Friends', FriendsList);
-app.use(`/CreateGroup`, postCreateGroup);
-app.use(`/CreateGroup`, getCreateGroup);
-app.use('/notifications', Notif);
-app.use('/MyGroups', Groups);
-app.use(`/createExpense`, postExpense);
-app.use(`/getExpenses`, getExpenses);
-app.use('/MyGroups/GroupTotalExpenses', GroupTotalExpenses);
+// API routes
+app.use('/api/dashboard', dashboardRouter);
+app.use('/api/my-profile', myProfileRouter);
+app.use('/api/profile/edit', editProfile);
+app.use('/api/group-details', groupDetailsRouter);
+app.use('/api/groups/create', groupCreationRouter);
+app.use('/api/settlements', settlementsRouter);
+app.use('/api/settlements/addSettlement', settlementsRouter);
+app.use('/api/my-groups', groupRoutes);
+app.use('/api/expenses', expensesRouter);
+app.use('/api/createExpense', expensesRouter);
+app.use('/api/my-groups/total-expenses', groupTotalExpensesRouter);
 app.use("/api/group-invitations", groupInvitationRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
-app.use('auth/logout', Logout);
+app.use("/api/admin", adminRoutes);
+
+// Fallback legacy support
+app.use('/dashboard', dashboardRouter);
+app.use('/my-profile', myProfileRouter);
 
 ////////////////////////////////////////////////////////////////////////////
 app.use((err, req, res, next) => {
