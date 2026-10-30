@@ -77,7 +77,7 @@ export function RecentActivity({ items, users, groups, me, now }: Props) {
                 </span>
               </span>
               <span className={styles.group}>
-                <span aria-hidden>{r.group.emoji}</span> {r.group.name}
+                <span aria-hidden>{r.group?.emoji}</span> {r.group?.name}
               </span>
               <span className={styles.day}>{r.day}</span>
               <span className={styles.effect}>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AddExpenseModal } from '../components/dashboard/AddExpenseModal'
 import { BalanceOverview } from '../components/dashboard/BalanceOverview'
 import { GroupsGrid } from '../components/dashboard/GroupsGrid'
@@ -11,81 +12,126 @@ import { Toast } from '../components/ui/Toast'
 import { ME, NOW, friendBalances, groups, recentActivity, users } from '../data/mock'
 import { firstName, money } from '../lib/format'
 import { useTheme } from '../lib/useTheme'
-import type { Activity } from '../types'
+import { FriendBalance, Group, type Activity, type User } from '../types'
 import styles from './Dashboard.module.css'
+
 
 /** The dashboard only previews activity; the full list lives on its own page. */
 const ACTIVITY_PREVIEW = 5
 
 export function Dashboard() {
-  const me = users[ME]
-  const { dark, toggle } = useTheme()
-  const [activity, setActivity] = useState<Activity[]>(recentActivity)
-  const [adding, setAdding] = useState(false)
-  const [toast, setToast] = useState<string | null>(null)
-  const toastTimer = useRef<number>()
+   const [me, setMe] = useState<User | null>(null)
+   const { dark, toggle } = useTheme()
+   const [activity, setActivity] = useState<Activity[]>(recentActivity)
+   const [adding, setAdding] = useState(false)
+   const [toast, setToast] = useState<string | null>(null)
+   const toastTimer = useRef<number>()
+   const navigate = useNavigate();
+   const [groups, setGroupList] = useState<Group[]>([])
+   const [depts, setDept] = useState<FriendBalance[]>([])
+   const notify = useCallback((message: string) => {
+      setToast(message)
+      window.clearTimeout(toastTimer.current)
+      toastTimer.current = window.setTimeout(() => setToast(null), 2600)
+   }, [])
 
-  const notify = useCallback((message: string) => {
-    setToast(message)
-    window.clearTimeout(toastTimer.current)
-    toastTimer.current = window.setTimeout(() => setToast(null), 2600)
-  }, [])
+   const closeModal = useCallback(() => setAdding(false), [])
 
-  const closeModal = useCallback(() => setAdding(false), [])
+   // Keyboard shortcut: "n" opens the add-expense dialog.
+   useEffect(() => {
 
-  // Keyboard shortcut: "n" opens the add-expense dialog.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement
-      if (e.key === 'n' && !typing && !e.metaKey && !e.ctrlKey) setAdding(true)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
+      async function loadDashboard() {
+         try {
+            const [res1, res2] = await Promise.all([fetch("/api/dashboard", {
+               method: 'GET',
+               headers: { 'Content-Type': 'application/json' }
+            }), fetch('/api/my-profile', { method: 'GET', headers: { 'Content-Type': 'application/json' } })]);
+            if (res1.status === 401 || res2.status === 401) {
+               console.log('Unauthorized (401) -> would navigate to /login')
+               navigate('/login');
+               return;
+            }
+            const DashboardData = await res1.json()
+            console.log('Dashboard API response:', DashboardData)
+            const profileData = await res2.json()
+            console.log('Profile API response:', profileData)
 
-  return (
-    <div className={styles.app}>
-      <Sidebar me={me} />
+            setGroupList(DashboardData.groups?.userRecentGroups || [])
+            setDept(DashboardData.depts?.userRecentDepts || [])
+            setMe(profileData.user)
 
-      <main className={styles.main}>
-        <div className={styles.content}>
-          <Topbar firstName={firstName(me.name)} today={NOW} dark={dark} onToggleTheme={toggle} onAdd={() => setAdding(true)} />
+         } catch (err) { console.log('Failed to load dashboard: ', err) }
+         return;
+      }
 
-          <BalanceOverview
-            balances={friendBalances}
-            users={users}
-            groupCount={groups.length}
-            onSettle={(u, amount) => notify(`Recorded ${money(amount)} paid to ${firstName(u.name)}`)}
-            onRemind={(u) => notify(`Reminder sent to ${firstName(u.name)}`)}
-          />
+      loadDashboard()
 
-          <Section title="Groups" action={<SectionLink>All groups</SectionLink>}>
-            <GroupsGrid groups={groups} now={NOW} />
-          </Section>
+      console.log('user mail: ', me?.email)
 
-          <Section title="Recent activity" action={<SectionLink>View all</SectionLink>}>
-            <RecentActivity items={activity.slice(0, ACTIVITY_PREVIEW)} users={users} groups={groups} me={ME} now={NOW} />
-          </Section>
-        </div>
-      </main>
+      const onKey = (e: KeyboardEvent) => {
+         const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement
+         if (e.key === 'n' && !typing && !e.metaKey && !e.ctrlKey) setAdding(true)
+      }
+      window.addEventListener('keydown', onKey)
+      return () => window.removeEventListener('keydown', onKey)
+   }, [])
 
-      <MobileNav onAdd={() => setAdding(true)} />
+   // Temporary test display:
+   if (!me) {
+      return (<div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', color: 'white' }} >
+         Loading dashboard...
+      </div>
+      )
+   }
+   return (
+      <div className={styles.app}>
+         <Sidebar me={me} />
 
-      <AddExpenseModal
-        open={adding}
-        onClose={closeModal}
-        onSave={(expense, group) => {
-          setActivity((prev) => [expense, ...prev])
-          setAdding(false)
-          notify(`Added “${expense.title}” to ${group.name}`)
-        }}
-        groups={groups}
-        users={users}
-        me={ME}
-        today={NOW}
-      />
+         <main className={styles.main}>
+            <div className={styles.content}>
+               <Topbar firstName={firstName(me.name)} today={NOW} dark={dark} onToggleTheme={toggle} onAdd={() => setAdding(true)} />
 
-      <Toast message={toast} />
-    </div>
-  )
+               <BalanceOverview
+                  balances={friendBalances}
+                  users={users}
+                  groupCount={groups.length}
+                  onSettle={(u, amount) => notify(`Recorded ${money(amount)} paid to ${firstName(u.name)}`)}
+                  onRemind={(u) => notify(`Reminder sent to ${firstName(u.name)}`)}
+               />
+
+               <Section title="Groups" action={<SectionLink>All groups</SectionLink>}>
+                  <GroupsGrid groups={groups} now={NOW} />
+               </Section>
+
+               <Section title="Recent activity" action={<SectionLink>View all</SectionLink>}>
+                  <RecentActivity items={groups.length > 0 ? activity.slice(0, ACTIVITY_PREVIEW) : []}
+                     users={users}
+                     groups={groups}
+                     me={me.id}
+                     now={NOW}
+                  />
+               </Section>
+            </div>
+         </main>
+
+         <MobileNav onAdd={() => setAdding(true)} />
+         {groups.length > 0 && (
+            <AddExpenseModal
+               open={adding}
+               onClose={closeModal}
+               onSave={(expense, group) => {
+                  setActivity((prev) => [expense, ...prev])
+                  setAdding(false)
+                  notify(`Added “${expense.title}” to ${group.name}`)
+               }}
+               groups={groups}
+               users={users}
+               me={me.id}
+               today={NOW}
+            />
+         )}
+
+         <Toast message={toast} />
+      </div>
+   )
 }

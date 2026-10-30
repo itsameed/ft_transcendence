@@ -9,7 +9,11 @@ export interface User {
   email: string
 }
 
-export type GroupKind = 'trip' | 'home' | 'event' | 'other'
+export type GroupKind = 'trip' | 'home' | 'event' | 'other' | 'dinner' 
+                        | 'party' | 'wedding' | 'vacation' | 'conference' 
+                        | 'festival' | 'concert' | 'sports' | 'workshop' 
+                        | 'retreat' | 'roadtrip' | 'camping' | 'cruise' 
+                        | 'skiing' | 'hiking' | 'beach' | 'citytrip'
 
 export interface Group {
   id: string
