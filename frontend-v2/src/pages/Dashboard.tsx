@@ -9,7 +9,7 @@ import { Sidebar } from '../components/layout/Sidebar'
 import { Topbar } from '../components/layout/Topbar'
 import { Section, SectionLink } from '../components/ui/Section'
 import { Toast } from '../components/ui/Toast'
-import { ME, NOW, friendBalances, groups, recentActivity, users } from '../data/mock'
+// import { NOW, friendBalances, groups, recentActivity, users } from '../data/mock'
 import { firstName, money } from '../lib/format'
 import { useTheme } from '../lib/useTheme'
 import { FriendBalance, Group, type Activity, type User } from '../types'
@@ -22,13 +22,16 @@ const ACTIVITY_PREVIEW = 5
 export function Dashboard() {
    const [me, setMe] = useState<User | null>(null)
    const { dark, toggle } = useTheme()
-   const [activity, setActivity] = useState<Activity[]>(recentActivity)
+   // const [activity, setActivity] = useState<Activity[]>(recentActivity)
    const [adding, setAdding] = useState(false)
    const [toast, setToast] = useState<string | null>(null)
    const toastTimer = useRef<number>()
    const navigate = useNavigate();
    const [groups, setGroupList] = useState<Group[]>([])
    const [depts, setDept] = useState<FriendBalance[]>([])
+   const [users, setUsers] = useState<Record<string, User>>({})
+   const NOW = new Date()
+
    const notify = useCallback((message: string) => {
       setToast(message)
       window.clearTimeout(toastTimer.current)
@@ -59,6 +62,35 @@ export function Dashboard() {
             setGroupList(DashboardData.groups?.userRecentGroups || [])
             setDept(DashboardData.depts?.userRecentDepts || [])
             setMe(profileData.user)
+
+            const recentDepts = DashboardData.debts?.userRecentDebts
+            const userMap: Record<string, User> = {}
+            const balanceList: FriendBalance[] = []
+
+            if (profileData.user){
+               userMap[profileData.user.id] = profileData.user
+            }
+
+            if (recentDepts?.youOwe){
+               recentDepts.youOwe.forEach((item: any) => {
+                  const u = item.user
+                  if(u){
+                     userMap[u._id] = {id: u._id, name: u.username, email: ''}
+                     balanceList.push({userId: u._id, amount: -item.totalAmount})
+                  }
+               })
+            }
+            if (recentDepts?.oweYou){
+               recentDepts.oweYou.forEach((item: any) => {
+                  const u = item.user
+                  if(u){
+                     userMap[u._id] = {id: u._id, name: u.username, email: ''}
+                     balanceList.push({userId: u._id, amount: item.totalAmount})
+                  }
+               })
+            }
+            setUsers(userMap)
+            setDept(balanceList)
 
          } catch (err) { console.log('Failed to load dashboard: ', err) }
          return;
@@ -92,7 +124,7 @@ export function Dashboard() {
                <Topbar firstName={firstName(me.name)} today={NOW} dark={dark} onToggleTheme={toggle} onAdd={() => setAdding(true)} />
 
                <BalanceOverview
-                  balances={friendBalances}
+                  balances={depts}
                   users={users}
                   groupCount={groups.length}
                   onSettle={(u, amount) => notify(`Recorded ${money(amount)} paid to ${firstName(u.name)}`)}
@@ -103,19 +135,19 @@ export function Dashboard() {
                   <GroupsGrid groups={groups} now={NOW} />
                </Section>
 
-               <Section title="Recent activity" action={<SectionLink>View all</SectionLink>}>
+               {/* <Section title="Recent activity" action={<SectionLink>View all</SectionLink>}>
                   <RecentActivity items={groups.length > 0 ? activity.slice(0, ACTIVITY_PREVIEW) : []}
                      users={users}
                      groups={groups}
                      me={me.id}
                      now={NOW}
                   />
-               </Section>
+               </Section> */}
             </div>
          </main>
 
          <MobileNav onAdd={() => setAdding(true)} />
-         {groups.length > 0 && (
+         {/* {groups.length > 0 && (
             <AddExpenseModal
                open={adding}
                onClose={closeModal}
@@ -129,7 +161,7 @@ export function Dashboard() {
                me={me.id}
                today={NOW}
             />
-         )}
+         )} */}
 
          <Toast message={toast} />
       </div>
