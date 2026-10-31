@@ -6,29 +6,24 @@ const Expense = require('../models/Schemas/Expenses');
 const User = require('../models/Schemas/User');
 
 async function getRecentGroupBalances(userId) {
-    
     const groups = await Group.find({ 'members.userId': userId })
-        .sort({ createdAt: -1 }) 
+        .sort({ createdAt: -1 })
         .limit(4)
         .select('name createdAt members');
 
     if (groups.length === 0) {
-        return []; 
+        return [];
     }
 
-    
     const groupIds = groups.map(group => group._id);
 
-    
     const expenses = await Expense.find({ group: { $in: groupIds } });
 
-    
     const balances = {};
     groups.forEach(group => {
         balances[group._id.toString()] = 0;
     });
 
-    
     for (let i = 0; i < expenses.length; i++) {
         const exp = expenses[i];
         const groupId = exp.group.toString();
@@ -38,36 +33,32 @@ async function getRecentGroupBalances(userId) {
             p => p.toString() === userId.toString()
         );
 
-        
         if (isPayer || isParticipant) {
             const userShare = getUserShare(exp, userId);
             const amountUserPaid = isPayer ? exp.amount : 0;
-
-            
             balances[groupId] += (amountUserPaid - userShare);
         }
     }
 
-    
     const result = groups.map(group => {
         const groupId = group._id.toString();
         const rawBalance = balances[groupId];
+        const memberIds = group.members.map(member => member.userId);
         
         return {
             groupId: group._id,
             name: group.name,
-            createdAt: group.createdAt.toISOString().replace('T', ' ').slice(0, 19),
+            createdAt: group.createdAt,
             membersCount: group.members.length,
-            
-            balance: Math.round(rawBalance * 100) / 100 
+            memberIds: memberIds,
+            balance: Math.round(rawBalance * 100) / 100
         };
     });
 
     return result;
 }
-// helper function for getting a specific user's share in a custom split
+
 function getUserShare(expense, targetUserId) {
-    
     if (expense.splitMethod === 'custom') {
         const splitEntry = expense.customSplit.find(
             s => s.user.toString() === targetUserId.toString()
@@ -75,7 +66,6 @@ function getUserShare(expense, targetUserId) {
         return splitEntry ? splitEntry.amount : 0;
     }
 
-    
     const participantCount = expense.participants.length;
     if (participantCount === 0) return 0;
     
@@ -276,19 +266,16 @@ async function getUserBalance(req, res, next)
     const formattedGroups = [];
     
     const userGroups = await Group.find({ "members.userId": userId }).lean();
-    
+    let totalBalance = 0;
     for (let group of userGroups) {
         console.log("current group is : ", group.name);
         const expenses = await Expense.find({group: group._id});
         const balance = calculateUserBalance(expenses, userId, group);
-        group.expenses = expenses;
-        group.userTotalBalance = balance;
-        formattedGroups.push(group.userTotalBalance);
-        
+        totalBalance += balance;     
     }
     const userRecentDebts = await getRecentDebts(userId);
     const userRecentGroups = await getRecentGroupBalances(userId);
-    return res.json({groups: {userRecentGroups}, debts: {userRecentDebts},});
+    return res.json({userTotalBalance: {totalBalance}, groups: {userRecentGroups}, debts: {userRecentDebts},});
     } catch (error) {
         console.error("Error getting user balance:", error);
         throw error;
