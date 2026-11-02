@@ -8,13 +8,15 @@ const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
 const sessionMiddleware = require('./middleware/session');
-const AIChat = require('./routes/ai/chat');                       // [NEW] AI router (SSE endpoint)
-const AIGroup = require('./models/Schemas/Group');                // [NEW] Group model for /chat/group/:id page
+
+// ===== AI Imports =====
+const AIChat = require('./routes/ai/chat');
+const AIGroup = require('./models/Schemas/Group');
 
 app.set("view engine", 'ejs');
 app.use(express.json());
 app.use(express.static("public"));
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(`public`));
 app.use(cookieParser());
 
@@ -28,7 +30,6 @@ const groupRoutes = require("./routes/groupRoutes");
 const groupInvitationRoutes = require("./routes/groupInvitationRoutes");
 const groupDetailsRouter = require('./routes/GroupDetails');
 const loginPageRouter = require('./routes/login.js');
-// const userGroupsRouter = require('./routes/groupRoutes.js');
 const dashboardRouter = require('./routes/Home.js');
 const signupPageRouter = require('./routes/signup.js');
 const groupCreationRouter = require('./routes/CreateGroup.js');
@@ -41,23 +42,24 @@ const editProfile = require('./routes/EditProfile.js');
 const googleAuth = require('./routes/googleAuth');
 const adminRoutes = require("./routes/adminRoutes");
 const searchUser = require('./routes/searchUser.js');
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use(sessionMiddleware);
-
 
 app.use(passport.initialize());
 app.use(passport.session());
 
 //////////////////////////// Routes use ////////////////////////////////////////
-// Auth routes
+
+// ===== Auth routes =====
 app.use('/auth/google', googleAuth);
 app.use('/', dashboardRouter);
 app.use('/auth/login', loginPageRouter);
 app.use('/auth/signup', signupPageRouter);
 app.use('/auth/logout', logoutRouter);
 
-// API routes
+// ===== API routes =====
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/my-profile', myProfileRouter);
 app.use('/api/profile/edit', editProfile);
@@ -78,19 +80,21 @@ app.use("/api/conversations", conversationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/search", searchUser);
 
-// Fallback legacy support
+// ===== AI Routes =====
+app.use('/api', AIChat);
+
+// ===== Fallback legacy support =====
 app.use('/dashboard', dashboardRouter);
 app.use('/my-profile', myProfileRouter);
-app.use('/api', AIChat);                                          // [NEW] mounts /api/chat/group/:groupId/stream
 
-// ===== AI Chat Page (per-group) =====                           // [NEW]
-app.get('/chat/group/:groupId', async (req, res) => {             // [NEW] render groupChat.ejs for a specific group
-    if (!req.session?.userId) {                                   // [NEW] must be logged in
+// ===== AI Chat Page (per-group) =====
+app.get('/chat/group/:groupId', async (req, res) => {
+    if (!req.session?.userId) {
         return res.redirect('/auth/login');
     }
 
     try {
-        const group = await AIGroup.findOne({                     // [NEW] verify user belongs to this group
+        const group = await AIGroup.findOne({
             _id: req.params.groupId,
             $or: [
                 { createdBy: req.session.userId },
@@ -98,11 +102,11 @@ app.get('/chat/group/:groupId', async (req, res) => {             // [NEW] rende
             ]
         }).lean();
 
-        if (!group) {                                             // [NEW] not found OR no access -> 404
+        if (!group) {
             return res.status(404).send('Group not found or access denied');
         }
 
-        res.render('groupChat', {                                 // [NEW] pass groupId + groupName to the view
+        res.render('groupChat', {
             groupId: group._id.toString(),
             groupName: group.name
         });
@@ -112,10 +116,8 @@ app.get('/chat/group/:groupId', async (req, res) => {             // [NEW] rende
     }
 });
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////
+// ===== Error handler =====
 app.use((err, req, res, next) => {
   if (err.name !== "CastError") {
     console.error(err);
@@ -132,6 +134,7 @@ app.use((err, req, res, next) => {
   });
 });
 
+// ===== Socket.IO =====
 const server = http.createServer(app);
 
 const io = new Server(server);
@@ -155,7 +158,8 @@ io.on("connection", (socket) => {
   socket.on("joinConversation", async (conversationId, userId) => {
     try {
 
-      const group = await Group.findOne({
+      // ✅ استخدام AIGroup (لأن Group غير معرّف)
+      const group = await AIGroup.findOne({
         conversationId: conversationId,
         "members.userId": userId
       });
@@ -191,7 +195,7 @@ io.on("connection", (socket) => {
 });
 
 ////////////////////////////////////////////////////////////////
-
+// ===== Start Server =====
 const startServer = async () => {
 
   await connectDB();
