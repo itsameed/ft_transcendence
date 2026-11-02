@@ -61,10 +61,11 @@ app.use('/api/group-details', groupDetailsRouter);
 app.use('/api/groups/create', groupCreationRouter);
 app.use('/api/settlements', settlementsRouter);
 app.use('/api/settlements/addSettlement', settlementsRouter);
+// Must precede groupRoutes: its GET /:groupId would otherwise capture `total-expenses` as a groupId
+app.use('/api/my-groups/total-expenses', groupTotalExpensesRouter);
 app.use('/api/my-groups', groupRoutes);
 app.use('/api/expenses', expensesRouter);
 app.use('/api/createExpense', expensesRouter);
-app.use('/api/my-groups/total-expenses', groupTotalExpensesRouter);
 app.use("/api/group-invitations", groupInvitationRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/friends", friendRoutes);
@@ -76,6 +77,8 @@ app.use("/api/admin", adminRoutes);
 // Fallback legacy support
 app.use('/dashboard', dashboardRouter);
 app.use('/my-profile', myProfileRouter);
+app.use('/my-groups/total-expenses', groupTotalExpensesRouter);
+app.use('/my-groups', groupRoutes);
 
 ////////////////////////////////////////////////////////////////////////////
 app.use((err, req, res, next) => {
