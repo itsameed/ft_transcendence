@@ -25,9 +25,10 @@ export interface Group {
   totalSpent: number
   /** Positive: the group owes you. Negative: you owe the group. */
   yourBalance: number
-  startDate?: string
-  endDate?: string
-  lastActivityAt: string
+  description?: string
+  createdAt: string
+  conversationId?: string
+  
 }
 
 export type Category =

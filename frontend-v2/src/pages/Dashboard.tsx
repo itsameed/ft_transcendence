@@ -28,7 +28,7 @@ export function Dashboard() {
    const toastTimer = useRef<number>()
    const navigate = useNavigate();
    const [groups, setGroupList] = useState<Group[]>([])
-   const [depts, setDept] = useState<FriendBalance[]>([])
+   const [debts, setDebt] = useState<FriendBalance[]>([])
    const [users, setUsers] = useState<Record<string, User>>({})
    const NOW = new Date()
 
@@ -59,11 +59,21 @@ export function Dashboard() {
             const profileData = await res2.json()
             console.log('Profile API response:', profileData)
 
-            setGroupList(DashboardData.groups?.userRecentGroups || [])
-            setDept(DashboardData.depts?.userRecentDepts || [])
+            setGroupList((DashboardData.groups?.userRecentGroups || []).map((group: any)=>({
+                  id: group.groupId,
+                  name: group.name,
+                  emoji: '👥',
+                  kind: 'other',
+                  memberIds: group.memberIds,
+                  totalSpent: 0,
+                  yourBalance: group.balance,
+                  createdAt: group.createdAt,
+               }))
+            )
+            setDebt(DashboardData.debts?.userRecentDebts || [])
             setMe(profileData.user)
 
-            const recentDepts = DashboardData.debts?.userRecentDebts
+            const recentDebts = DashboardData.debts?.userRecentDebts
             const userMap: Record<string, User> = {}
             const balanceList: FriendBalance[] = []
 
@@ -71,8 +81,8 @@ export function Dashboard() {
                userMap[profileData.user.id] = profileData.user
             }
 
-            if (recentDepts?.youOwe){
-               recentDepts.youOwe.forEach((item: any) => {
+            if (recentDebts?.youOwe){
+               recentDebts.youOwe.forEach((item: any) => {
                   const u = item.user
                   if(u){
                      userMap[u._id] = {id: u._id, name: u.username, email: ''}
@@ -80,8 +90,8 @@ export function Dashboard() {
                   }
                })
             }
-            if (recentDepts?.oweYou){
-               recentDepts.oweYou.forEach((item: any) => {
+            if (recentDebts?.oweYou){
+               recentDebts.oweYou.forEach((item: any) => {
                   const u = item.user
                   if(u){
                      userMap[u._id] = {id: u._id, name: u.username, email: ''}
@@ -90,7 +100,7 @@ export function Dashboard() {
                })
             }
             setUsers(userMap)
-            setDept(balanceList)
+            setDebt(balanceList)
 
          } catch (err) { console.log('Failed to load dashboard: ', err) }
          return;
@@ -98,16 +108,16 @@ export function Dashboard() {
 
       loadDashboard()
 
-      console.log('user mail: ', me?.email)
-
+      
       const onKey = (e: KeyboardEvent) => {
          const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement
          if (e.key === 'n' && !typing && !e.metaKey && !e.ctrlKey) setAdding(true)
-      }
+         }
       window.addEventListener('keydown', onKey)
       return () => window.removeEventListener('keydown', onKey)
    }, [])
-
+   
+   console.log('user mail: ', me?.email)
    // Temporary test display:
    if (!me) {
       return (<div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', color: 'white' }} >
@@ -124,14 +134,14 @@ export function Dashboard() {
                <Topbar firstName={firstName(me.name)} today={NOW} dark={dark} onToggleTheme={toggle} onAdd={() => setAdding(true)} />
 
                <BalanceOverview
-                  balances={depts}
+                  balances={debts}
                   users={users}
                   groupCount={groups.length}
                   onSettle={(u, amount) => notify(`Recorded ${money(amount)} paid to ${firstName(u.name)}`)}
                   onRemind={(u) => notify(`Reminder sent to ${firstName(u.name)}`)}
                />
 
-               <Section title="Groups" action={<SectionLink>All groups</SectionLink>}>
+               <Section title="Groups" action={<SectionLink href="/groups">All groups</SectionLink>}>
                   <GroupsGrid groups={groups} now={NOW} />
                </Section>
 
@@ -147,12 +157,12 @@ export function Dashboard() {
          </main>
 
          <MobileNav onAdd={() => setAdding(true)} />
-         {/* {groups.length > 0 && (
+         {groups.length > 0 ?
             <AddExpenseModal
                open={adding}
                onClose={closeModal}
                onSave={(expense, group) => {
-                  setActivity((prev) => [expense, ...prev])
+                  // setActivity((prev) => [expense, ...prev])
                   setAdding(false)
                   notify(`Added “${expense.title}” to ${group.name}`)
                }}
@@ -161,7 +171,7 @@ export function Dashboard() {
                me={me.id}
                today={NOW}
             />
-         )} */}
+         : <Toast message={"You must be in at least one group."} />}
 
          <Toast message={toast} />
       </div>

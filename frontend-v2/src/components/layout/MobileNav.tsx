@@ -1,14 +1,15 @@
 import { Plus } from 'lucide-react'
+import { NavLink } from 'react-router-dom'
 import { NAV } from './Sidebar'
 import styles from './MobileNav.module.css'
 
 export function MobileNav({ onAdd }: { onAdd: () => void }) {
   const [first, second, ...rest] = NAV
-  const item = ({ label, icon: Icon, active }: (typeof NAV)[number]) => (
-    <a key={label} href="#" className={`${styles.item} ${active ? styles.active : ''}`}>
+  const item = ({ label, icon: Icon, to }: (typeof NAV)[number]) => (
+    <NavLink key={label} to={to} className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
       <Icon size={20} strokeWidth={1.75} />
       <span>{label}</span>
-    </a>
+    </NavLink>
   )
   return (
     <nav className={styles.bar} aria-label="Main">

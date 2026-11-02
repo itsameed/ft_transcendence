@@ -1,0 +1,28 @@
+.empty {
+  color: var(--text-3);
+}
+
+.members {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 16px;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.role {
+  margin-left: auto;
+  color: var(--text-3);
+  font-size: 13px;
+  text-transform: capitalize;
+}
