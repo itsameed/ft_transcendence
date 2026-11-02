@@ -38,6 +38,7 @@ const myProfileRouter = require('./routes/MyProfile.js');
 const editProfile = require('./routes/EditProfile.js');
 const googleAuth = require('./routes/googleAuth');
 const adminRoutes = require("./routes/adminRoutes");
+const searchUser = require('./routes/searchUser.js');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use(sessionMiddleware);
@@ -49,6 +50,7 @@ app.use(passport.session());
 //////////////////////////// Routes use ////////////////////////////////////////
 // Auth routes
 app.use('/auth/google', googleAuth);
+app.use('/', dashboardRouter);
 app.use('/auth/login', loginPageRouter);
 app.use('/auth/signup', signupPageRouter);
 app.use('/auth/logout', logoutRouter);
@@ -73,6 +75,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/search", searchUser);
 
 // Fallback legacy support
 app.use('/dashboard', dashboardRouter);
