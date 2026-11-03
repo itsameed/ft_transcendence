@@ -158,7 +158,7 @@ io.on("connection", (socket) => {
   socket.on("joinConversation", async (conversationId, userId) => {
     try {
 
-      const group = await Group.findOne({
+      const group = await AIGroup.findOne({
         conversationId: conversationId,
         "members.userId": userId
       });
