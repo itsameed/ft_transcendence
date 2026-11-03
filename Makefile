@@ -1,6 +1,6 @@
 COMPOSE := docker compose
 
-.PHONY: help up start down restart build rebuild pull logs ps config
+.PHONY: help up start down restart build rebuild pull logs ps config dev
 
 help:
 	@echo "Available targets:"
@@ -14,11 +14,19 @@ help:
 	@echo "  make ps       Show running services"
 	@echo "  make pull     Pull service images"
 	@echo "  make config   Validate and print the Compose configuration"
+	@echo "	make dev      Run the dev version"
 
 start: up
 
 up:
 	$(COMPOSE) up -d
+
+dev: up
+	@echo "Starting backend (nodemon, :3000) + frontend (vite, :5174) — Ctrl+C stops both"
+	@trap 'kill 0' INT TERM EXIT; \
+	(cd backend && npm run dev) & \
+	(cd frontend-v2 && npm run dev) & \
+	wait
 
 down:
 	$(COMPOSE) down
