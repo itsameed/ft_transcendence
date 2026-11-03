@@ -1,4 +1,4 @@
-import { Activity, LayoutGrid, Settings, Users, UsersRound } from 'lucide-react'
+import { LayoutGrid, MessageSquare, Settings, UsersRound } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import type { User } from '../../types'
 import { Avatar } from '../ui/Avatar'
@@ -6,9 +6,8 @@ import styles from './Sidebar.module.css'
 
 export const NAV = [
   { label: 'Dashboard', icon: LayoutGrid, to: '/dashboard' },
-  { label: 'Groups', icon: UsersRound, to: '/groups' },
-  { label: 'Friends', icon: Users, to: '#' },
-  { label: 'Activity', icon: Activity, to: '#' },
+  { label: 'Groups & Friends', icon: UsersRound, to: '/groups' },
+  { label: 'Chat', icon: MessageSquare, to: '/chat' },
 ]
 
 export function Logo() {

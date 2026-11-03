@@ -62,7 +62,7 @@ export function Dashboard() {
             setGroupList((DashboardData.groups?.userRecentGroups || []).map((group: any)=>({
                   id: group.groupId,
                   name: group.name,
-                  emoji: '👥',
+                  emoji: '',
                   kind: 'other',
                   memberIds: group.memberIds,
                   totalSpent: 0,
