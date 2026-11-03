@@ -5,7 +5,9 @@ import './styles/global.css'
 import { Login } from './pages/Login'
 import { Signup } from './pages/Signup'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { ChatPage } from './pages/Chat'
 import { Dashboard } from './pages/Dashboard'
+import { GroupPage } from './pages/Group'
 import { Landing } from './pages/Landing'
 
 export function App() {
@@ -15,6 +17,8 @@ export function App() {
         <Route path="/login" element={<Login/>}/>
         <Route path="/signup" element={<Signup/>}/>
         <Route path="/dashboard" element={<Dashboard/>}/>
+        <Route path="/groups" element={<GroupPage/>}/>
+        <Route path="/chat" element={<ChatPage/>}/>
         <Route path="*" element={<Landing/>}/>
       </Routes>
     </Router>

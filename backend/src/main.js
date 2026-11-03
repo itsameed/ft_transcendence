@@ -8,6 +8,8 @@ const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
 const sessionMiddleware = require('./middleware/session');
+const AIChat = require('./routes/ai/chat');                       // [NEW] AI router (SSE endpoint)
+const AIGroup = require('./models/Schemas/Group');                // [NEW] Group model for /chat/group/:id page
 
 app.set("view engine", 'ejs');
 app.use(express.json());
@@ -38,6 +40,7 @@ const myProfileRouter = require('./routes/MyProfile.js');
 const editProfile = require('./routes/EditProfile.js');
 const googleAuth = require('./routes/googleAuth');
 const adminRoutes = require("./routes/adminRoutes");
+const searchUser = require('./routes/searchUser.js');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use(sessionMiddleware);
@@ -49,6 +52,7 @@ app.use(passport.session());
 //////////////////////////// Routes use ////////////////////////////////////////
 // Auth routes
 app.use('/auth/google', googleAuth);
+app.use('/', dashboardRouter);
 app.use('/auth/login', loginPageRouter);
 app.use('/auth/signup', signupPageRouter);
 app.use('/auth/logout', logoutRouter);
@@ -61,10 +65,11 @@ app.use('/api/group-details', groupDetailsRouter);
 app.use('/api/groups/create', groupCreationRouter);
 app.use('/api/settlements', settlementsRouter);
 app.use('/api/settlements/addSettlement', settlementsRouter);
+// Must precede groupRoutes: its GET /:groupId would otherwise capture `total-expenses` as a groupId
+app.use('/api/my-groups/total-expenses', groupTotalExpensesRouter);
 app.use('/api/my-groups', groupRoutes);
 app.use('/api/expenses', expensesRouter);
 app.use('/api/createExpense', expensesRouter);
-app.use('/api/my-groups/total-expenses', groupTotalExpensesRouter);
 app.use("/api/group-invitations", groupInvitationRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/friends", friendRoutes);
@@ -72,10 +77,46 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/search", searchUser);
 
 // Fallback legacy support
 app.use('/dashboard', dashboardRouter);
 app.use('/my-profile', myProfileRouter);
+app.use('/my-groups/total-expenses', groupTotalExpensesRouter);
+app.use('/my-groups', groupRoutes);
+app.use('/api', AIChat);                                          // [NEW] mounts /api/chat/group/:groupId/stream
+
+// ===== AI Chat Page (per-group) =====                           // [NEW]
+app.get('/chat/group/:groupId', async (req, res) => {             // [NEW] render groupChat.ejs for a specific group
+    if (!req.session?.userId) {                                   // [NEW] must be logged in
+        return res.redirect('/auth/login');
+    }
+
+    try {
+        const group = await AIGroup.findOne({                     // [NEW] verify user belongs to this group
+            _id: req.params.groupId,
+            $or: [
+                { createdBy: req.session.userId },
+                { 'members.userId': req.session.userId }
+            ]
+        }).lean();
+
+        if (!group) {                                             // [NEW] not found OR no access -> 404
+            return res.status(404).send('Group not found or access denied');
+        }
+
+        res.render('groupChat', {                                 // [NEW] pass groupId + groupName to the view
+            groupId: group._id.toString(),
+            groupName: group.name
+        });
+    } catch (err) {
+        console.error('Group chat error:', err);
+        res.status(500).send('Error loading group');
+    }
+});
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////
 app.use((err, req, res, next) => {

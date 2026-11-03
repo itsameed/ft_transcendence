@@ -1,0 +1,24 @@
+# Lefthook — mirrors .github/workflows/ci.yml
+# Install hooks:  cd frontend-v2 && npm install   (runs `prepare`)
+# Skip once:      git commit --no-verify  /  LEFTHOOK=0 git push
+
+pre-commit:
+  parallel: true
+  commands:
+    typecheck:
+      # frontend typecheck (includes staged TS changes)
+      root: frontend-v2/
+      glob: "*.{ts,tsx}"
+      run: npx tsc -b
+
+    backend-syntax:
+      glob: "backend/**/*.js"
+      run: for f in {staged_files}; do node --check "$f" || exit 1; done
+
+pre-push:
+  parallel: false
+  commands:
+    build:
+      root: frontend-v2/
+      glob: "*.{ts,tsx,css,json,html}"
+      run: npm run build

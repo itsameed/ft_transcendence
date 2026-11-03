@@ -9,7 +9,7 @@
   flex-shrink: 0;
   padding: 28px 16px 20px;
   border-right: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--panel-gradient);
   overflow-y: auto;
 }
 
@@ -61,7 +61,7 @@
 .active:hover {
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 0 0 1px var(--border);
+  box-shadow: var(--shadow-card), 0 0 0 1px var(--border);
 }
 
 .footer {

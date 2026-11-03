@@ -9,7 +9,11 @@ export interface User {
   email: string
 }
 
-export type GroupKind = 'trip' | 'home' | 'event' | 'other'
+export type GroupKind = 'trip' | 'home' | 'event' | 'other' | 'dinner' 
+                        | 'party' | 'wedding' | 'vacation' | 'conference' 
+                        | 'festival' | 'concert' | 'sports' | 'workshop' 
+                        | 'retreat' | 'roadtrip' | 'camping' | 'cruise' 
+                        | 'skiing' | 'hiking' | 'beach' | 'citytrip'
 
 export interface Group {
   id: string
@@ -21,9 +25,10 @@ export interface Group {
   totalSpent: number
   /** Positive: the group owes you. Negative: you owe the group. */
   yourBalance: number
-  startDate?: string
-  endDate?: string
-  lastActivityAt: string
+  description?: string
+  createdAt: string
+  conversationId?: string
+  
 }
 
 export type Category =

@@ -1,0 +1,20 @@
+Config dir: /tmp/create_ap.wlp0s20f3.conf.6s6VBKD3
+PID: 1475348
+cp: warning: behavior of -n is non-portable and may change in future; use --update=none instead
+cp: warning: behavior of -n is non-portable and may change in future; use --update=none instead
+Network Manager found, set ap0 as unmanaged device... DONE
+Custom frequency band set with 2.4Ghz with channel 6
+Creating a virtual WiFi interface... ap0 created.
+Sharing Internet using method: nat
+hostapd command-line interface: hostapd_cli -p /tmp/create_ap.wlp0s20f3.conf.6s6VBKD3/hostapd_ctrl
+ap0: interface state UNINITIALIZED->ENABLED
+ap0: AP-ENABLED 
+ap0: STA c2:65:8b:c9:e1:5f IEEE 802.11: authenticated
+ap0: STA c2:65:8b:c9:e1:5f IEEE 802.11: associated (aid 1)
+ap0: AP-STA-CONNECTED c2:65:8b:c9:e1:5f
+ap0: STA c2:65:8b:c9:e1:5f RADIUS: starting accounting session 85CB9046AD95F354
+ap0: STA c2:65:8b:c9:e1:5f WPA: pairwise key handshake completed (RSN)
+ap0: EAPOL-4WAY-HS-COMPLETED c2:65:8b:c9:e1:5f
+
+Doing cleanup.. ap0: AP-STA-DISCONNECTED c2:65:8b:c9:e1:5f
+done

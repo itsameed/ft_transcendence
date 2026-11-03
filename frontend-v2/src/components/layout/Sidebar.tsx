@@ -1,13 +1,13 @@
-import { Activity, LayoutGrid, Settings, Users, UsersRound } from 'lucide-react'
+import { LayoutGrid, MessageSquare, Settings, UsersRound } from 'lucide-react'
+import { NavLink } from 'react-router-dom'
 import type { User } from '../../types'
 import { Avatar } from '../ui/Avatar'
 import styles from './Sidebar.module.css'
 
 export const NAV = [
-  { label: 'Dashboard', icon: LayoutGrid, active: true },
-  { label: 'Groups', icon: UsersRound },
-  { label: 'Friends', icon: Users },
-  { label: 'Activity', icon: Activity },
+  { label: 'Dashboard', icon: LayoutGrid, to: '/dashboard' },
+  { label: 'Groups & Friends', icon: UsersRound, to: '/groups' },
+  { label: 'Chat', icon: MessageSquare, to: '/chat' },
 ]
 
 export function Logo() {
@@ -29,11 +29,11 @@ export function Sidebar({ me }: { me: User }) {
       <Logo />
 
       <nav className={styles.nav} aria-label="Main">
-        {NAV.map(({ label, icon: Icon, active }) => (
-          <a key={label} href="#" className={`${styles.link} ${active ? styles.active : ''}`} aria-current={active ? 'page' : undefined}>
+        {NAV.map(({ label, icon: Icon, to }) => (
+          <NavLink key={label} to={to} className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
             <Icon size={18} strokeWidth={1.75} />
             {label}
-          </a>
+          </NavLink>
         ))}
       </nav>
 

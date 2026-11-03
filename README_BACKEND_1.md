@@ -24,7 +24,7 @@ This reference describes the routes mounted by `src/main.js` and the request dat
 
 ## Groups API
 
-The same API router is mounted at both `/api/groups` and `/my-groups`. Each endpoint below is available under both prefixes. All require an authenticated session.
+The same API router is mounted at `/api/groups`, `/api/my-groups`, and the legacy `/my-groups`. Each endpoint below is available under all three prefixes. All require an authenticated session.
 
 | Method and path | Frontend data | Result |
 | --- | --- | --- |
@@ -37,7 +37,7 @@ The same API router is mounted at both `/api/groups` and `/my-groups`. Each endp
 | `PATCH <prefix>/:groupId` | Path `groupId`; JSON `{ "name": "Updated name" }` | Renames a group. Owner only. |
 | `DELETE <prefix>/:groupId` | Path `groupId`; no body | Deletes the group and its conversation data. Owner only. |
 
-For `<prefix>`, use `/api/groups` or `/my-groups` (for example, `GET /api/groups/me`). The `/my-groups` mount does not define a page-rendering `GET /my-groups/` handler; it mounts these API routes only.
+For `<prefix>`, use `/api/groups`, `/api/my-groups`, or `/my-groups` (for example, `GET /api/groups/me` or `GET /my-groups/me`). The `/my-groups` mount does not define a page-rendering `GET /my-groups/` handler; it mounts these API routes only. Prefer the `/api/` prefixes; the bare `/my-groups` mount is kept as legacy support alongside `/dashboard` and `/my-profile`. Note `GET /my-groups/total-expenses` (and `/api/my-groups/total-expenses`) is matched before `GET <prefix>/:groupId`, so it is not shadowed by it.
 
 ## Friends API
 
