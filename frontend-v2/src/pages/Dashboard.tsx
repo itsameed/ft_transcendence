@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { AddExpenseModal } from '../components/dashboard/AddExpenseModal'
 import { BalanceOverview } from '../components/dashboard/BalanceOverview'
 import { GroupsGrid } from '../components/dashboard/GroupsGrid'
-import { RecentActivity } from '../components/dashboard/RecentActivity'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Topbar } from '../components/layout/Topbar'
@@ -12,12 +11,8 @@ import { Toast } from '../components/ui/Toast'
 // import { NOW, friendBalances, groups, recentActivity, users } from '../data/mock'
 import { firstName, money } from '../lib/format'
 import { useTheme } from '../lib/useTheme'
-import { FriendBalance, Group, type Activity, type User } from '../types'
+import { FriendBalance, Group, type User } from '../types'
 import styles from './Dashboard.module.css'
-
-
-/** The dashboard only previews activity; the full list lives on its own page. */
-const ACTIVITY_PREVIEW = 5
 
 export function Dashboard() {
    const [me, setMe] = useState<User | null>(null)
