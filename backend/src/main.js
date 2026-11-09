@@ -4,14 +4,25 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const passport = require('./middleware/googleAuth');
 const connectDB = require("./config/database.js");
+
+const {
+  metricsMiddleware,
+  metricsEndpoint
+} = require('./middleware/metrics');
+
 const app = express();
+
 app.set('trust proxy', 1);
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+app.get('/metrics', metricsEndpoint);
+app.use(metricsMiddleware);
+
 const http = require("http");
 const { Server } = require("socket.io");
 const sessionMiddleware = require('./middleware/session');
+
 const AIChat = require('./routes/ai/chat');                       // [NEW] AI router (SSE endpoint)
 const AIGroup = require('./models/Schemas/Group');                // [NEW] Group model for /chat/group/:id page
 
