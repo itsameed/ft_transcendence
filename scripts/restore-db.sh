@@ -14,9 +14,14 @@ if [ ! -f "$BACKUP_FILE" ]; then
   exit 1
 fi
 
-docker compose exec -T mongodb mongorestore \
-  --archive \
-  --gzip \
-  --drop < "$BACKUP_FILE"
+docker compose exec -T mongodb sh -c '
+  mongorestore \
+    --username "$MONGO_INITDB_ROOT_USERNAME" \
+    --password "$MONGO_INITDB_ROOT_PASSWORD" \
+    --authenticationDatabase admin \
+    --archive \
+    --gzip \
+    --drop
+' < "$BACKUP_FILE"
 
 echo "Database restored from: $BACKUP_FILE"
