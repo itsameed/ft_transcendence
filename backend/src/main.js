@@ -5,6 +5,9 @@ const cookieParser = require('cookie-parser');
 const passport = require('./middleware/googleAuth');
 const connectDB = require("./config/database.js");
 const app = express();
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 const http = require("http");
 const { Server } = require("socket.io");
 const sessionMiddleware = require('./middleware/session');
