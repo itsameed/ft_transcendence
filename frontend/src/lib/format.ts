@@ -1,21 +1,66 @@
-const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+import type { Category } from '../types'
 
-export function formatMoney(value: number): string {
-  return money.format(Math.abs(value))
+export const CURRENCY = 'MAD'
+
+const moneyFmt = new Intl.NumberFormat('en-US', {
+   minimumFractionDigits: 0,
+   maximumFractionDigits: 2,
+})
+
+/** 1378 -> "1,378 MAD". Always unsigned; pass `signed` to get "+1,378 MAD". */
+export function money(value: number, opts: { signed?: boolean } = {}): string {
+   const abs = moneyFmt.format(Math.abs(value))
+   const sign = opts.signed ? (value > 0 ? '+' : value < 0 ? '−' : '') : ''
+   return `${sign}${abs} ${CURRENCY}`
 }
 
-export function initials(name: string): string {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+export function firstName(fullName: string): string {
+   return fullName.split(' ')[0]
 }
 
-export function greeting(date = new Date()): string {
-  const h = date.getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 18) return 'Good afternoon'
-  return 'Good evening'
+export function initials(fullName: string): string {
+   const parts = fullName.trim().split(/\s+/)
+   return ((parts[0]?.[0] ?? '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase()
+}
+
+const DAY = 24 * 60 * 60 * 1000
+
+export function relativeDay(iso: string, now: Date): string {
+   const date = new Date(iso)
+   const startOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+   const diff = Math.round((startOf(now) - startOf(date)) / DAY)
+   if (diff === 0) return 'Today'
+   if (diff === 1) return 'Yesterday'
+   if (diff > 1 && diff < 7) return date.toLocaleDateString('en-US', { weekday: 'long' })
+   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+export function dateRange(start: string, end: string): string {
+   const s = new Date(start)
+   const e = new Date(end)
+   const month = (d: Date) => d.toLocaleDateString('en-US', { month: 'short' })
+   return s.getMonth() === e.getMonth()
+      ? `${month(s)} ${s.getDate()}–${e.getDate()}`
+      : `${month(s)} ${s.getDate()} – ${month(e)} ${e.getDate()}`
+}
+
+export function daysUntil(iso: string, now: Date): number {
+   return Math.ceil((new Date(iso).getTime() - now.getTime()) / DAY)
+}
+
+export const categoryLabel: Record<Category, string> = {
+   food: 'Food & drinks',
+   lodging: 'Lodging',
+   transport: 'Transport',
+   groceries: 'Groceries',
+   activities: 'Activities',
+   utilities: 'Bills & utilities',
+   other: 'Other',
+}
+
+export function greeting(now: Date): string {
+   const hour = now.getHours()
+   if (hour < 12) return 'Good morning'
+   if (hour < 18) return 'Good afternoon'
+   return 'Good evening'
 }

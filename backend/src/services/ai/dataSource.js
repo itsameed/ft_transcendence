@@ -3,9 +3,17 @@ const Group = require('../../models/Schemas/Group');
 const Expense = require('../../models/Schemas/Expenses');
 const Settlement = require('../../models/Schemas/Settlement');
 
+function formatDate(date) {
+  if (!date) return '';
+  const d = new Date(date);
+  return d.toISOString().slice(0, 10);
+}
 
 async function loadGroupDocuments(userId, groupId) {
-  const group = await Group.findOne({
+  const userData = await User.findById(userId, 'username email').lean();
+  if (!userData) return null;
+
+  const groupData = await Group.findOne({
     _id: groupId,
     $or: [
       { createdBy: userId },
@@ -16,9 +24,7 @@ async function loadGroupDocuments(userId, groupId) {
     .populate('createdBy', 'username')
     .lean();
 
-  if (!group) {
-    return null;
-  }
+  if (!groupData) return null;
 
   const expenses = await Expense.find({ group: groupId })
     .sort({ date: -1 })
@@ -32,171 +38,85 @@ async function loadGroupDocuments(userId, groupId) {
     .populate('toUser', 'username')
     .lean();
 
-  const totalAgg = await Expense.aggregate([
-    { $match: { group: group._id } },
-    { $group: { _id: null, total: { $sum: '$amount' } } }
-  ]);
-
-  let total = 0;
-  if (totalAgg.length > 0) {
-    total = totalAgg[0].total;
-  }
-
   const docs = [];
 
-  // ----- Members -----
+  let ownerName = 'Unknown';
+  if (groupData.createdBy && groupData.createdBy.username) {
+    ownerName = groupData.createdBy.username;
+  }
+
+  let userRole = 'member';
+  if (groupData.createdBy && groupData.createdBy._id &&
+      groupData.createdBy._id.toString() === userId.toString()) {
+    userRole = 'owner';
+  }
+
   const memberNames = [];
-  if (group.members) {
-    for (let i = 0; i < group.members.length; i++) {
-      const m = group.members[i];
+  if (groupData.members) {
+    for (let i = 0; i < groupData.members.length; i++) {
+      const m = groupData.members[i];
       if (m && m.userId && m.userId.username) {
         memberNames.push(m.userId.username);
       }
     }
   }
 
-  // ----- Owner name -----
-  let ownerName = 'مجهول';
-  if (group.createdBy && group.createdBy.username) {
-    ownerName = group.createdBy.username;
-  }
-
-  // ----- Group doc -----
   docs.push(
-    'المجموعة الحالية اسمها "' + group.name + '" ' +
-    'وصاحبها هو ' + ownerName + '، ' +
-    'وتضم الأعضاء: ' + memberNames.join('، ') + '. ' +
-    'إجمالي مصاريف هذه المجموعة: ' + total + ' درهم.'
+    'Current user: "' + userData.username + '" ' +
+    '(email: ' + userData.email + '), ' +
+    'role: ' + userRole + ', owner: ' + ownerName + '.'
   );
 
-  // ----- Expenses -----
+  docs.push(
+    'Group "' + groupData.name + '" members: ' +
+    memberNames.join(', ') + '. ' +
+    'Owner: ' + ownerName + '.'
+  );
+
   for (let i = 0; i < expenses.length; i++) {
     const e = expenses[i];
 
-    let payer = 'مجهول';
-    if (e.payer) {
-      payer = e.payer.username;
-    }
+    let payerName = 'Unknown';
+    if (e.payer && e.payer.username) payerName = e.payer.username;
 
-    const parts = [];
+    let description = 'No description';
+    if (e.description) description = e.description;
+
+    const participants = [];
     if (e.participants) {
       for (let j = 0; j < e.participants.length; j++) {
         if (e.participants[j] && e.participants[j].username) {
-          parts.push(e.participants[j].username);
+          participants.push(e.participants[j].username);
         }
       }
     }
 
-    let description = 'بدون وصف';
-    if (e.description) {
-      description = e.description;
-    }
-
     docs.push(
-      'مصروف بعنوان "' + description + '" ' +
-      'بمبلغ ' + e.amount + ' درهم ' +
-      'دفعه ' + payer + ' ' +
-      'بتاريخ ' + formatDate(e.date) + ' ' +
-      'وتم تقسيمه بين: ' + parts.join('، ') + '.'
+      'Expense "' + description + '": ' + e.amount + ' MAD was paid by ' +
+      payerName + ' on ' + formatDate(e.date) + '. ' +
+      'Shared between: ' + participants.join(', ') + '.'
     );
   }
 
-  // ----- Settlements -----
   for (let i = 0; i < settlements.length; i++) {
     const s = settlements[i];
 
-    let from = 'مجهول';
-    if (s.fromUser) {
-      from = s.fromUser.username;
-    }
+    let fromName = 'Unknown';
+    let toName = 'Unknown';
+    if (s.fromUser && s.fromUser.username) fromName = s.fromUser.username;
+    if (s.toUser && s.toUser.username) toName = s.toUser.username;
 
-    let to = 'مجهول';
-    if (s.toUser) {
-      to = s.toUser.username;
-    }
-
-    docs.push(from + ' دفع لـ ' + to + ' بمبلغ ' + s.amount + ' درهم.');
+    docs.push(
+      'Settlement: ' + fromName + ' paid ' + toName + ' ' + s.amount + ' MAD.'
+    );
   }
 
   return {
-    groupName: group.name,
+    groupName: groupData.name,
     docs: docs
   };
 }
 
-
-async function loadUserContext(userId, groupId) {
-  const user = await User.findById(userId, 'username email').lean();
-  if (!user) {
-    return null;
-  }
-
-  let currentGroup = null;
-  let userRole = 'member';
-
-  if (groupId) {
-    currentGroup = await Group.findOne({
-      _id: groupId,
-      $or: [
-        { createdBy: userId },
-        { 'members.userId': userId }
-      ]
-    })
-      .populate('createdBy', 'username')
-      .populate('members.userId', 'username')
-      .lean();
-
-    if (currentGroup && currentGroup.createdBy) {
-      if (currentGroup.createdBy._id.toString() === userId.toString()) {
-        userRole = 'owner';
-      }
-    }
-  }
-
-  // Map new schema → what chat.js expects
-  let mapped = null;
-  if (currentGroup) {
-    const memberUsers = [];
-    if (currentGroup.members) {
-      for (let i = 0; i < currentGroup.members.length; i++) {
-        const m = currentGroup.members[i];
-        if (m && m.userId) {
-          memberUsers.push(m.userId);
-        }
-      }
-    }
-
-    mapped = {
-      _id: currentGroup._id,
-      groupName: currentGroup.name,
-      owner: currentGroup.createdBy,
-      members: memberUsers
-    };
-  }
-
-  return {
-    username: user.username,
-    email: user.email,
-    role: userRole,
-    currentGroup: mapped
-  };
-}
-
-// ============================================================
-// Helpers
-// ============================================================
-function formatDate(date) {
-  if (!date) {
-    return '';
-  }
-  const d = new Date(date);
-  return d.toISOString().slice(0, 10);
-}
-
-// ============================================================
-// Exports
-// ============================================================
 module.exports = {
-  loadGroupDocuments,
-  loadUserContext
+  loadGroupDocuments
 };
