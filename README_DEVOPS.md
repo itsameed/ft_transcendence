@@ -1,11 +1,12 @@
 # DevOps setup
 
-The application runs through Docker Compose using five containers:
+The application runs through Docker Compose using six containers:
 
 - MongoDB stores application data.
+- Database backup creates scheduled MongoDB backups and removes expired backups.
 - Backend runs the Node.js API.
 - Frontend uses Nginx to serve the website and forward requests to the backend.
-- Prometheus collects backend metrics.
+- Prometheus collects backend metrics and evaluates alerting rules.
 - Grafana displays the collected metrics.
 
 ## Requirements
@@ -37,6 +38,22 @@ GF_SECURITY_ADMIN_USER=
 GF_SECURITY_ADMIN_PASSWORD=
 ```
 
+Get the current user and group IDs:
+
+```bash
+id -u
+id -g
+```
+
+Add those values to:
+
+```env
+BACKUP_UID=
+BACKUP_GID=
+```
+
+This ensures automatic backup files belong to the current user.
+
 `MONGO_URL` can remain empty because Docker Compose creates it from the MongoDB username and password.
 
 Google authentication, email and AI variables are optional during local testing. Their values can remain empty or disabled when those features are not being tested.
@@ -63,7 +80,7 @@ Check the containers:
 docker compose ps
 ```
 
-All five containers should become healthy.
+All application and monitoring containers should become healthy, while the database backup container should remain running.
 
 ## Local addresses
 
@@ -121,28 +138,115 @@ Prometheus evaluates the following backend alerts:
 - `SlowBackendResponses`: the 95th percentile response time exceeds one second for five minutes.
 - `HighBackendErrorRate`: more than five percent of requests return server errors for five minutes.
 
-Loaded alert rules can be checked at:
+Loaded alert rules can be checked with:
 
 ```bash
 curl http://localhost:9090/api/v1/rules
+```
 
 ## Database backups
 
-Create a backup:
+### Automatic backups
+
+The `db-backup` container creates a backup immediately when it starts and then creates another backup every 24 hours.
+
+Backups older than seven days are deleted automatically.
+
+Check the backup container:
+
+```bash
+docker compose ps db-backup
+```
+
+View its logs:
+
+```bash
+docker compose logs db-backup
+```
+
+Automatic backups are saved inside `database-backups/`.
+
+### Manual backup
+
+Create a backup manually:
 
 ```bash
 make backup
 ```
 
-Backups are saved inside `database-backups/` and are ignored by Git.
+Backup files are ignored by Git.
 
-Restore a backup:
+### Restore a backup
+
+List the available backups:
+
+```bash
+ls -lh database-backups
+```
+
+Restore the selected backup:
 
 ```bash
 make restore FILE=database-backups/<backup-file>
 ```
 
-Restoring replaces the current database contents with the contents of the selected backup.
+Restoring uses `--drop`, so the current database collections are replaced by the contents of the selected backup.
+
+After restoring, restart the backend:
+
+```bash
+docker compose restart backend
+```
+
+Verify the application:
+
+```bash
+curl -k https://localhost:8443/health
+```
+
+Log in and confirm that the expected users, groups and expenses are present.
+
+## Disaster recovery procedure
+
+If the MongoDB data is lost or corrupted:
+
+1. Stop the backend to prevent new database changes:
+
+```bash
+docker compose stop backend
+```
+
+2. Confirm that MongoDB is running:
+
+```bash
+docker compose up -d mongodb
+```
+
+3. List the available backups:
+
+```bash
+ls -lh database-backups
+```
+
+4. Restore the most recent valid backup:
+
+```bash
+make restore FILE=database-backups/<backup-file>
+```
+
+5. Start the backend again:
+
+```bash
+docker compose up -d backend
+```
+
+6. Verify the backend health:
+
+```bash
+curl -k https://localhost:8443/health
+```
+
+7. Log in to the application and verify the restored data.
 
 ## Useful commands
 
@@ -156,6 +260,7 @@ make restart
 make logs
 make ps
 make config
+make backup
 ```
 
 ## Stop the project

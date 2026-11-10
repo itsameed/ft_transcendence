@@ -24,6 +24,26 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
 
+  db-backup:
+    image: mongo:7.0.14-jammy
+    container_name: ft_db_backup
+    restart: unless-stopped
+    user: "${BACKUP_UID}:${BACKUP_GID}"
+    entrypoint:
+      - /bin/sh
+      - /scripts/automatic-backup.sh
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      BACKUP_INTERVAL_SECONDS: "86400"
+      BACKUP_RETENTION_DAYS: "7"
+    volumes:
+      - ./scripts/automatic-backup.sh:/scripts/automatic-backup.sh:ro
+      - ./database-backups:/backups
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
   backend:
     build:
       context: ./backend
