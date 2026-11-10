@@ -129,6 +129,11 @@
   text-underline-offset: 3px;
 }
 
+.signOut:hover:not(:disabled) {
+  border-color: var(--owe);
+  color: var(--owe);
+}
+
 .pwForm {
   display: grid;
   gap: 18px;

@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Moon, Sun } from 'lucide-react'
+import { LogOut, Moon, Sun } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
+import { logout } from '../lib/auth'
 import { useTheme } from '../lib/useTheme'
 import type { User } from '../types'
 import pageStyles from './Dashboard.module.css'
@@ -20,7 +21,13 @@ export function SettingsPage() {
   const [pwSaving, setPwSaving] = useState(false)
   const [pwMessage, setPwMessage] = useState('')
   const [pwError, setPwError] = useState('')
+  const [loggingOut, setLoggingOut] = useState(false)
   const { dark, toggle } = useTheme()
+
+  async function signOut() {
+    setLoggingOut(true)
+    await logout()
+  }
   const navigate = useNavigate()
 
   async function changePassword(event: FormEvent<HTMLFormElement>) {
@@ -145,6 +152,22 @@ export function SettingsPage() {
                   <Button type="submit" variant="primary" disabled={pwSaving}>{pwSaving ? 'Updating…' : 'Update password'}</Button>
                 </div>
               </form>
+            </Card>
+          </section>
+
+          <section className={styles.section} aria-labelledby="session-heading">
+            <div className={styles.sectionHeading}>
+              <h2 id="session-heading">Session</h2>
+              <p>Sign out of Tally on this device.</p>
+            </div>
+            <Card className={styles.preference}>
+              <div className={styles.preferenceCopy}>
+                <strong>{me.name}</strong>
+                <span>{me.email}</span>
+              </div>
+              <Button type="button" icon={<LogOut size={15} />} onClick={signOut} disabled={loggingOut} className={styles.signOut}>
+                {loggingOut ? 'Logging out…' : 'Log out'}
+              </Button>
             </Card>
           </section>
         </div>

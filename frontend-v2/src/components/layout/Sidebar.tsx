@@ -2,6 +2,7 @@ import { LayoutGrid, MessageSquare, Settings, UsersRound } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import type { User } from '../../types'
 import { Avatar } from '../ui/Avatar'
+import { LogoutButton } from './LogoutButton'
 import { NotificationBell } from './NotificationBell'
 import styles from './Sidebar.module.css'
 
@@ -48,6 +49,7 @@ export function Sidebar({ me }: { me: User }) {
             <span>{me.email}</span>
           </span>
         </NavLink>
+        <LogoutButton />
       </div>
     </aside>
   )
