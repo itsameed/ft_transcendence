@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, UserPlus } from 'lucide-react'
 import { GroupsGrid } from '../components/dashboard/GroupsGrid'
+import { CreateGroupModal } from '../components/groups/CreateGroupModal'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Avatar } from '../components/ui/Avatar'
@@ -31,6 +32,7 @@ export function GroupPage() {
   const [filter, setFilter] = useState<Filter>('all')
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
   const NOW = new Date()
@@ -133,7 +135,7 @@ export function GroupPage() {
               <Search size={17} aria-hidden />
               <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search friends, groups, or people to add…" aria-label="Search" />
             </label>
-            <Button variant="primary" icon={<Plus size={16} />} onClick={() => navigate('/dashboard')}>New group</Button>
+            <Button variant="primary" icon={<Plus size={16} />} onClick={() => setCreating(true)}>New group</Button>
           </div>
 
           <div className={styles.chips} role="tablist" aria-label="Filter">
@@ -184,7 +186,7 @@ export function GroupPage() {
             <section aria-label="Your groups">
               <h2 className={styles.sectionTitle}>Your groups ({visibleGroups.length})</h2>
               {visibleGroups.length === 0 ? <p className={styles.empty}>No groups match.</p> : <GroupsGrid groups={visibleGroups} now={NOW} />}
-              <p className={styles.hint}>Groups are joined by invitation — ask a member to invite you, or create a new group.</p>
+              <p className={styles.hint}>Select a group to see its members and details, or create a new group with your friends.</p>
             </section>
           )}
 
@@ -210,7 +212,18 @@ export function GroupPage() {
           )}
         </div>
       </main>
-      <MobileNav onAdd={() => navigate('/dashboard')} />
+      <MobileNav onAdd={() => setCreating(true)} />
+      <CreateGroupModal
+        open={creating}
+        friends={friends}
+        onClose={() => setCreating(false)}
+        onCreated={(group) => {
+          setGroups((prev) => [group, ...prev])
+          setCreating(false)
+          setToast(`Created “${group.name}”`)
+          navigate(`/groups/${group.id}`)
+        }}
+      />
       <Toast message={toast} />
     </div>
   )
