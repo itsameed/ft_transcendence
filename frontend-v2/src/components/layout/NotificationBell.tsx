@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { Bell } from 'lucide-react'
 import { io, type Socket } from 'socket.io-client'
-import { fetchNotifications } from '../../lib/notifications'
+import { NOTIFICATIONS_CHANGED, fetchNotifications } from '../../lib/notifications'
 import styles from './Sidebar.module.css'
 
 const POLL_MS = 60_000
@@ -24,7 +24,11 @@ export function NotificationBell({ userId }: { userId: string }) {
   useEffect(() => {
     refresh()
     const timer = window.setInterval(refresh, POLL_MS)
-    return () => window.clearInterval(timer)
+    window.addEventListener(NOTIFICATIONS_CHANGED, refresh)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener(NOTIFICATIONS_CHANGED, refresh)
+    }
   }, [refresh])
 
   useEffect(() => {

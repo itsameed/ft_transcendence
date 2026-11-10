@@ -7,7 +7,7 @@ import { Sidebar } from '../components/layout/Sidebar'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { relativeDay } from '../lib/format'
-import { fetchNotifications, iconForNotification, mapNotification, type AppNotification } from '../lib/notifications'
+import { fetchNotifications, iconForNotification, mapNotification, notifyNotificationsChanged, type AppNotification } from '../lib/notifications'
 import type { User } from '../types'
 import pageStyles from './Dashboard.module.css'
 import styles from './Notifications.module.css'
@@ -72,6 +72,7 @@ export function NotificationsPage() {
     if (n.isRead) return
     setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, isRead: true } : x)))
     await fetch(`/api/notifications/${n.id}/read`, { method: 'PATCH' }).catch(() => { /* state already updated */ })
+    notifyNotificationsChanged()
   }
 
   async function markAllRead() {
@@ -82,17 +83,20 @@ export function NotificationsPage() {
       await Promise.all(unreadItems.map((n) => fetch(`/api/notifications/${n.id}/read`, { method: 'PATCH' }).catch(() => null)))
     } finally {
       setMarkingAll(false)
+      notifyNotificationsChanged()
     }
   }
 
   async function remove(n: AppNotification) {
     setItems((prev) => prev.filter((x) => x.id !== n.id))
     await fetch(`/api/notifications/${n.id}`, { method: 'DELETE' }).catch(() => { /* state already updated */ })
+    notifyNotificationsChanged()
   }
 
   async function clearAll() {
     setItems([])
     await fetch('/api/notifications/user/all', { method: 'DELETE' }).catch(() => { /* state already updated */ })
+    notifyNotificationsChanged()
   }
 
   if (loading) return <div className={styles.state}>Loading notifications…</div>

@@ -45,6 +45,13 @@ export function mapNotification(raw: any): AppNotification {
   }
 }
 
+/** Fired whenever notification state changes, so badges elsewhere resync instantly. */
+export const NOTIFICATIONS_CHANGED = 'tally:notifications-changed'
+
+export function notifyNotificationsChanged() {
+  window.dispatchEvent(new Event(NOTIFICATIONS_CHANGED))
+}
+
 export async function fetchNotifications(): Promise<AppNotification[]> {
   const res = await fetch('/api/notifications')
   if (res.status === 401) throw Object.assign(new Error('unauthorized'), { status: 401 })
