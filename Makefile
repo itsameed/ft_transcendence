@@ -4,18 +4,18 @@ COMPOSE := docker compose
 
 help:
 	@echo "Available targets:"
-	@echo "  make start    Start the server in detached mode"
-	@echo "  make up       Start services in detached mode"
-	@echo "  make down     Stop and remove services"
-	@echo "  make build    Build service images"
-	@echo "  make rebuild  Rebuild images without cache and start services"
-	@echo "  make restart  Restart services"
-	@echo "  make logs     Follow service logs"
-	@echo "  make ps       Show running services"
-	@echo "  make pull     Pull service images"
-	@echo "  make config   Validate and print the Compose configuration"
-	@echo "  make backup   Create a database backup"
-	@echo "  make restore  Restore a database backup"
+	@echo "  make start                 Start the server in detached mode"
+	@echo "  make up                    Start services in detached mode"
+	@echo "  make down                  Stop and remove services"
+	@echo "  make build                 Build service images"
+	@echo "  make rebuild               Rebuild images without cache and start services"
+	@echo "  make restart               Restart services"
+	@echo "  make logs                  Follow service logs"
+	@echo "  make ps                    Show running services"
+	@echo "  make pull                  Pull service images"
+	@echo "  make config                Validate the Compose configuration"
+	@echo "  make backup                Create a database backup"
+	@echo "  make restore FILE=<path>   Restore a database backup"
 
 start: up
 
@@ -51,4 +51,5 @@ backup:
 	./scripts/backup-db.sh
 
 restore:
-	./scripts/restore-db.sh
+	@test -n "$(FILE)" || (echo "Usage: make restore FILE=database-backups/<backup-file>" && exit 1)
+	./scripts/restore-db.sh "$(FILE)"
