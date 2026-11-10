@@ -32,6 +32,7 @@ const FAKE_USERS = [
   { username: 'anas', displayName: 'Anas El Fassi', email: 'anas@tally.test', bio: 'Roommate & co-payer' },
   { username: 'imane', displayName: 'Imane Chraibi', email: 'imane@tally.test', bio: 'New here — send me a request!' },
   { username: 'mehdi', displayName: 'Mehdi Alaoui', email: 'mehdi@tally.test', bio: 'Football every Friday' },
+  { username: 'aymen', displayName: 'amine berada', email: 'hjgdjfsd@tally.test', bio: 'hhhhh every Friday' },
 ];
 
 const daysAgo = (n, h = 12) => {
