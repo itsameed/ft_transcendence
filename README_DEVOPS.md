@@ -111,6 +111,21 @@ Open:
 
 The dashboard displays request rate, response time, memory usage and CPU usage.
 
+### Alerting rules
+
+Prometheus evaluates the following backend alerts:
+
+- `BackendDown`: backend cannot be reached for one minute.
+- `HighBackendMemory`: memory usage exceeds 500 MB for five minutes.
+- `HighBackendCPU`: CPU usage exceeds 80 percent for five minutes.
+- `SlowBackendResponses`: the 95th percentile response time exceeds one second for five minutes.
+- `HighBackendErrorRate`: more than five percent of requests return server errors for five minutes.
+
+Loaded alert rules can be checked at:
+
+```bash
+curl http://localhost:9090/api/v1/rules
+
 ## Database backups
 
 Create a backup:
