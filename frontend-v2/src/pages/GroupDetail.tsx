@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Crown, MessageSquare } from 'lucide-react'
+import { ArrowLeft, Crown, MessageSquare, UserPlus } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
+import { AddMembersModal } from '../components/groups/AddMembersModal'
 import { Avatar } from '../components/ui/Avatar'
+import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { iconForKind } from '../lib/GroupKinds'
 import { categoryIcon } from '../lib/categories'
@@ -33,6 +35,9 @@ export function GroupDetailPage() {
   const [group, setGroup] = useState<GroupDetail | null>(null)
   const [expenses, setExpenses] = useState<GroupExpense[]>([])
   const [expensesNote, setExpensesNote] = useState('')
+  const [friends, setFriends] = useState<User[]>([])
+  const [adding, setAdding] = useState(false)
+  const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
@@ -76,6 +81,10 @@ export function GroupDetailPage() {
         if (!groupRes.ok) throw new Error('Could not load this group.')
         const profile = profileRes.ok ? await profileRes.json() : null
         if (profile?.user) setMe(profile.user)
+        fetch('/api/friends')
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) => { if (d?.friends) setFriends(d.friends.map((f: any) => ({ id: f._id, name: f.username, email: f.email }))) })
+          .catch(() => { /* picker stays empty; error surfaces on open */ })
         const data = await groupRes.json()
         const g = data.group
         setGroup({
@@ -107,6 +116,7 @@ export function GroupDetailPage() {
 
   const Icon = iconForKind(group.kind)
   const created = new Date(group.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  const isOwner = group.members.some((m) => m.user.id === me.id && m.role === 'owner')
 
   return (
     <div className={pageStyles.app}>
@@ -166,10 +176,18 @@ export function GroupDetailPage() {
           </section>
 
           <section className={styles.section} aria-labelledby="group-members">
-            <div className={styles.sectionHeading}>
-              <h2 id="group-members">Members ({group.members.length})</h2>
-              <p>Select a member to view their profile.</p>
+            <div className={styles.sectionHeadingRow}>
+              <div className={styles.sectionHeading}>
+                <h2 id="group-members">Members ({group.members.length})</h2>
+                <p>Select a member to view their profile.</p>
+              </div>
+              {isOwner && (
+                <Button variant="primary" size="sm" icon={<UserPlus size={15} />} onClick={() => setAdding(true)}>
+                  Add people
+                </Button>
+              )}
             </div>
+            {notice && <p className={styles.note} role="status">{notice}</p>}
             <ul className={styles.groupList}>
               {group.members.map((m) => (
                 <li key={m.user.id}>
@@ -186,6 +204,22 @@ export function GroupDetailPage() {
         </div>
       </main>
       <MobileNav />
+      <AddMembersModal
+        open={adding}
+        groupId={group.id}
+        groupName={group.name}
+        friends={friends}
+        memberIds={group.members.map((m) => m.user.id)}
+        onClose={() => setAdding(false)}
+        onAdded={(addedUsers) => {
+          setGroup((current) => current ? {
+            ...current,
+            members: [...current.members, ...addedUsers.map((u) => ({ user: u, role: 'member', joinedAt: new Date().toISOString() }))],
+          } : current)
+          setAdding(false)
+          setNotice(addedUsers.length === 1 ? `Added ${addedUsers[0].name} to ${group.name}.` : `Added ${addedUsers.length} people to ${group.name}.`)
+        }}
+      />
     </div>
   )
 }

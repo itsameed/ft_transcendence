@@ -203,6 +203,13 @@
   font-size: 13px;
 }
 
+.sectionHeadingRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .groupList {
   display: flex;
   flex-direction: column;
