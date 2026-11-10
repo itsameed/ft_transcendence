@@ -150,7 +150,9 @@ export function GroupPage() {
               <ul className={styles.rows}>
                 {people.map((u) => (
                   <li key={u.id} className={styles.row}>
-                    <Avatar user={u} size={34} /><span className={styles.who}><strong>{u.name}</strong><small>{u.email || 'Not a friend yet'}</small></span>
+                    <Link className={styles.rowLink} to={`/users/${u.id}`}>
+                      <Avatar user={u} size={34} /><span className={styles.who}><strong>{u.name}</strong><small>{u.email || 'Not a friend yet'}</small></span>
+                    </Link>
                     <span className={styles.actions}><Button variant="primary" size="sm" icon={<UserPlus size={15} />} onClick={() => addFriend(u)}>Add friend</Button></span>
                   </li>
                 ))}
@@ -164,8 +166,10 @@ export function GroupPage() {
               <ul className={styles.rows}>
                 {requests.map((r) => (
                   <li key={r._id} className={styles.row}>
-                    <Avatar user={{ id: r.requester._id, name: r.requester.username, email: r.requester.email }} size={34} />
-                    <span className={styles.who}><strong>{r.requester.username}</strong><small>sent you a friend request</small></span>
+                    <Link className={styles.rowLink} to={`/users/${r.requester._id}`}>
+                      <Avatar user={{ id: r.requester._id, name: r.requester.username, email: r.requester.email }} size={34} />
+                      <span className={styles.who}><strong>{r.requester.username}</strong><small>sent you a friend request</small></span>
+                    </Link>
                     <span className={styles.actions}>
                       <Button variant="primary" size="sm" onClick={() => respond(r, true)}>Accept</Button>
                       <Button size="sm" onClick={() => respond(r, false)}>Decline</Button>
@@ -191,7 +195,9 @@ export function GroupPage() {
                 <ul className={styles.rows}>
                   {visibleFriends.map((f) => (
                     <li key={f.id} className={styles.row}>
-                      <Avatar user={f} size={34} /><span className={styles.who}><strong>{f.name}</strong><small>{f.email}</small></span>
+                      <Link className={styles.rowLink} to={`/users/${f.id}`}>
+                        <Avatar user={f} size={34} /><span className={styles.who}><strong>{f.name}</strong><small>{f.email}</small></span>
+                      </Link>
                       <span className={styles.actions}>
                         <Link className={styles.chatLink} to="/chat">Chat</Link>
                         <button type="button" className={styles.remove} onClick={() => removeFriend(f)}>Remove</button>
