@@ -129,6 +129,47 @@
   text-underline-offset: 3px;
 }
 
+.pwForm {
+  display: grid;
+  gap: 18px;
+}
+
+.pwForm label {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.pwForm input {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.pwFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pwMessage,
+.pwError {
+  font-size: 13px;
+}
+
+.pwMessage {
+  color: var(--owed);
+}
+
+.pwError {
+  color: var(--owe);
+}
+
 .state {
   display: grid;
   min-height: 100vh;
