@@ -6,9 +6,16 @@ import { Sidebar } from '../components/layout/Sidebar'
 import { Avatar } from '../components/ui/Avatar'
 import { Card } from '../components/ui/Card'
 import { iconForKind } from '../lib/GroupKinds'
-import type { User } from '../types'
+import { categoryIcon } from '../lib/categories'
+import { money, relativeDay } from '../lib/format'
+import type { Category, User } from '../types'
 import pageStyles from './Dashboard.module.css'
 import styles from './Profile.module.css'
+
+interface GroupExpense {
+  id: string; title: string; category: Category; amount: number
+  paidBy: User; date: string; myShare: number | null
+}
 
 interface GroupMember { user: User; role: string; joinedAt: string }
 interface GroupDetail {
@@ -24,8 +31,38 @@ export function GroupDetailPage() {
   const { groupId } = useParams<{ groupId: string }>()
   const [me, setMe] = useState<User | null>(null)
   const [group, setGroup] = useState<GroupDetail | null>(null)
+  const [expenses, setExpenses] = useState<GroupExpense[]>([])
+  const [expensesNote, setExpensesNote] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadExpenses() {
+      try {
+        // Canonical list endpoint. Until the backend serves it, show an empty state.
+        const res = await fetch(`/api/groups/${groupId}/expenses`)
+        if (cancelled) return
+        if (res.status === 401) { navigate('/login'); return }
+        if (!res.ok) { setExpenses([]); setExpensesNote('Expenses are not available for this group yet.'); return }
+        const data = await res.json()
+        const rows = (Array.isArray(data) ? data : data.expenses ?? []) as any[]
+        setExpenses(rows.map((e): GroupExpense => ({
+          id: String(e._id ?? e.id ?? `${e.description}-${e.date}`),
+          title: e.description ?? e.title ?? 'Expense',
+          category: (e.category ?? 'other') as Category,
+          amount: Number(e.amount ?? 0),
+          paidBy: mapUser(e.payer ?? e.paidBy),
+          date: e.date ?? e.createdAt ?? new Date().toISOString(),
+          myShare: e.myShare != null ? Number(e.myShare) : null,
+        })).sort((a, b) => +new Date(b.date) - +new Date(a.date)))
+      } catch {
+        if (!cancelled) { setExpenses([]); setExpensesNote('Expenses are not available for this group yet.') }
+      }
+    }
+    loadExpenses()
+    return () => { cancelled = true }
+  }, [groupId, navigate])
 
   useEffect(() => {
     async function load() {
@@ -97,6 +134,36 @@ export function GroupDetailPage() {
               <Link to={`/chat?group=${group.id}`} className={styles.inlineAction}><MessageSquare size={15} aria-hidden /> Open chat</Link>
             )}
           </Card>
+
+          <section className={styles.section} aria-labelledby="group-expenses">
+            <div className={styles.sectionHeading}>
+              <h2 id="group-expenses">Expenses ({expenses.length})</h2>
+              <p>{expenses.length > 0 ? `Total spent: ${money(expenses.reduce((sum, e) => sum + e.amount, 0))}` : 'Every expense shared in this group.'}</p>
+            </div>
+            {expenses.length === 0 ? (
+              <p className={styles.intro}>{expensesNote || 'No expenses yet — add one from the dashboard.'}</p>
+            ) : (
+              <ul className={styles.groupList}>
+                {expenses.map((e) => {
+                  const Icon = categoryIcon[e.category] ?? categoryIcon.other
+                  const mine = e.paidBy.id === me.id
+                  return (
+                    <li key={e.id} className={styles.groupRow}>
+                      <span className={styles.groupIcon}><Icon size={19} strokeWidth={1.6} aria-hidden /></span>
+                      <span className={styles.expenseMain}>
+                        <strong>{e.title}</strong>
+                        <small>{mine ? 'You' : e.paidBy.name} paid · {relativeDay(e.date, new Date())}</small>
+                      </span>
+                      <span className={styles.expenseAmount}>
+                        <strong className="tabular">{money(e.amount)}</strong>
+                        {e.myShare != null && <small>{mine ? 'you lent' : 'your share'} {money(Math.abs(e.myShare))}</small>}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </section>
 
           <section className={styles.section} aria-labelledby="group-members">
             <div className={styles.sectionHeading}>

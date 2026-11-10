@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
-import type { Group, User } from '../../types'
+import type { Group, GroupKind, User } from '../../types'
+import { GROUP_KINDS, groupKindLabel, iconForKind } from '../../lib/GroupKinds'
 import { Avatar } from '../ui/Avatar'
 import { Button } from '../ui/Button'
 import styles from './CreateGroupModal.module.css'
@@ -15,6 +16,7 @@ interface Props {
 export function CreateGroupModal({ open, friends, onClose, onCreated }: Props) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [kind, setKind] = useState<GroupKind>('other')
   const [picked, setPicked] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -23,6 +25,7 @@ export function CreateGroupModal({ open, friends, onClose, onCreated }: Props) {
     if (!open) return
     setName('')
     setDescription('')
+    setKind('other')
     setPicked([])
     setError('')
     setSaving(false)
@@ -49,7 +52,7 @@ export function CreateGroupModal({ open, friends, onClose, onCreated }: Props) {
       const res = await fetch('/api/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), description: description.trim(), memberIds: picked }),
+        body: JSON.stringify({ name: name.trim(), description: description.trim(), kind, memberIds: picked }),
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.message ?? 'Could not create the group.')
@@ -58,7 +61,7 @@ export function CreateGroupModal({ open, friends, onClose, onCreated }: Props) {
         id: String(g._id ?? g.id),
         name: g.name,
         emoji: '',
-        kind: (g.kind || 'other') as Group['kind'],
+        kind: (g.kind || kind) as Group['kind'],
         memberIds: (g.members ?? []).map((m: any) => String(m.userId?._id ?? m.userId)),
         totalSpent: 0,
         yourBalance: 0,
@@ -93,6 +96,28 @@ export function CreateGroupModal({ open, friends, onClose, onCreated }: Props) {
             <span>Description <em>(optional)</em></span>
             <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What is this group for?" maxLength={140} />
           </label>
+
+          <fieldset className={styles.friends}>
+            <legend>Category</legend>
+            <div className={styles.kindGrid} role="radiogroup" aria-label="Group category">
+              {GROUP_KINDS.map((k) => {
+                const Icon = iconForKind(k)
+                return (
+                  <button
+                    key={k}
+                    type="button"
+                    role="radio"
+                    aria-checked={kind === k}
+                    className={`${styles.kindOption} ${kind === k ? styles.kindOn : ''}`}
+                    onClick={() => setKind(k)}
+                  >
+                    <Icon size={17} strokeWidth={1.75} aria-hidden />
+                    {groupKindLabel[k]}
+                  </button>
+                )
+              })}
+            </div>
+          </fieldset>
 
           <fieldset className={styles.friends}>
             <legend>Add friends {picked.length > 0 ? `(${picked.length} selected)` : ''}</legend>

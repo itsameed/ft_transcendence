@@ -263,6 +263,40 @@
   white-space: nowrap;
 }
 
+.expenseMain {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.expenseMain strong {
+  font-weight: 550;
+}
+
+.expenseMain small {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.expenseAmount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.expenseAmount strong {
+  font-weight: 600;
+}
+
+.expenseAmount small {
+  color: var(--text-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
 .state {
   display: grid;
   min-height: 100vh;

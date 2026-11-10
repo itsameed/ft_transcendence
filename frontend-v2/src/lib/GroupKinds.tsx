@@ -16,3 +16,13 @@ export const groupIcon: Record<GroupKind, LucideIcon> = {
 export function iconForKind(kind: string): LucideIcon {
   return groupIcon[kind as GroupKind] ?? Coffee
 }
+
+export const groupKindLabel: Record<GroupKind, string> = {
+  trip: 'Trip', home: 'Home', event: 'Event', dinner: 'Dinner', party: 'Party',
+  wedding: 'Wedding', vacation: 'Vacation', conference: 'Conference', festival: 'Festival',
+  concert: 'Concert', sports: 'Sports', workshop: 'Workshop', retreat: 'Retreat',
+  roadtrip: 'Road trip', camping: 'Camping', cruise: 'Cruise', skiing: 'Skiing',
+  hiking: 'Hiking', beach: 'Beach', citytrip: 'City trip', other: 'Other',
+}
+
+export const GROUP_KINDS = Object.keys(groupKindLabel) as GroupKind[]
