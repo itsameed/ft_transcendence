@@ -13,6 +13,7 @@ import { ProfilePage } from './pages/Profile'
 import { SettingsPage } from './pages/Settings'
 import { UserProfilePage } from './pages/UserProfile'
 import { GroupDetailPage } from './pages/GroupDetail'
+import { NotificationsPage } from './pages/Notifications'
 
 export function App() {
   return (
@@ -27,6 +28,7 @@ export function App() {
         <Route path="/settings" element={<SettingsPage/>}/>
         <Route path="/users/:userId" element={<UserProfilePage/>}/>
         <Route path="/groups/:groupId" element={<GroupDetailPage/>}/>
+        <Route path="/notifications" element={<NotificationsPage/>}/>
         <Route path="*" element={<Landing/>}/>
       </Routes>
     </Router>

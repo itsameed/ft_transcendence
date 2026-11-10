@@ -2,6 +2,7 @@ import { LayoutGrid, MessageSquare, Settings, UsersRound } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import type { User } from '../../types'
 import { Avatar } from '../ui/Avatar'
+import { NotificationBell } from './NotificationBell'
 import styles from './Sidebar.module.css'
 
 export const NAV = [
@@ -36,6 +37,7 @@ export function Sidebar({ me }: { me: User }) {
             {label}
           </NavLink>
         ))}
+        <NotificationBell userId={me.id} />
       </nav>
 
       <div className={styles.footer}>
