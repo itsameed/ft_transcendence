@@ -20,9 +20,10 @@ interface Props {
  * the meaning, so the amounts themselves can stay neutral.
  */
 export function BalanceOverview({ balances, users, groupCount, onSettle, onRemind }: Props) {
-  const { net, owedToYou, youOwe } = summarize(balances)
-  const owing = balances.filter((b) => b.amount < 0).sort((a, b) => a.amount - b.amount)
-  const owed = balances.filter((b) => b.amount > 0).sort((a, b) => b.amount - a.amount)
+  const rows = Array.isArray(balances) ? balances : []
+  const { net, owedToYou, youOwe } = summarize(rows)
+  const owing = rows.filter((b) => b.amount < 0).sort((a, b) => a.amount - b.amount)
+  const owed = rows.filter((b) => b.amount > 0).sort((a, b) => b.amount - a.amount)
 
   return (
     <Card padded={false}>
