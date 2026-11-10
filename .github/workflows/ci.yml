@@ -1,16 +1,15 @@
 name: CI
 
-# Mirrors lefthook.yml: typecheck + backend syntax on every PR/push,
-# full production build as the push gate.
 on:
   push:
-    branches: [main, zakaria]
+    branches: [main, zakaria, devops]
   pull_request:
 
 jobs:
   check:
-    name: Typecheck + backend syntax
+    name: Typecheck and backend syntax
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -20,7 +19,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend-v2/package-lock.json
 
-      - name: Install frontend deps
+      - name: Install frontend dependencies
         working-directory: frontend-v2
         run: npm ci
 
@@ -28,17 +27,19 @@ jobs:
         working-directory: frontend-v2
         run: npx tsc -b
 
-      - name: Backend syntax check
+      - name: Check backend syntax
+        shell: bash
         run: |
           shopt -s globstar nullglob
-          for f in backend/src/**/*.js backend/scripts/*.js; do
-            node --check "$f"
+          for file in backend/src/**/*.js backend/scripts/*.js; do
+            node --check "$file"
           done
 
   build:
     name: Production build
     runs-on: ubuntu-latest
     needs: check
+
     steps:
       - uses: actions/checkout@v4
 
@@ -48,10 +49,26 @@ jobs:
           cache: npm
           cache-dependency-path: frontend-v2/package-lock.json
 
-      - name: Install frontend deps
+      - name: Install frontend dependencies
         working-directory: frontend-v2
         run: npm ci
 
-      - name: Build
+      - name: Build frontend
         working-directory: frontend-v2
         run: npm run build
+
+  docker-check:
+    name: Docker configuration and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create test environment file
+        run: cp .env.example .env
+
+      - name: Validate Docker Compose
+        run: docker compose config --quiet
+
+      - name: Build application images
+        run: docker compose build backend frontend
