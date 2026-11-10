@@ -8,7 +8,7 @@ async function destroySession(req, res, next) {
 
         res.json({ message: 'Logged out successfully.' });
     })
-    next();
+    // next();
 }
 
 module.exports = destroySession;
