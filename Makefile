@@ -1,6 +1,6 @@
 COMPOSE := docker compose
 
-.PHONY: help up start down restart build rebuild pull logs ps config
+.PHONY: help up start down restart build rebuild pull logs ps config backup restore
 
 help:
 	@echo "Available targets:"
@@ -14,6 +14,8 @@ help:
 	@echo "  make ps       Show running services"
 	@echo "  make pull     Pull service images"
 	@echo "  make config   Validate and print the Compose configuration"
+	@echo "  make backup   Create a database backup"
+	@echo "  make restore  Restore a database backup"
 
 start: up
 
@@ -44,3 +46,9 @@ ps:
 
 config:
 	$(COMPOSE) config
+
+backup:
+	./scripts/backup-db.sh
+
+restore:
+	./scripts/restore-db.sh
