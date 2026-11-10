@@ -84,7 +84,7 @@ export function ProfilePage() {
             <div>
               <p className={styles.eyebrow}>Account</p>
               <h1>Your profile</h1>
-              <p className={styles.intro}>Your details and activity on Tally.</p>
+              <p className={styles.intro}>Your details and activity on Splitify.</p>
             </div>
           </header>
 

@@ -1,4 +1,4 @@
-import { LayoutGrid, MessageSquare, Settings, UsersRound } from 'lucide-react'
+import { LayoutGrid, MessageSquare, Settings, Split, UsersRound } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import type { User } from '../../types'
 import { Avatar } from '../ui/Avatar'
@@ -17,11 +17,9 @@ export function Logo() {
   return (
     <span className={styles.logo}>
       <span className={styles.mark} aria-hidden>
-        <svg viewBox="0 0 24 24" width="15" height="15">
-          <path d="M6 7h12M12 7v11" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" fill="none" />
-        </svg>
+        <Split size={15} strokeWidth={2.2} />
       </span>
-      Tally
+      Splitify
     </span>
   )
 }

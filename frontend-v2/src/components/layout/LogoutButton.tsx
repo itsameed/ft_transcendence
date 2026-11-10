@@ -24,7 +24,7 @@ export function LogoutButton() {
 
   return (
     <div className={styles.logoutConfirm} role="group" aria-label="Confirm log out">
-      <span>Log out of Tally?</span>
+      <span>Log out of Splitify?</span>
       <span className={styles.logoutActions}>
         <button type="button" className={styles.logoutCancel} onClick={() => setConfirming(false)} disabled={busy}>
           Cancel

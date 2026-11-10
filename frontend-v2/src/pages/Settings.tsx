@@ -85,13 +85,13 @@ export function SettingsPage() {
           <header className={styles.heading}>
             <p className={styles.eyebrow}>Preferences</p>
             <h1>Settings</h1>
-            <p>Make Tally feel right for you.</p>
+            <p>Make Splitify feel right for you.</p>
           </header>
 
           <section className={styles.section} aria-labelledby="appearance-heading">
             <div className={styles.sectionHeading}>
               <h2 id="appearance-heading">Appearance</h2>
-              <p>Choose the color theme used across Tally.</p>
+              <p>Choose the color theme used across Splitify.</p>
             </div>
             <Card className={styles.preference}>
               <div className={styles.preferenceCopy}>
@@ -131,7 +131,7 @@ export function SettingsPage() {
           <section className={styles.section} aria-labelledby="security-heading">
             <div className={styles.sectionHeading}>
               <h2 id="security-heading">Password</h2>
-              <p>Change the password you use to sign in to Tally.</p>
+              <p>Change the password you use to sign in to Splitify.</p>
             </div>
             <Card>
               <form className={styles.pwForm} onSubmit={changePassword}>
@@ -158,7 +158,7 @@ export function SettingsPage() {
           <section className={styles.section} aria-labelledby="session-heading">
             <div className={styles.sectionHeading}>
               <h2 id="session-heading">Session</h2>
-              <p>Sign out of Tally on this device.</p>
+              <p>Sign out of Splitify on this device.</p>
             </div>
             <Card className={styles.preference}>
               <div className={styles.preferenceCopy}>
