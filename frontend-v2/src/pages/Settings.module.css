@@ -1,0 +1,162 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.heading h1 {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.heading > p:last-child {
+  margin-top: 6px;
+  color: var(--text-2);
+}
+
+.eyebrow {
+  margin-bottom: 6px;
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sectionHeading h2 {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.sectionHeading p {
+  margin-top: 5px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.preference,
+.account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.preferenceCopy,
+.accountIdentity > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.preferenceCopy strong,
+.accountIdentity strong {
+  font-weight: 600;
+}
+
+.preferenceCopy span,
+.accountIdentity span {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.segment {
+  display: flex;
+  flex-shrink: 0;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.segment button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 88px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.segment .selected {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-card), 0 0 0 1px var(--border);
+}
+
+.accountIdentity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.accountIdentity > div {
+  overflow: hidden;
+}
+
+.accountIdentity span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editLink {
+  flex-shrink: 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.editLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.state {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  color: var(--text-2);
+}
+
+@media (max-width: 640px) {
+  .content {
+    gap: 26px;
+  }
+
+  .heading h1 {
+    font-size: 23px;
+  }
+
+  .preference,
+  .account {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .segment {
+    width: 100%;
+  }
+
+  .segment button {
+    flex: 1;
+  }
+}

@@ -8,6 +8,7 @@ export const NAV = [
   { label: 'Dashboard', icon: LayoutGrid, to: '/dashboard' },
   { label: 'Groups & Friends', icon: UsersRound, to: '/groups' },
   { label: 'Chat', icon: MessageSquare, to: '/chat' },
+  { label: 'Settings', icon: Settings, to: '/settings' },
 ]
 
 export function Logo() {
@@ -38,10 +39,6 @@ export function Sidebar({ me }: { me: User }) {
       </nav>
 
       <div className={styles.footer}>
-        <a href="#" className={styles.link}>
-          <Settings size={18} strokeWidth={1.75} />
-          Settings
-        </a>
         <NavLink to="/profile" className={({ isActive }) => `${styles.me} ${isActive ? styles.active : ''}`}>
           <Avatar user={me} size={32} />
           <span className={styles.meText}>

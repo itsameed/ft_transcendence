@@ -10,6 +10,7 @@ import { Dashboard } from './pages/Dashboard'
 import { GroupPage } from './pages/Group'
 import { Landing } from './pages/Landing'
 import { ProfilePage } from './pages/Profile'
+import { SettingsPage } from './pages/Settings'
 
 export function App() {
   return (
@@ -21,6 +22,7 @@ export function App() {
         <Route path="/groups" element={<GroupPage/>}/>
         <Route path="/chat" element={<ChatPage/>}/>
         <Route path="/profile" element={<ProfilePage/>}/>
+        <Route path="/settings" element={<SettingsPage/>}/>
         <Route path="*" element={<Landing/>}/>
       </Routes>
     </Router>
