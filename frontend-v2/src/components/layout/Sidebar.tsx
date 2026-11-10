@@ -42,13 +42,13 @@ export function Sidebar({ me }: { me: User }) {
           <Settings size={18} strokeWidth={1.75} />
           Settings
         </a>
-        <a href="#" className={styles.me}>
+        <NavLink to="/profile" className={({ isActive }) => `${styles.me} ${isActive ? styles.active : ''}`}>
           <Avatar user={me} size={32} />
           <span className={styles.meText}>
             <strong>{me.name}</strong>
             <span>{me.email}</span>
           </span>
-        </a>
+        </NavLink>
       </div>
     </aside>
   )
