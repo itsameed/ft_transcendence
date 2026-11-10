@@ -40,12 +40,11 @@ export function Dashboard() {
 
       async function loadDashboard() {
          try {
-            const [res1, res2] = await Promise.all([fetch("/api/dashboard", {
+            const [res1, res2, groupsRes] = await Promise.all([fetch("/api/dashboard", {
                method: 'GET',
                headers: { 'Content-Type': 'application/json' }
-            }), fetch('/api/my-profile', { method: 'GET', headers: { 'Content-Type': 'application/json' } })]);
-            if (res1.status === 401 || res2.status === 401) {
-               console.log('Unauthorized (401) -> would navigate to /login')
+            }), fetch('/api/my-profile', { method: 'GET', headers: { 'Content-Type': 'application/json' } }), fetch('/api/groups/me')]);
+            if (res1.status === 401 || res2.status === 401 || groupsRes.status === 401) {
                navigate('/login');
                return;
             }
@@ -94,6 +93,18 @@ export function Dashboard() {
                   }
                })
             }
+            // Group members you have no balance with aren't in the debts lists
+            // above; resolve their real names so the expense modal can use them.
+            if (groupsRes.ok) {
+               const groupsData = await groupsRes.json().catch(() => null)
+               for (const g of groupsData?.groups ?? []) {
+                  for (const m of g.members ?? []) {
+                     const u = m.userId
+                     const id = String(u?._id ?? u ?? '')
+                     if (id && u?.username) userMap[id] = { id, name: u.username, email: u.email ?? '' }
+                  }
+               }
+            }
             setUsers(userMap)
             setDebt(balanceList)
 
@@ -112,7 +123,6 @@ export function Dashboard() {
       return () => window.removeEventListener('keydown', onKey)
    }, [])
    
-   console.log('user mail: ', me?.email)
    // Temporary test display:
    if (!me) {
       return (<div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', color: 'white' }} >

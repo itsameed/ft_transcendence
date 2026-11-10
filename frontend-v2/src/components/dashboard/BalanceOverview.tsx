@@ -92,7 +92,7 @@ function Column({ title, tone, total, rows, users, empty, action, actionLabel, o
       ) : (
         <ul className={styles.rows}>
           {rows.map(({ userId, amount }) => {
-            const user = users[userId]
+            const user = users[userId] ?? { id: userId, name: 'Unknown member', email: '' }
             const [first, ...rest] = user.name.split(' ')
             return (
               <li key={userId} className={styles.row}>
