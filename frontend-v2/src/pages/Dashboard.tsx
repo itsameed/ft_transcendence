@@ -40,19 +40,16 @@ export function Dashboard() {
 
       async function loadDashboard() {
          try {
-            const [res1, res2] = await Promise.all([fetch("/api/dashboard", {
+            const [res1, res2, groupsRes] = await Promise.all([fetch("/api/dashboard", {
                method: 'GET',
                headers: { 'Content-Type': 'application/json' }
-            }), fetch('/api/my-profile', { method: 'GET', headers: { 'Content-Type': 'application/json' } })]);
-            if (res1.status === 401 || res2.status === 401) {
-               console.log('Unauthorized (401) -> would navigate to /login')
+            }), fetch('/api/my-profile', { method: 'GET', headers: { 'Content-Type': 'application/json' } }), fetch('/api/groups/me')]);
+            if (res1.status === 401 || res2.status === 401 || groupsRes.status === 401) {
                navigate('/login');
                return;
             }
             const DashboardData = await res1.json()
-            console.log('Dashboard API response:', DashboardData)
             const profileData = await res2.json()
-            console.log('Profile API response:', profileData)
 
             setGroupList((DashboardData.groups?.userRecentGroups || []).map((group: any)=>({
                   id: group.groupId,
@@ -65,34 +62,43 @@ export function Dashboard() {
                   createdAt: group.createdAt,
                }))
             )
-            setDebt(DashboardData.debts?.userRecentDebts || [])
             setMe(profileData.user)
 
+            // userRecentDebts is { youOwe: [...], oweYou: [...] } — not an array.
+            // Build FriendBalance[] exactly once; never put the raw object in state.
             const recentDebts = DashboardData.debts?.userRecentDebts
             const userMap: Record<string, User> = {}
-            const balanceList: FriendBalance[] = []
+            const balanceMap = new Map<string, number>()
 
             if (profileData.user){
                userMap[profileData.user.id] = profileData.user
             }
 
-            if (recentDebts?.youOwe){
-               recentDebts.youOwe.forEach((item: any) => {
-                  const u = item.user
-                  if(u){
-                     userMap[u._id] = {id: u._id, name: u.username, email: ''}
-                     balanceList.push({userId: u._id, amount: -item.totalAmount})
-                  }
-               })
+            const addDebt = (item: any, sign: 1 | -1) => {
+               const u = item?.user
+               const id = String(u?._id ?? u?.id ?? item?.payerId ?? item?.debtorId ?? '')
+               if (!id) return
+               if (u?.username) userMap[id] = { id, name: u.username, email: u.email ?? '' }
+               const amount = Number(item?.totalAmount ?? item?.amount ?? 0)
+               if (!Number.isFinite(amount) || amount === 0) return
+               balanceMap.set(id, (balanceMap.get(id) ?? 0) + sign * amount)
             }
-            if (recentDebts?.oweYou){
-               recentDebts.oweYou.forEach((item: any) => {
-                  const u = item.user
-                  if(u){
-                     userMap[u._id] = {id: u._id, name: u.username, email: ''}
-                     balanceList.push({userId: u._id, amount: item.totalAmount})
+            for (const item of recentDebts?.youOwe ?? []) addDebt(item, -1)
+            for (const item of recentDebts?.oweYou ?? []) addDebt(item, 1)
+            const balanceList: FriendBalance[] = [...balanceMap.entries()]
+               .map(([userId, amount]) => ({ userId, amount: Math.round(amount * 100) / 100 }))
+               .filter((b) => b.amount !== 0)
+            // Group members you have no balance with aren't in the debts lists
+            // above; resolve their real names so the expense modal can use them.
+            if (groupsRes.ok) {
+               const groupsData = await groupsRes.json().catch(() => null)
+               for (const g of groupsData?.groups ?? []) {
+                  for (const m of g.members ?? []) {
+                     const u = m.userId
+                     const id = String(u?._id ?? u ?? '')
+                     if (id && u?.username) userMap[id] = { id, name: u.username, email: u.email ?? '' }
                   }
-               })
+               }
             }
             setUsers(userMap)
             setDebt(balanceList)
@@ -112,7 +118,6 @@ export function Dashboard() {
       return () => window.removeEventListener('keydown', onKey)
    }, [])
    
-   console.log('user mail: ', me?.email)
    // Temporary test display:
    if (!me) {
       return (<div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', color: 'white' }} >

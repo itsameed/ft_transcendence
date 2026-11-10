@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { Group } from '../../types'
 import { money } from '../../lib/format'
 import { iconForKind } from '../../lib/GroupKinds'
@@ -15,7 +16,7 @@ export function GroupsGrid({ groups }: { groups: Group[]; now?: Date }) {
             const tone = g.yourBalance > 0 ? 'owed' : g.yourBalance < 0 ? 'owe' : 'settled'
             const Icon = iconForKind(g.kind)
             return (
-               <a key={g.id} href="#" className={styles.tile}>
+               <Link key={g.id} to={`/groups/${g.id}`} className={styles.tile}>
                   <span className={styles.emoji} aria-hidden>
                      <Icon size={26} strokeWidth={1.5} />
                   </span>
@@ -31,7 +32,7 @@ export function GroupsGrid({ groups }: { groups: Group[]; now?: Date }) {
                         </strong>
                      )}
                   </span>
-               </a>
+               </Link>
             )
          })}
       </div>

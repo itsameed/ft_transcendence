@@ -13,7 +13,9 @@ export function summarize(balances: FriendBalance[]): BalanceSummary {
   let youOwe = 0
   let peopleOwingYou = 0
   let peopleYouOwe = 0
-  for (const { amount } of balances) {
+  // Tolerate a malformed payload instead of crashing the dashboard.
+  const rows = Array.isArray(balances) ? balances : []
+  for (const { amount } of rows) {
     if (amount > 0) {
       owedToYou += amount
       peopleOwingYou++

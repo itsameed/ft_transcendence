@@ -137,7 +137,7 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
 
   if (!open) return null
 
-  const name = (id: string) => (id === me ? 'You' : users[id].name)
+  const name = (id: string) => (id === me ? 'You' : users[id]?.name ?? 'Unknown member')
 
   const summary =
     included.length === 0
@@ -258,9 +258,9 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
                     >
                       {on && <Check size={13} strokeWidth={3} />}
                     </button>
-                    <Avatar user={users[id]} size={30} />
+                    <Avatar user={users[id] ?? { id, name: 'Unknown member', email: '' }} size={30} />
                     <span className={styles.memberName}>
-                      {id === me ? 'You' : firstName(users[id].name)}
+                      {id === me ? 'You' : firstName(name(id))}
                       {id === paidBy && <em>paid</em>}
                     </span>
                     {on && mode === 'equal' && <span className={`${styles.share} tabular`}>{money(shares[id] ?? 0)}</span>}

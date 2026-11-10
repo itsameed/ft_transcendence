@@ -115,7 +115,7 @@ export function ChatPage() {
     const aiId = `ai-${Date.now()}`
     setAiMessages((p) => [...p,
       { id: `q-${Date.now()}`, senderId: me!.id, senderName: me!.name, content: question, createdAt: new Date().toISOString() },
-      { id: aiId, senderId: 'ai', senderName: 'Tally AI', content: '', createdAt: new Date().toISOString(), ai: true }])
+      { id: aiId, senderId: 'ai', senderName: 'Splitify AI', content: '', createdAt: new Date().toISOString(), ai: true }])
     try {
       const res = await fetch(`/api/chat/group/${selected.id}/stream`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question }),

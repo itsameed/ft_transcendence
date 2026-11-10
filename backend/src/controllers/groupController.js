@@ -8,7 +8,7 @@ const Notification = require("../models/Schemas/Notification");
 
 const createGroup = async (req, res, next) => {
   try {
-    const { name } = req.body;
+    const { name, description = '', memberIds = [] } = req.body ?? {};
     const createdBy = req.user.id;
 
     if (!name || !name.trim()) {
@@ -17,19 +17,27 @@ const createGroup = async (req, res, next) => {
       });
     }
 
+    // Optional friends to add at creation; unknown/duplicate ids are ignored.
+    const extras = Array.isArray(memberIds)
+      ? [...new Set(memberIds.filter((id) => typeof id === 'string' && mongoose.Types.ObjectId.isValid(id) && id !== createdBy))]
+      : [];
+    const valid = extras.length
+      ? await User.find({ _id: { $in: extras } }).select('_id')
+      : [];
+    const members = [
+      { userId: createdBy, role: "owner" },
+      ...valid.map((u) => ({ userId: u._id, role: "member" })),
+    ];
+
     const group = await Group.create({
       name: name.trim(),
+      description: typeof description === 'string' ? description.trim() : '',
       createdBy: createdBy,
-      members: [
-        {
-          userId: createdBy,
-          role: "owner"
-        }
-      ]
+      members
     });
 
     const conversation = await Conversation.create({
-      participants: [createdBy]
+      participants: members.map((m) => m.userId)
     });
 
     group.conversationId = conversation._id;

@@ -138,7 +138,7 @@ export function Landing() {
 
       {/* Footer */}
       <footer className={styles.footer}>
-        <p>© 2026 Tally. Designed for effortless expense sharing.</p>
+        <p>© 2026 Splitify. Designed for effortless expense sharing.</p>
       </footer>
     </div>
   )
