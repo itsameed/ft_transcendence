@@ -6,12 +6,6 @@ const router = express.Router();
 const upload = require('../config/multer');
 const resizeImage = require('../config/sharp');
 
-router.get('/', (req, res) => {
-    // console.log("sdff");
-    console.log('reached here');
-    res.render(`signup`);
-});
-
 router.post('/', upload.single('avatar'), resizeImage,  loadNewUser);
 
 module.exports = router;
