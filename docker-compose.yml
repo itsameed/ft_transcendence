@@ -28,7 +28,6 @@ services:
     image: mongo:7.0.14-jammy
     container_name: ft_db_backup
     restart: unless-stopped
-    user: "${BACKUP_UID}:${BACKUP_GID}"
     entrypoint:
       - /bin/sh
       - /scripts/automatic-backup.sh

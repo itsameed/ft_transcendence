@@ -38,22 +38,6 @@ GF_SECURITY_ADMIN_USER=
 GF_SECURITY_ADMIN_PASSWORD=
 ```
 
-Get the current user and group IDs:
-
-```bash
-id -u
-id -g
-```
-
-Add those values to:
-
-```env
-BACKUP_UID=
-BACKUP_GID=
-```
-
-This ensures automatic backup files belong to the current user.
-
 `MONGO_URL` can remain empty because Docker Compose creates it from the MongoDB username and password.
 
 Google authentication, email and AI variables are optional during local testing. Their values can remain empty or disabled when those features are not being tested.
@@ -280,3 +264,12 @@ docker compose down -v
 ```
 
 Only use `-v` when the stored local data is no longer needed.
+
+## Service status page
+
+The service status page shows the current state of the frontend, backend, MongoDB, Prometheus, and Grafana.
+
+Open:
+
+```text
+https://localhost:8443/service-status.html

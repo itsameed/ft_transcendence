@@ -23,6 +23,7 @@ do
     --archive="$BACKUP_FILE" \
     --gzip
   then
+    chmod 644 "$BACKUP_FILE"
     echo "Automatic database backup created: $BACKUP_FILE"
     find "$BACKUP_FOLDER" \
       -type f \

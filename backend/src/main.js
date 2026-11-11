@@ -56,6 +56,7 @@ const editProfile = require('./routes/EditProfile.js');
 const googleAuth = require('./routes/googleAuth');
 const adminRoutes = require("./routes/adminRoutes");
 const searchUser = require('./routes/searchUser.js');
+const serviceStatus = require('./routes/serviceStatus.js');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use(sessionMiddleware);
@@ -73,6 +74,7 @@ app.use('/auth/signup', signupPageRouter);
 app.use('/auth/logout', logoutRouter);
 
 // API routes
+app.use('/status-api', serviceStatus);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/my-profile', myProfileRouter);
 app.use('/api/profile/edit', editProfile);
