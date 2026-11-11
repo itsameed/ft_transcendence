@@ -1,49 +1,74 @@
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const passport = require('./middleware/googleAuth');
-const connectDB = require("./config/database.js");
 
+require('dotenv').config({
+    path: path.resolve(__dirname, '../../.env')
+});
+
+const express = require('express');
+const http = require('http');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
+
+const { Server } = require('socket.io');
+
+const passport = require('./middleware/googleAuth');
+const sessionMiddleware = require('./middleware/session');
+const connectDB = require('./config/database.js');
 const {
-  metricsMiddleware,
-  metricsEndpoint
+    metricsMiddleware,
+    metricsEndpoint
 } = require('./middleware/metrics');
 
-const app = express();
+const User = require('./models/Schemas/User');
+const Conversation = require('./models/Schemas/Conversation');
+const AIGroup = require('./models/Schemas/Group');
 
+const AIChat = require('./routes/ai/chat');
+
+const app = express();
 app.set('trust proxy', 1);
+
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+    res.status(200).json({ status: 'ok' });
 });
+
 app.get('/metrics', metricsEndpoint);
 app.use(metricsMiddleware);
 
-const http = require("http");
-const { Server } = require("socket.io");
-const sessionMiddleware = require('./middleware/session');
+const FRONTEND_URL =
+    process.env.FRONTEND_URL || 'http://localhost:5174';
 
-const AIChat = require('./routes/ai/chat');                       // [NEW] AI router (SSE endpoint)
-const AIGroup = require('./models/Schemas/Group');                // [NEW] Group model for /chat/group/:id page
+const PORT = process.env.PORT || 6664;
 
-app.set("view engine", 'ejs');
+app.set('view engine', 'ejs');
+
+app.use(cors({
+    origin: FRONTEND_URL,
+    credentials: true
+}));
+
 app.use(express.json());
-app.use(express.static("public"));
-app.use(express.urlencoded({extended: true}));
-app.use(express.static(`public`));
+app.use(express.urlencoded({ extended: true }));
+
+app.use(express.static('public'));
+
 app.use(cookieParser());
 
-///////////////////////////////////////////////// Models Routes //////////////////////////////////////////////////
+app.use(sessionMiddleware);
 
-const notificationRoutes = require("./routes/notificationRoutes");
-const conversationRoutes = require("./routes/conversationRoutes");
-const messageRoutes = require("./routes/messageRoutes");
-const friendRoutes = require("./routes/friendRoutes");
-const groupRoutes = require("./routes/groupRoutes");
-const groupInvitationRoutes = require("./routes/groupInvitationRoutes");
+app.use(passport.initialize());
+app.use(passport.session());
+
+const notificationRoutes = require('./routes/notificationRoutes');
+const conversationRoutes = require('./routes/conversationRoutes');
+const messageRoutes = require('./routes/messageRoutes');
+const friendRoutes = require('./routes/friendRoutes');
+const groupRoutes = require('./routes/groupRoutes');
+const groupInvitationRoutes = require('./routes/groupInvitationRoutes');
+
 const groupDetailsRouter = require('./routes/GroupDetails');
 const loginPageRouter = require('./routes/login.js');
-// const userGroupsRouter = require('./routes/groupRoutes.js');
 const dashboardRouter = require('./routes/Home.js');
 const signupPageRouter = require('./routes/signup.js');
 const groupCreationRouter = require('./routes/CreateGroup.js');
@@ -53,64 +78,63 @@ const groupTotalExpensesRouter = require('./routes/GroupTotalExpenses.js');
 const logoutRouter = require('./routes/Logout.js');
 const myProfileRouter = require('./routes/MyProfile.js');
 const editProfile = require('./routes/EditProfile.js');
+const changePasswordRouter = require('./routes/ChangePassword.js');
+const userProfileRouter = require('./routes/UserProfile.js');
 const googleAuth = require('./routes/googleAuth');
-const adminRoutes = require("./routes/adminRoutes");
+const adminRoutes = require('./routes/adminRoutes');
 const searchUser = require('./routes/searchUser.js');
 const serviceStatus = require('./routes/serviceStatus.js');
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-app.use(sessionMiddleware);
-
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-//////////////////////////// Routes use ////////////////////////////////////////
-// Auth routes
 app.use('/auth/google', googleAuth);
 app.use('/', dashboardRouter);
 app.use('/auth/login', loginPageRouter);
 app.use('/auth/signup', signupPageRouter);
 app.use('/auth/logout', logoutRouter);
 
-// API routes
-app.use('/status-api', serviceStatus);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/status-api', serviceStatus);
 app.use('/api/my-profile', myProfileRouter);
 app.use('/api/profile/edit', editProfile);
+app.use('/api/profile/change-password', changePasswordRouter);
+app.use('/api/users', userProfileRouter);
 app.use('/api/group-details', groupDetailsRouter);
 app.use('/api/groups/create', groupCreationRouter);
 app.use('/api/settlements', settlementsRouter);
 app.use('/api/settlements/addSettlement', settlementsRouter);
-// Must precede groupRoutes: its GET /:groupId would otherwise capture `total-expenses` as a groupId
+
 app.use('/api/my-groups/total-expenses', groupTotalExpensesRouter);
 app.use('/api/my-groups', groupRoutes);
+
 app.use('/api/expenses', expensesRouter);
 app.use('/api/createExpense', expensesRouter);
-app.use("/api/group-invitations", groupInvitationRoutes);
-app.use("/api/groups", groupRoutes);
-app.use("/api/friends", friendRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/conversations", messageRoutes);
-app.use("/api/conversations", conversationRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/search", searchUser);
 
-// Fallback legacy support
+app.use('/api/group-invitations', groupInvitationRoutes);
+app.use('/api/groups', groupRoutes);
+app.use('/api/friends', friendRoutes);
+app.use('/api/notifications', notificationRoutes);
+
+app.use('/api/conversations', messageRoutes);
+app.use('/api/conversations', conversationRoutes);
+
+app.use('/api/admin', adminRoutes);
+app.use('/search', searchUser);
+
 app.use('/dashboard', dashboardRouter);
 app.use('/my-profile', myProfileRouter);
 app.use('/my-groups/total-expenses', groupTotalExpensesRouter);
 app.use('/my-groups', groupRoutes);
-app.use('/api', AIChat);                                          // [NEW] mounts /api/chat/group/:groupId/stream
 
-// ===== AI Chat Page (per-group) =====                           // [NEW]
-app.get('/chat/group/:groupId', async (req, res) => {             // [NEW] render groupChat.ejs for a specific group
-    if (!req.session?.userId) {                                   // [NEW] must be logged in
+app.use('/api', AIChat);
+
+app.get('/chat/group/:groupId', async (req, res) => {
+
+    if (!req.session?.userId) {
         return res.redirect('/auth/login');
     }
 
     try {
-        const group = await AIGroup.findOne({                     // [NEW] verify user belongs to this group
+
+        const group = await AIGroup.findOne({
             _id: req.params.groupId,
             $or: [
                 { createdBy: req.session.userId },
@@ -118,112 +142,170 @@ app.get('/chat/group/:groupId', async (req, res) => {             // [NEW] rende
             ]
         }).lean();
 
-        if (!group) {                                             // [NEW] not found OR no access -> 404
-            return res.status(404).send('Group not found or access denied');
+        if (!group) {
+            return res.status(404).send(
+                'Group not found or access denied'
+            );
         }
 
-        res.render('groupChat', {                                 // [NEW] pass groupId + groupName to the view
+        return res.render('groupChat', {
             groupId: group._id.toString(),
             groupName: group.name
         });
-    } catch (err) {
-        console.error('Group chat error:', err);
-        res.status(500).send('Error loading group');
+
+    } catch (error) {
+
+        console.error('AI Chat page error:', error);
+
+        return res.status(500).send('Error loading group');
     }
-});
-
-
-
-
-////////////////////////////////////////////////////////////////////////////
-app.use((err, req, res, next) => {
-  if (err.name !== "CastError") {
-    console.error(err);
-  }
-
-  if (err.name === "CastError") {
-    return res.status(400).json({
-      message: "Invalid ID"
-    });
-  }
-
-  return res.status(500).json({
-    message: "Server error"
-  });
 });
 
 const server = http.createServer(app);
 
-const io = new Server(server);
-
-app.set("io", io);
-
-io.on("connection", (socket) => {
-
-  console.log("User connected:", socket.id);
-
-  socket.on("joinUser", (userId) => {
-
-    socket.join(`user:${userId}`);
-
-    console.log(
-      `Socket ${socket.id} joined user room ${userId}`
-    );
-
-  });
-
-  socket.on("joinConversation", async (conversationId, userId) => {
-    try {
-
-      const group = await Group.findOne({
-        conversationId: conversationId,
-        "members.userId": userId
-      });
-
-      if (!group) {
-        socket.emit("chatError", {
-          message: "You are not a member of this group"
-        });
-        return;
-      }
-
-      socket.join(`conversation:${conversationId}`);
-
-      console.log(
-        `User ${userId} joined conversation:${conversationId}`
-      );
-
-    } catch (error) {
-      console.error(error);
-
-      socket.emit("chatError", {
-        message: "Could not join conversation"
-      });
+const io = new Server(server, {
+    cors: {
+        origin: FRONTEND_URL,
+        credentials: true
     }
-  });
-
-  socket.on("disconnect", () => {
-
-    console.log("User disconnected:", socket.id);
-
-  });
-
 });
 
-////////////////////////////////////////////////////////////////
+app.set('io', io);
+
+io.engine.use(sessionMiddleware);
+
+io.use(async (socket, next) => {
+
+    try {
+
+        const userId = socket.request.session?.userId;
+
+        if (!userId) {
+            return next(new Error('Authentication required'));
+        }
+
+        const user = await User.findById(userId)
+            .select('_id status');
+
+        if (!user) {
+            return next(new Error('User not found'));
+        }
+
+        if (user.status === 'suspended') {
+            return next(new Error('Account suspended'));
+        }
+
+        socket.userId = user._id.toString();
+
+        return next();
+
+    } catch (error) {
+
+        console.error('Socket authentication error:', error);
+
+        return next(new Error('Authentication failed'));
+    }
+});
+
+io.on('connection', (socket) => {
+
+    console.log('User connected:', socket.userId);
+
+    socket.join(`user:${socket.userId}`);
+
+    console.log(
+        `User ${socket.userId} joined their personal room`
+    );
+
+    socket.on('joinConversation', async (conversationId) => {
+
+        try {
+
+            if (!mongoose.isValidObjectId(conversationId)) {
+
+                socket.emit('chatError', {
+                    message: 'Invalid conversation ID'
+                });
+
+                return;
+            }
+
+            const conversation = await Conversation.findOne({
+                _id: conversationId,
+                participants: socket.userId
+            });
+
+            if (!conversation) {
+
+                socket.emit('chatError', {
+                    message: 'You are not a participant in this conversation'
+                });
+
+                return;
+            }
+
+            socket.join(`conversation:${conversationId}`);
+
+            console.log(
+                `User ${socket.userId} joined conversation:${conversationId}`
+            );
+
+        } catch (error) {
+
+            console.error('Join conversation error:', error);
+
+            socket.emit('chatError', {
+                message: 'Could not join conversation'
+            });
+        }
+    });
+
+    socket.on('disconnect', (reason) => {
+
+        console.log(
+            `User ${socket.userId} disconnected:`,
+            reason
+        );
+    });
+});
+
+app.use((err, req, res, next) => {
+
+    if (err.name !== 'CastError') {
+        console.error(err);
+    }
+
+    if (err.name === 'CastError') {
+        return res.status(400).json({
+            message: 'Invalid ID'
+        });
+    }
+
+    return res.status(500).json({
+        message: 'Server error'
+    });
+});
 
 const startServer = async () => {
 
-  await connectDB();
+    try {
 
-  server.listen(process.env.PORT, () => {
+        await connectDB();
 
-    console.log(
-      `Server running on http://localhost:${process.env.PORT}`
-    );
+        server.listen(PORT, () => {
 
-  });
+            console.log(
+                `Server running on http://localhost:${PORT}`
+            );
 
+        });
+
+    } catch (error) {
+
+        console.error('Server startup failed:', error);
+
+        process.exit(1);
+    }
 };
 
 startServer();

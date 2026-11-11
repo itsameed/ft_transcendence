@@ -1,0 +1,34 @@
+.heading { font-size: 24px; letter-spacing: -0.02em; }
+.sub { color: var(--text-3); margin-top: 4px; }
+.toolbar { display: flex; gap: 10px; align-items: center; }
+.search {
+  flex: 1; display: flex; align-items: center; gap: 9px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+  padding: 0 16px; height: 44px; box-shadow: var(--shadow-card); color: var(--text-3);
+}
+.search input { flex: 1; border: 0; background: none; outline: none; color: var(--text); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  padding: 8px 15px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-2); box-shadow: var(--shadow-card); font-size: 13px;
+}
+.chipOn { background: var(--primary); border-color: var(--primary); color: var(--on-primary); font-weight: 600; }
+.sectionTitle { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); margin-bottom: 12px; }
+.rows { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.row {
+  display: flex; align-items: center; gap: 12px; padding: 13px 16px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-card);
+}
+.rowLink { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; color: inherit; text-decoration: none; border-radius: 10px; }
+.rowLink:hover .who strong { text-decoration: underline; text-underline-offset: 3px; }
+.who { display: flex; flex-direction: column; min-width: 0; }
+.who strong { font-size: 14px; }
+.who small { color: var(--text-3); font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+.actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.chatLink { color: var(--text-2); font-size: 13px; text-decoration: none; padding: 7px 10px; }
+.chatLink:hover { color: var(--text); }
+.remove { border: 0; background: none; color: var(--text-3); font-size: 13px; padding: 7px 6px; }
+.remove:hover { color: var(--owe); }
+.empty { color: var(--text-3); }
+.hint { color: var(--text-3); font-size: 13px; margin-top: 12px; }
+@media (max-width: 640px) { .toolbar { flex-wrap: wrap; } }

@@ -1,5 +1,7 @@
 name: CI
 
+# Mirrors lefthook.yml: typecheck + backend syntax on every PR/push,
+# full production build as the push gate.
 on:
   push:
     branches: [main, zakaria, devops]
@@ -7,9 +9,8 @@ on:
 
 jobs:
   check:
-    name: Typecheck and backend syntax
+    name: Typecheck + backend syntax
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -17,29 +18,27 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: frontend-v2/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install frontend dependencies
-        working-directory: frontend-v2
+      - name: Install frontend deps
+        working-directory: frontend
         run: npm ci
 
       - name: Typecheck
-        working-directory: frontend-v2
+        working-directory: frontend
         run: npx tsc -b
 
-      - name: Check backend syntax
-        shell: bash
+      - name: Backend syntax check
         run: |
           shopt -s globstar nullglob
-          for file in backend/src/**/*.js backend/scripts/*.js; do
-            node --check "$file"
+          for f in backend/src/**/*.js backend/scripts/*.js; do
+            node --check "$f"
           done
 
   build:
     name: Production build
     runs-on: ubuntu-latest
     needs: check
-
     steps:
       - uses: actions/checkout@v4
 
@@ -47,15 +46,16 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: frontend-v2/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install frontend dependencies
-        working-directory: frontend-v2
+      - name: Install frontend deps
+        working-directory: frontend
         run: npm ci
 
-      - name: Build frontend
-        working-directory: frontend-v2
+      - name: Build
+        working-directory: frontend
         run: npm run build
+
 
   docker-check:
     name: Docker configuration and build
