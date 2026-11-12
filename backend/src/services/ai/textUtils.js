@@ -1,4 +1,4 @@
-function normalize(text) 
+function normalize(text)
 {
   let result = text;
   result = result.replace(/[\u064B-\u065F]/g, '');
@@ -10,7 +10,7 @@ function normalize(text)
   return result;
 }
 
-function tokenize(text) 
+function tokenize(text)
 {
   const lower = text.toLowerCase();
   const norm = normalize(lower);

@@ -107,7 +107,7 @@ export function Dashboard() {
 
       loadDashboard()
 
-      
+
       const onKey = (e: KeyboardEvent) => {
          const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement
          if (e.key === 'n' && !typing && !e.metaKey && !e.ctrlKey) setAdding(true)
@@ -116,6 +116,8 @@ export function Dashboard() {
       return () => window.removeEventListener('keydown', onKey)
    }, [])
    
+
+   // Temporary test display:
    if (!me) {
       return <div className="page-state" role="status">Loading dashboard…</div>
    }
