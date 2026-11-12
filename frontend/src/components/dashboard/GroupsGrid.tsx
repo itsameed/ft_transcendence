@@ -9,7 +9,7 @@ function describe(group: Group): string {
    return `${group.memberIds.length} ${group.memberIds.length === 1 ? 'person' : 'people'}`
 }
 
-export function GroupsGrid({ groups }: { groups: Group[]; now?: Date }) {
+export function GroupsGrid({ groups, onCreate }: { groups: Group[]; now?: Date; onCreate?: () => void }) {
    return (
       <div className={styles.grid}>
          {groups.map((g) => {
@@ -25,18 +25,20 @@ export function GroupsGrid({ groups }: { groups: Group[]; now?: Date }) {
                      <span>{describe(g)}</span>
                   </span>
                   <span className={styles.balance}>
-                     <span>{tone === 'owed' ? 'You’re owed' : tone === 'owe' ? 'You owe' : 'All settled up'}</span>
-                     {tone !== 'settled' ? (
-                        <strong className="tabular" data-tone={tone}>
-                           {money(g.yourBalance)}
-                        </strong>
-                     ) : (
-                        <strong className={styles.settled}>Settled</strong>
-                     )}
+                     <span className={styles.badge} data-tone={tone}>
+                        {tone === 'owed' ? `You’re owed ${money(g.yourBalance)}` : tone === 'owe' ? `You owe ${money(g.yourBalance)}` : '✓ Settled'}
+                     </span>
                   </span>
                </Link>
             )
          })}
+         {onCreate && (
+            <button type="button" className={styles.createTile} onClick={onCreate}>
+               <span className={styles.createIcon} aria-hidden>+</span>
+               <strong>Create new group</strong>
+               <span>Trip, home, event…</span>
+            </button>
+         )}
       </div>
    )
 }

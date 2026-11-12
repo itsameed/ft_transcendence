@@ -8,6 +8,7 @@ import { Sidebar } from '../components/layout/Sidebar'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
+import { money } from '../lib/format'
 import type { Group, User } from '../types'
 import dashStyles from './Dashboard.module.css'
 import styles from './Group.module.css'
@@ -34,6 +35,8 @@ export function GroupPage() {
   const [toast, setToast] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [menuFor, setMenuFor] = useState<string | null>(null)
+  const [friendBalances, setFriendBalances] = useState<Record<string, number>>({})
+  const [groupBalances, setGroupBalances] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
   const NOW = new Date()
@@ -41,8 +44,8 @@ export function GroupPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [groupsRes, profileRes, friendsRes, requestsRes] = await Promise.all([
-          fetch('/api/groups/me'), fetch('/api/my-profile'), fetch('/api/friends'), fetch('/api/friends/requests'),
+        const [groupsRes, profileRes, friendsRes, requestsRes, dashRes] = await Promise.all([
+          fetch('/api/groups/me'), fetch('/api/my-profile'), fetch('/api/friends'), fetch('/api/friends/requests'), fetch('/api/dashboard'),
         ])
         if ([groupsRes, profileRes, friendsRes, requestsRes].some((r) => r.status === 401)) { navigate('/login'); return }
         if (!groupsRes.ok) throw new Error(`Failed to load groups (${groupsRes.status})`)
@@ -61,6 +64,22 @@ export function GroupPage() {
         if (requestsRes.ok) {
           const d = await requestsRes.json()
           setRequests(d.requests ?? [])
+        }
+        if (dashRes.ok) {
+          const dash = await dashRes.json().catch(() => null)
+          const rd = dash?.debts?.userRecentDebts
+          const map = new Map<string, number>()
+          const add = (item: any, sign: 1 | -1) => {
+            const id = String(item?.user?._id ?? '')
+            const amt = Number(item?.totalAmount ?? 0)
+            if (id && Number.isFinite(amt) && amt !== 0) map.set(id, Math.round(((map.get(id) ?? 0) + sign * amt) * 100) / 100)
+          }
+          for (const i of rd?.youOwe ?? []) add(i, -1)
+          for (const i of rd?.oweYou ?? []) add(i, 1)
+          setFriendBalances(Object.fromEntries([...map.entries()].filter(([, v]) => v !== 0)))
+          const gb: Record<string, number> = {}
+          for (const g of dash?.groups?.userRecentGroups ?? []) gb[String(g.groupId)] = Number(g.balance ?? 0)
+          setGroupBalances(gb)
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load')
@@ -186,7 +205,7 @@ export function GroupPage() {
           {showGroups && (
             <section aria-label="Your groups">
               <h2 className={styles.sectionTitle}>Your groups ({visibleGroups.length})</h2>
-              {visibleGroups.length === 0 ? <p className={styles.empty}>No groups match.</p> : <GroupsGrid groups={visibleGroups} now={NOW} />}
+              {visibleGroups.length === 0 ? <p className={styles.empty}>No groups match.</p> : <GroupsGrid groups={visibleGroups.map((g) => ({ ...g, yourBalance: groupBalances[g.id] ?? g.yourBalance }))} now={NOW} onCreate={() => setCreating(true)} />}
               <p className={styles.hint}>Select a group to see its members and details, or create a new group with your friends.</p>
             </section>
           )}
@@ -195,26 +214,33 @@ export function GroupPage() {
             <section aria-label="Friends">
               <h2 className={styles.sectionTitle}>Friends ({visibleFriends.length})</h2>
               {visibleFriends.length === 0 ? <p className={styles.empty}>No friends match.</p> : (
-                <ul className={styles.rows}>
-                  {visibleFriends.map((f) => (
-                    <li key={f.id} className={styles.row}>
-                      <Link className={styles.rowLink} to={`/users/${f.id}`}>
-                        <Avatar user={f} size={34} /><span className={styles.who}><strong>{f.name}</strong><small>{f.email}</small></span>
-                      </Link>
-                      <span className={styles.actions}>
-                        <Link className={styles.chatLink} to="/chat">Chat</Link>
-                        <span className={styles.menuWrap}>
-                          <button type="button" className={styles.menuBtn} aria-label={`More actions for ${f.name}`} aria-expanded={menuFor === f.id} onClick={() => setMenuFor(menuFor === f.id ? null : f.id)}><MoreVertical size={17} /></button>
-                          {menuFor === f.id && (
-                            <span className={styles.menu} role="menu">
-                              <Link to={`/users/${f.id}`} className={styles.menuItem} role="menuitem">View profile</Link>
-                              <button type="button" className={`${styles.menuItem} ${styles.menuDanger}`} role="menuitem" onClick={() => { setMenuFor(null); removeFriend(f) }}>Remove friend</button>
-                            </span>
-                          )}
+                <ul className={styles.friendGrid}>
+                  {visibleFriends.map((f) => {
+                    const bal = friendBalances[f.id] ?? 0
+                    return (
+                      <li key={f.id} className={styles.friendCard}>
+                        <Link className={styles.friendHead} to={`/users/${f.id}`}>
+                          <Avatar user={f} size={38} />
+                          <span className={styles.who}><strong>{f.name}</strong><small>{f.email}</small></span>
+                        </Link>
+                        <span className={styles.friendBadge} data-tone={bal > 0 ? 'owed' : bal < 0 ? 'owe' : 'settled'}>
+                          {bal > 0 ? `Owes you ${money(bal)}` : bal < 0 ? `You owe ${money(bal)}` : '✓ Settled'}
                         </span>
-                      </span>
-                    </li>
-                  ))}
+                        <span className={styles.friendActions}>
+                          <Link className={styles.chatLink} to="/chat">Chat</Link>
+                          <span className={styles.menuWrap}>
+                            <button type="button" className={styles.menuBtn} aria-label={`More actions for ${f.name}`} aria-expanded={menuFor === f.id} onClick={() => setMenuFor(menuFor === f.id ? null : f.id)}><MoreVertical size={17} /></button>
+                            {menuFor === f.id && (
+                              <span className={styles.menu} role="menu">
+                                <Link to={`/users/${f.id}`} className={styles.menuItem} role="menuitem">View profile</Link>
+                                <button type="button" className={`${styles.menuItem} ${styles.menuDanger}`} role="menuitem" onClick={() => { setMenuFor(null); removeFriend(f) }}>Remove friend</button>
+                              </span>
+                            )}
+                          </span>
+                        </span>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </section>
