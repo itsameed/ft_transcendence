@@ -329,13 +329,6 @@ export function ChatPage() {
                         <span className={styles.convMeta}><span className={styles.pill}>{g.memberIds.length} members</span></span>
                       </span>
                     </button>
-                    <button className={`${styles.conv} ${isSelected && mode === 'ai' ? styles.convOn : ''}`} onClick={() => { setSelectedId(g.id); setMode('ai'); setMobileThread(true); setReplyTo(null) }} aria-current={isSelected && mode === 'ai'}>
-                      <span className={`${styles.convIcon} ${styles.aiConvIcon}`}><Sparkles size={17} /></span>
-                      <span className={styles.convBody}>
-                        <span className={styles.convTop}><span className={styles.convName}>AI — {g.name}</span></span>
-                        <span className={styles.convLast}><span>Ask about this group</span></span>
-                      </span>
-                    </button>
                   </div>
                 )
               })}
