@@ -1,5 +1,6 @@
 .landing {
     min-height: 100vh;
+  min-height: 100dvh;
     display: flex;
     flex-direction: column;
     background-color: var(--bg);
@@ -41,6 +42,11 @@
 .themeToggle:hover {
     background: var(--surface-2);
     color: var(--text);
+    border-color: var(--text-3);
+}
+.themeToggle:active {
+    background: var(--surface-3);
+    transform: scale(0.96);
 }
 
 .authLinks {
@@ -125,7 +131,7 @@
     height: 48px;
     padding: 0 24px;
     font-size: 15px;
-    font-weight: 550;
+    font-weight: 500;
     border-radius: var(--radius-sm);
 }
 
@@ -133,7 +139,7 @@
     height: 48px;
     padding: 0 20px;
     font-size: 15px;
-    font-weight: 550;
+    font-weight: 500;
     border-radius: var(--radius-sm);
 }
 
@@ -184,7 +190,7 @@
     font-size: 13px;
     font-weight: 600;
     color: var(--owed);
-    background: rgba(58, 114, 84, 0.12);
+    background: var(--accent-soft);
     padding: 4px 10px;
     border-radius: 999px;
 }
@@ -212,7 +218,7 @@
 
 .statValue {
     font-size: 22px;
-    font-weight: 650;
+    font-weight: 600;
     color: var(--text);
     letter-spacing: -0.02em;
 }
@@ -238,7 +244,7 @@
 
 .sectionTitle {
     font-size: 26px;
-    font-weight: 650;
+    font-weight: 600;
     letter-spacing: -0.02em;
     margin: 0 0 8px;
 }
@@ -259,16 +265,18 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
     padding: 28px 24px;
     display: flex;
     flex-direction: column;
     gap: 14px;
-    transition: transform 0.15s, border-color 0.15s;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .featureCard:hover {
     transform: translateY(-2px);
     border-color: var(--border-strong);
+    box-shadow: var(--shadow-pop);
 }
 
 .featureIcon {

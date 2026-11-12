@@ -25,7 +25,7 @@ const AIChat = require('./routes/ai/chat');
 const app = express();
 
 const FRONTEND_URL =
-    process.env.FRONTEND_URL || 'http://localhost:5174';
+    process.env.FRONTEND_URL || 'http://localhost:5175';
 
 const PORT = process.env.PORT || 6664;
 

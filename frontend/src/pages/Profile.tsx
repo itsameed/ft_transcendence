@@ -72,7 +72,7 @@ export function ProfilePage() {
     }
   }
 
-  if (loading) return <div className={styles.state}>Loading profile...</div>
+  if (loading) return <div className={styles.state} role="status">Loading profile…</div>
   if (!profile) return <div className={styles.state} role="alert">{error || 'Profile unavailable.'}</div>
 
   return (

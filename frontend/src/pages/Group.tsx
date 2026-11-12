@@ -117,7 +117,7 @@ export function GroupPage() {
   }
 
   if (loading || !me) {
-    return <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh' }}>{error ?? 'Loading…'}</div>
+    return <div className="page-state" role={error ? 'alert' : 'status'}>{error ?? 'Loading…'}</div>
   }
 
   return (

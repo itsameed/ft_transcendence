@@ -29,6 +29,7 @@
   color: var(--text-3);
   font-size: 12px;
   font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -69,9 +70,13 @@
   display: flex;
   align-items: stretch;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-card);
+  transition: border-color 0.15s ease;
+}
+.row:hover {
+  border-color: var(--border-strong);
 }
 
 .row.unread {
@@ -122,11 +127,13 @@
 .main strong {
   font-size: 14px;
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .main span {
   color: var(--text-2);
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 .main small {
@@ -146,22 +153,25 @@
   display: grid;
   place-items: center;
   width: 40px;
+  min-height: 44px;
   margin: 8px 8px 8px 0;
   border: 0;
   border-radius: 10px;
   background: transparent;
   color: var(--text-3);
   flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .delete:hover {
-  background: var(--hover-wash);
+  background: var(--danger-soft);
   color: var(--owe);
 }
 
 .state {
   display: grid;
   min-height: 100vh;
+  min-height: 100dvh;
   place-items: center;
   padding: 24px;
   color: var(--text-2);

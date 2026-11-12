@@ -1,5 +1,6 @@
 .authWrapper {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background-color: var(--bg);
@@ -31,6 +32,11 @@
 .themeToggle:hover {
   background: var(--surface-2);
   color: var(--text);
+  border-color: var(--text-3);
+}
+.themeToggle:active {
+  background: var(--surface-3);
+  transform: scale(0.96);
 }
 
 .content {
@@ -49,7 +55,7 @@
   border-radius: var(--radius-lg);
   padding: 36px 32px;
   box-shadow: var(--shadow-pop);
-  animation: appear 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+  animation: appear 0.28s var(--ease);
 }
 
 @keyframes appear {
@@ -91,13 +97,13 @@
 
 .field label {
   font-size: 13px;
-  font-weight: 550;
+  font-weight: 500;
   color: var(--text);
 }
 
 .input {
   width: 100%;
-  height: 42px;
+  height: var(--field-height);
   padding: 0 14px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
@@ -106,23 +112,16 @@
   font-size: 14px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
 }
 
 .input:focus {
   background: var(--surface);
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(27, 27, 25, 0.08);
-}
-
-:global([data-theme='dark']) .input:focus {
-  box-shadow: 0 0 0 3px rgba(236, 235, 231, 0.12);
 }
 
 .errorAlert {
   padding: 10px 14px;
   border-radius: var(--radius-sm);
-  background: rgba(162, 86, 59, 0.12);
+  background: var(--danger-soft);
   border: 1px solid var(--owe);
   color: var(--owe);
   font-size: 13px;
@@ -135,7 +134,7 @@
   height: 44px;
   border-radius: var(--radius-sm);
   font-size: 14px;
-  font-weight: 550;
+  font-weight: 500;
 }
 
 .footer {

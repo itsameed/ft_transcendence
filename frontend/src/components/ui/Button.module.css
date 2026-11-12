@@ -7,16 +7,17 @@
   border-radius: var(--radius-sm);
   font-weight: 500;
   white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
-.button:active {
+.button:active:not(:disabled) {
   transform: scale(0.98);
 }
 
 .button:disabled {
-  opacity: 0.4;
-  pointer-events: none;
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .md {
@@ -26,7 +27,7 @@
 }
 
 .sm {
-  height: 32px;
+  height: 34px;
   padding: 0 12px;
   border-radius: 8px;
   font-size: 13px;
@@ -42,24 +43,32 @@
   background: var(--primary);
   color: var(--on-primary);
 }
-.primary:hover {
+.primary:hover:not(:disabled) {
   background: var(--primary-hover);
+}
+.primary:active:not(:disabled) {
+  background: var(--primary);
 }
 
 .secondary {
   background: var(--surface);
   border-color: var(--border-strong);
   color: var(--text);
+  box-shadow: 0 1px 2px rgba(87, 70, 40, 0.04);
 }
-.secondary:hover {
+.secondary:hover:not(:disabled) {
   background: var(--surface-2);
+  border-color: var(--text-3);
+}
+.secondary:active:not(:disabled) {
+  background: var(--surface-3);
 }
 
 .ghost {
   background: transparent;
   color: var(--text-2);
 }
-.ghost:hover {
-  background: var(--surface-2);
+.ghost:hover:not(:disabled) {
+  background: var(--hover-wash);
   color: var(--text);
 }

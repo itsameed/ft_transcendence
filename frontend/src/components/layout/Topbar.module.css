@@ -44,6 +44,11 @@
 .iconButton:hover {
   background: var(--surface-2);
   color: var(--text);
+  border-color: var(--text-3);
+}
+.iconButton:active {
+  background: var(--surface-3);
+  transform: scale(0.96);
 }
 
 @media (max-width: 860px) {

@@ -26,10 +26,12 @@ export function GroupsGrid({ groups }: { groups: Group[]; now?: Date }) {
                   </span>
                   <span className={styles.balance}>
                      <span>{tone === 'owed' ? 'You’re owed' : tone === 'owe' ? 'You owe' : 'All settled up'}</span>
-                     {tone !== 'settled' && (
+                     {tone !== 'settled' ? (
                         <strong className="tabular" data-tone={tone}>
                            {money(g.yourBalance)}
                         </strong>
+                     ) : (
+                        <strong className={styles.settled}>Settled</strong>
                      )}
                   </span>
                </Link>

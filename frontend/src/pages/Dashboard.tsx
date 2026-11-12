@@ -118,12 +118,8 @@ export function Dashboard() {
       return () => window.removeEventListener('keydown', onKey)
    }, [])
    
-   // Temporary test display:
    if (!me) {
-      return (<div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', color: 'white' }} >
-         Loading dashboard...
-      </div>
-      )
+      return <div className="page-state" role="status">Loading dashboard…</div>
    }
    return (
       <div className={styles.app}>

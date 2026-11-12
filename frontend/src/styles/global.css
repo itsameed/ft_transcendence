@@ -44,6 +44,14 @@
   --radius: 14px;
   --radius-lg: 20px;
 
+  /* One field height and one focus ring, shared by every input/select
+     in the app (auth, profile, settings, modals, search, composer). */
+  --field-height: 44px;
+  --focus-ring: 0 0 0 3px var(--surface-3);
+  --accent-soft: rgba(58, 114, 84, 0.12);
+  --danger-soft: rgba(162, 86, 59, 0.12);
+  --ease: cubic-bezier(0.2, 0.9, 0.3, 1);
+
   --font: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
@@ -70,6 +78,8 @@
     --on-primary: #121211;
     --owed: #8fbf9f;
     --owe: #dc9a80;
+    --accent-soft: rgba(143, 191, 159, 0.16);
+    --danger-soft: rgba(220, 154, 128, 0.16);
     --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.5);
     --shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.6);
     --scrim: rgba(0, 0, 0, 0.55);
@@ -98,6 +108,8 @@
   --on-primary: #121211;
   --owed: #8fbf9f;
   --owe: #dc9a80;
+  --accent-soft: rgba(143, 191, 159, 0.16);
+  --danger-soft: rgba(220, 154, 128, 0.16);
   --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.5);
   --shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.6);
   --scrim: rgba(0, 0, 0, 0.55);
@@ -126,6 +138,7 @@ body {
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   font-feature-settings: 'cv11', 'ss01';
 }
 
@@ -138,9 +151,15 @@ p {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
   color: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-3);
 }
 
 button {
@@ -150,6 +169,46 @@ button {
 :focus-visible {
   outline: 2px solid var(--text);
   outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+/* Every text field in the app shares this treatment: 44px tall, a warm
+   fill that lifts to the surface on focus, and the same ring. */
+input:not([type='checkbox']):not([type='radio']),
+select,
+textarea {
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+input:not([type='checkbox']):not([type='radio']):focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--text-3);
+  box-shadow: var(--focus-ring);
+}
+
+/* Shared full-page loading / error state (Dashboard, Groups, Chat, …). */
+.page-state {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 24px;
+  color: var(--text-2);
+  font-size: 14px;
+  text-align: center;
+  animation: state-in 0.3s var(--ease);
+}
+
+@keyframes state-in {
+  from {
+    opacity: 0;
+  }
 }
 
 .tabular {

@@ -136,7 +136,7 @@ export function ChatPage() {
     } finally { setStreaming(false) }
   }
 
-  if (loading || !me) return <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh' }}>{error ?? 'Loading…'}</div>
+  if (loading || !me) return <div className="page-state" role={error ? 'alert' : 'status'}>{error ?? 'Loading…'}</div>
 
   return (
     <div className={dashStyles.app}>

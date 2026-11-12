@@ -7,20 +7,25 @@
 .tile {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  min-height: 200px;
-  padding: 22px;
+  gap: 14px;
+  min-height: 168px;
+  padding: 20px 22px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-card);
   color: inherit;
   text-decoration: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .tile:hover {
   border-color: var(--border-strong);
+  box-shadow: var(--shadow-pop);
+  transform: translateY(-1px);
+}
+.tile:active {
+  transform: translateY(0);
 }
 
 .emoji {
@@ -72,6 +77,10 @@
 .balance strong[data-tone='owe'] {
   color: var(--owe);
 }
+.balance .settled {
+  color: var(--text-2);
+  font-size: 14px;
+}
 
 @container (max-width: 960px) {
   .grid {
@@ -84,7 +93,7 @@
     gap: 12px;
   }
   .tile {
-    min-height: 184px;
+    min-height: 152px;
     padding: 18px;
   }
 }
