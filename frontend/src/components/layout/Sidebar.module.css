@@ -179,6 +179,30 @@
   margin-top: auto;
 }
 
+.themeToggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  font-weight: 500;
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.themeToggle:hover {
+  background: var(--hover-wash);
+  color: var(--text);
+}
+
+.themeToggle:active {
+  background: var(--surface-3);
+}
+
 .me {
   display: flex;
   align-items: center;
