@@ -341,7 +341,7 @@ export function ChatPage() {
     <div className={dashStyles.app}>
       <Sidebar me={me} />
       <main className={`${dashStyles.main} ${styles.chatMain}`}>
-        <div className={`${styles.shell} ${details ? styles.detailsOpen : ''} ${mobileThread ? styles.mobileThread : ''}`}>
+        <div className={`${styles.shell} ${details && selected && !inDm ? styles.detailsOpen : ''} ${mobileThread ? styles.mobileThread : ''}`}>
           <aside className={styles.list} aria-label="Conversations">
             <div className={styles.listHead}>
               <div className={styles.listTitle}><h1>Messages</h1>
