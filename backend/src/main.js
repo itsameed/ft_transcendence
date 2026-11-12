@@ -15,6 +15,10 @@ const { Server } = require('socket.io');
 const passport = require('./middleware/googleAuth');
 const sessionMiddleware = require('./middleware/session');
 const connectDB = require('./config/database.js');
+const {
+    metricsMiddleware,
+    metricsEndpoint
+} = require('./middleware/metrics');
 
 const User = require('./models/Schemas/User');
 const Conversation = require('./models/Schemas/Conversation');
@@ -23,6 +27,14 @@ const AIGroup = require('./models/Schemas/Group');
 const AIChat = require('./routes/ai/chat');
 
 const app = express();
+app.set('trust proxy', 1);
+
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
+app.get('/metrics', metricsEndpoint);
+app.use(metricsMiddleware);
 
 const FRONTEND_URL =
     process.env.FRONTEND_URL || 'http://localhost:5175';
@@ -71,6 +83,7 @@ const userProfileRouter = require('./routes/UserProfile.js');
 const googleAuth = require('./routes/googleAuth');
 const adminRoutes = require('./routes/adminRoutes');
 const searchUser = require('./routes/searchUser.js');
+const serviceStatus = require('./routes/serviceStatus.js');
 
 app.use('/auth/google', googleAuth);
 app.use('/', dashboardRouter);
@@ -79,6 +92,7 @@ app.use('/auth/signup', signupPageRouter);
 app.use('/auth/logout', logoutRouter);
 
 app.use('/api/dashboard', dashboardRouter);
+app.use('/status-api', serviceStatus);
 app.use('/api/my-profile', myProfileRouter);
 app.use('/api/profile/edit', editProfile);
 app.use('/api/profile/change-password', changePasswordRouter);

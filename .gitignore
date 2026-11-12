@@ -41,3 +41,6 @@ practice
 .devcontainer/
 .editorconfig
 graphify-out
+
+# Local database backups
+database-backups/

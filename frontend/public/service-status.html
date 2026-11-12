@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tally Service Status</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, sans-serif;
+      background: #101010;
+      color: #f4f4f4;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+    }
+
+    main {
+      width: min(680px, calc(100% - 32px));
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    .description,
+    #last-updated {
+      color: #a9a9a9;
+    }
+
+    .services {
+      margin-top: 32px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .service {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border: 1px solid #303030;
+      border-radius: 12px;
+      background: #191919;
+    }
+
+    .status {
+      font-weight: 700;
+    }
+
+    .operational {
+      color: #75d69c;
+    }
+
+    .unavailable {
+      color: #ef8d7d;
+    }
+
+    .checking {
+      color: #d7bd72;
+    }
+
+    #refresh {
+      margin-top: 24px;
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>Tally Service Status</h1>
+    <p class="description">Current health of the platform services.</p>
+    <p id="last-updated">Checking services...</p>
+
+    <section class="services">
+      <div class="service">
+        <span>Frontend</span>
+        <span class="status operational">Operational</span>
+      </div>
+
+      <div class="service">
+        <span>Backend</span>
+        <span id="backend" class="status checking">Checking</span>
+      </div>
+
+      <div class="service">
+        <span>MongoDB</span>
+        <span id="mongodb" class="status checking">Checking</span>
+      </div>
+
+      <div class="service">
+        <span>Prometheus</span>
+        <span id="prometheus" class="status checking">Checking</span>
+      </div>
+
+      <div class="service">
+        <span>Grafana</span>
+        <span id="grafana" class="status checking">Checking</span>
+      </div>
+    </section>
+
+    <button id="refresh" type="button">Refresh status</button>
+  </main>
+
+  <script>
+    const serviceNames = ["backend", "mongodb", "prometheus", "grafana"];
+
+    function showStatus(service, operational) {
+      const element = document.getElementById(service);
+
+      element.textContent = operational ? "Operational" : "Unavailable";
+      element.className = operational
+        ? "status operational"
+        : "status unavailable";
+    }
+
+    async function refreshStatus() {
+      serviceNames.forEach((service) => {
+        const element = document.getElementById(service);
+        element.textContent = "Checking";
+        element.className = "status checking";
+      });
+
+      try {
+        const response = await fetch("/status-api");
+        const result = await response.json();
+
+        serviceNames.forEach((service) => {
+          showStatus(service, result.services[service] === "operational");
+        });
+      } catch {
+        serviceNames.forEach((service) => showStatus(service, false));
+      }
+
+      document.getElementById("last-updated").textContent =
+        `Last updated: ${new Date().toLocaleString()}`;
+    }
+
+    document.getElementById("refresh").addEventListener("click", refreshStatus);
+
+    refreshStatus();
+    setInterval(refreshStatus, 30000);
+  </script>
+</body>
+</html>

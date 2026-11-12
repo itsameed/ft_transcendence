@@ -75,7 +75,7 @@ class RagEngine {
         const finalPrompt = this.prompt.build(question, docs);
         console.log(finalPrompt);
         const answer = await this.llm.generatestream(finalPrompt, onToken, abortSignal);
-            console.log(answer);   
+            console.log(answer);
         return {
             answer: answer,
             sources: docs

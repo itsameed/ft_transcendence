@@ -1,0 +1,47 @@
+groups:
+  - name: backend-alerts
+    rules:
+      - alert: BackendDown
+        expr: up{job="ft_backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Backend is unavailable
+          description: Prometheus has been unable to reach the backend for one minute.
+
+      - alert: HighBackendMemory
+        expr: ft_process_resident_memory_bytes > 500 * 1024 * 1024
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Backend memory usage is high
+          description: Backend memory usage has exceeded 500 MB for five minutes.
+
+      - alert: HighBackendCPU
+        expr: rate(ft_process_cpu_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Backend CPU usage is high
+          description: Backend CPU usage has remained above 80 percent for five minutes.
+
+      - alert: SlowBackendResponses
+        expr: histogram_quantile(0.95, sum by (le) (rate(ft_http_request_duration_seconds_bucket[5m]))) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Backend responses are slow
+          description: The 95th percentile response time has exceeded one second for five minutes.
+
+      - alert: HighBackendErrorRate
+        expr: sum(rate(ft_http_requests_total{status_code=~"5.."}[5m])) / sum(rate(ft_http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Backend error rate is high
+          description: More than five percent of backend requests have returned server errors for five minutes.
