@@ -31,7 +31,7 @@ export function BalanceOverview({ balances, users, groupCount, onSettle, onRemin
         <p className={styles.label}>
           {net > 0 ? 'Overall, you’re owed' : net < 0 ? 'Overall, you owe' : 'You’re all settled up'}
         </p>
-        <p className={styles.net}>{money(net)}</p>
+        <p className={styles.net} data-tone={net > 0 ? 'owed' : net < 0 ? 'owe' : 'settled'}>{money(net)}</p>
         <p className={styles.meta}>
           Debts are simplified across your {groupCount} groups, so everyone makes as few payments as possible.
         </p>

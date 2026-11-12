@@ -1,4 +1,4 @@
-import { Moon, Plus, Sun } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { greeting } from '../../lib/format'
 import { Button } from '../ui/Button'
 import { Logo } from './Sidebar'
@@ -7,12 +7,10 @@ import styles from './Topbar.module.css'
 interface Props {
   firstName: string
   today: Date
-  dark: boolean
-  onToggleTheme: () => void
   onAdd: () => void
 }
 
-export function Topbar({ firstName, today, dark, onToggleTheme, onAdd }: Props) {
+export function Topbar({ firstName, today, onAdd }: Props) {
   return (
     <header className={styles.topbar}>
       <div className={styles.mobileBrand}>
@@ -27,9 +25,6 @@ export function Topbar({ firstName, today, dark, onToggleTheme, onAdd }: Props) 
       </div>
 
       <div className={styles.actions}>
-        <button className={styles.iconButton} onClick={onToggleTheme} aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
-          {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
-        </button>
         <Button variant="primary" icon={<Plus />} onClick={onAdd} className={styles.add} title="Add expense (N)">
           Add expense
         </Button>

@@ -72,3 +72,16 @@
   background: var(--hover-wash);
   color: var(--text);
 }
+
+/* Dark mode: secondary borders were nearly invisible on charcoal. */
+:global([data-theme='dark']) .secondary {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+:global([data-theme='dark']) .secondary:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.38);
+}
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .secondary {
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+}
