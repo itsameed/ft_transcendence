@@ -12,6 +12,7 @@ import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
 import { AddExpenseModal } from '../components/dashboard/AddExpenseModal'
+import { CreateGroupModal } from '../components/groups/CreateGroupModal'
 import { iconForKind } from '../lib/GroupKinds'
 import { categoryIcon } from '../lib/categories'
 import { firstName, money, relativeDay } from '../lib/format'
@@ -20,6 +21,7 @@ import dashStyles from './Dashboard.module.css'
 import styles from './ChatNew.module.css'
 
 interface ApiGroup { _id: string; name: string; kind: string; conversationId?: string; members: { userId: { _id: string; username: string; email: string } }[] }
+interface DmConv { conversationId: string; other: User; participants: string[] }
 interface Msg { id: string; senderId: string; senderName: string; content: string; createdAt: string; ai?: boolean }
 interface GroupExpense { id: string; title: string; category: string; amount: number; paidBy: User; date: string; myShare: number | null; shares: { userId: string; amount: number }[] | null }
 type Mode = 'group' | 'ai'
@@ -60,6 +62,12 @@ export function ChatPage() {
   const [toast, setToast] = useState<string | null>(null)
   const [emojiOpen, setEmojiOpen] = useState(false)
   const [addingExpense, setAddingExpense] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [creatingGroup, setCreatingGroup] = useState(false)
+  const [friends, setFriends] = useState<User[]>([])
+  const [dms, setDms] = useState<DmConv[]>([])
+  const [dmTarget, setDmTarget] = useState<User | null>(null)
+  const [dmBusy, setDmBusy] = useState(false)
   const [expenses, setExpenses] = useState<GroupExpense[]>([])
   const [expensesNote, setExpensesNote] = useState('')
   const [globalDebts, setGlobalDebts] = useState<{ user: User; amount: number }[]>([])
@@ -79,6 +87,8 @@ export function ChatPage() {
   const [params] = useSearchParams()
   const selected = groups.find((g) => g.id === selectedId) ?? null
   const thread = mode === 'group' ? messages : aiMessages
+  const activeConvId = dmTarget && selected === null ? dms.find((d) => d.other.id === dmTarget.id)?.conversationId : selected?.conversationId
+  const inDm = Boolean(dmTarget) && !selected
 
   const notify = useCallback((message: string) => {
     setToast(message)
@@ -127,6 +137,23 @@ export function ChatPage() {
         setUsers(userMap); setGroups(mapped)
         const wanted = params.get('group')
         setSelectedId(mapped.find((g) => g.id === wanted)?.id ?? mapped[0]?.id ?? null)
+        fetch('/api/friends').then((r) => (r.ok ? r.json() : null)).then((d) => {
+          if (d?.friends) setFriends(d.friends.map((f: any) => ({ id: String(f._id), name: f.username, email: f.email ?? '' })))
+        }).catch(() => { /* picker shows an empty state */ })
+        fetch('/api/conversations').then((r) => (r.ok ? r.json() : null)).then((list) => {
+          if (!Array.isArray(list) || !profile?.user) return
+          const mine = String(profile.user.id)
+          const groupConvIds = new Set(mapped.map((g) => g.conversationId).filter(Boolean))
+          const dmList: DmConv[] = []
+          for (const c of list) {
+            const parts: string[] = (c.participants ?? []).map(String)
+            if (parts.length !== 2 || groupConvIds.has(String(c._id))) continue
+            const otherId = parts.find((p) => p !== mine)
+            if (!otherId) continue
+            dmList.push({ conversationId: String(c._id), participants: parts, other: userMap[otherId] ?? { id: otherId, name: 'Unknown member', email: '' } })
+          }
+          setDms(dmList)
+        }).catch(() => { /* DM section stays empty */ })
       } catch { setError('Failed to load conversations') } finally { setLoading(false) }
     }
     load()
@@ -160,9 +187,9 @@ export function ChatPage() {
   }, [selected?.id, me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!selected?.conversationId) { setMessages([]); return }
+    if (!activeConvId) { setMessages([]); return }
     let cancelled = false
-    fetch(`/api/conversations/${selected.conversationId}/messages`)
+    fetch(`/api/conversations/${activeConvId}/messages`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data: any[]) => {
         if (!cancelled) setMessages((Array.isArray(data) ? data : []).map((m) => ({
@@ -171,18 +198,18 @@ export function ChatPage() {
         })))
       }).catch(() => { if (!cancelled) setMessages([]) })
     return () => { cancelled = true }
-  }, [selected?.conversationId])
+  }, [activeConvId])
 
   useEffect(() => {
-    if (!me || !selected?.conversationId) return
+    if (!me || !activeConvId) return
     const socket = io({ path: '/socket.io' })
     socketRef.current = socket
     socket.on('connect', () => {
       socket.emit('joinUser', me.id)
-      socket.emit('joinConversation', selected.conversationId, me.id)
+      socket.emit('joinConversation', activeConvId, me.id)
     })
     socket.on('newMessage', (m: any) => {
-      if (m.conversationId !== selected.conversationId) return
+      if (m.conversationId !== activeConvId) return
       setMessages((prev) => prev.some((x) => x.id === m._id) ? prev : [...prev, {
         id: m._id, senderId: m.senderId?._id ?? m.senderId, senderName: m.senderId?.username ?? 'Unknown', content: m.content, createdAt: m.createdAt,
       }])
@@ -193,12 +220,12 @@ export function ChatPage() {
       }
     })
     return () => { socket.disconnect(); socketRef.current = null }
-  }, [me?.id, selected?.conversationId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [me?.id, activeConvId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [thread.length, mode, selectedId, typingName])
   useEffect(() => {
-    if (selected?.conversationId) setReadAt((p) => ({ ...p, [selected.conversationId!]: new Date().toISOString() }))
-  }, [selected?.conversationId, messages.length])
+    if (activeConvId) setReadAt((p) => ({ ...p, [activeConvId]: new Date().toISOString() }))
+  }, [activeConvId, messages.length])
 
   const expenseCount = useMemo(() => expenses.length, [expenses])
   const totalSpent = useMemo(() => expenses.reduce((a, e) => a + e.amount, 0), [expenses])
@@ -232,9 +259,9 @@ export function ChatPage() {
 
   async function sendGroup() {
     const content = draft.trim()
-    if (!content || !selected?.conversationId) return
+    if (!content || !activeConvId) return
     setDraft(''); setReplyTo(null)
-    const res = await fetch(`/api/conversations/${selected.conversationId}/messages`, {
+    const res = await fetch(`/api/conversations/${activeConvId}/messages`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content }),
     })
     if (!res.ok) { setDraft(content); notify('Could not send — please try again'); return }
@@ -270,6 +297,24 @@ export function ChatPage() {
     } finally { setStreaming(false) }
   }
 
+  async function startDm(friend: User) {
+    const existing = dms.find((d) => d.other.id === friend.id)
+    setPickerOpen(false)
+    if (existing) { setSelectedId(null); setDmTarget(existing.other); setMode('group'); setMobileThread(true); return }
+    setDmBusy(true)
+    try {
+      const res = await fetch('/api/conversations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: friend.id }) })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?._id) throw new Error(data?.message ?? 'Could not start the conversation.')
+      const conv: DmConv = { conversationId: String(data._id), participants: (data.participants ?? []).map(String), other: friend }
+      setDms((p) => [conv, ...p.filter((d) => d.conversationId !== conv.conversationId)])
+      setUsers((p) => ({ ...p, [friend.id]: friend }))
+      setSelectedId(null); setDmTarget(friend); setMode('group'); setMobileThread(true)
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'Could not start the conversation.')
+    } finally { setDmBusy(false) }
+  }
+
   function react(m: Msg) {
     setReactions((prev) => {
       const cur = { ...(prev[m.id] ?? {}) }
@@ -298,7 +343,7 @@ export function ChatPage() {
           <aside className={styles.list} aria-label="Conversations">
             <div className={styles.listHead}>
               <div className={styles.listTitle}><h1>Messages</h1>
-                <button className={`${styles.iconBtn} ${styles.primary}`} aria-label="New conversation" onClick={() => notify('Pick a group below — every group has its own conversation')}><CirclePlus size={19} /></button></div>
+                <button className={`${styles.iconBtn} ${styles.primary}`} aria-label="New conversation" onClick={() => setPickerOpen(true)}><CirclePlus size={19} /></button></div>
               <label className={styles.search}><Search size={16} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search conversations…" aria-label="Search conversations" /></label>
             </div>
             <div className={styles.filters} role="tablist" aria-label="Filter conversations">
@@ -315,12 +360,27 @@ export function ChatPage() {
               {(filter === 'all' || filter === 'groups') && visibleGroups.length === 0 && groups.length > 0 && (
                 <div className={styles.emptyList}><strong>No conversations found</strong>Try another search.</div>
               )}
+              {dms.length > 0 && (filter === 'all') && (
+                <>
+                  <p className={styles.listLabel}>Direct messages</p>
+                  {dms.map((d) => (
+                    <button key={d.conversationId} className={`${styles.conv} ${inDm && dmTarget?.id === d.other.id ? styles.convOn : ''}`} onClick={() => { setSelectedId(null); setDmTarget(d.other); setMode('group'); setMobileThread(true); setReplyTo(null) }} aria-current={inDm && dmTarget?.id === d.other.id}>
+                      <Avatar user={d.other} size={40} />
+                      <span className={styles.convBody}>
+                        <span className={styles.convTop}><span className={styles.convName}>{d.other.name}</span></span>
+                        <span className={styles.convLast}><span>Direct message</span></span>
+                      </span>
+                    </button>
+                  ))}
+                </>
+              )}
+              {(filter === 'all' || filter === 'groups') && <p className={styles.listLabel}>Groups</p>}
               {(filter === 'all' || filter === 'groups') && visibleGroups.map((g) => {
                 const Icon = iconForKind(g.kind)
                 const isSelected = selectedId === g.id
                 return (
                   <div key={g.id}>
-                    <button className={`${styles.conv} ${isSelected && mode === 'group' ? styles.convOn : ''}`} onClick={() => { setSelectedId(g.id); setMode('group'); setMobileThread(true); setReplyTo(null) }} aria-current={isSelected && mode === 'group'}>
+                    <button className={`${styles.conv} ${isSelected && mode === 'group' ? styles.convOn : ''}`} onClick={() => { setSelectedId(g.id); setDmTarget(null); setMode('group'); setMobileThread(true); setReplyTo(null) }} aria-current={isSelected && mode === 'group'}>
                       <span className={styles.convIcon}><Icon size={19} /></span>
                       <span className={styles.convBody}>
                         <span className={styles.convTop}><span className={styles.convName}>{g.name}</span><span className={styles.convTime}>{g.memberIds.length} {g.memberIds.length === 1 ? 'person' : 'people'}</span></span>
@@ -336,29 +396,33 @@ export function ChatPage() {
           </aside>
 
           <section className={styles.thread} aria-label="Conversation">
-            {!selected ? <p className={styles.emptyList}>Select a conversation.</p> : (
+            {!selected && !inDm ? <p className={styles.emptyList}>Select a conversation.</p> : (
               <>
                 <header className={styles.threadHead}>
                   <button className={`${styles.iconBtn} ${styles.backBtn}`} onClick={() => setMobileThread(false)} aria-label="Back to conversations"><ArrowLeft size={18} /></button>
-                  <button className={styles.threadId} onClick={() => setDetails(!details)} aria-label="Toggle group details">
-                    <span className={styles.convIcon}>{mode === 'ai' ? <Sparkles size={18} /> : <GroupIcon size={19} />}</span>
-                    <span style={{ minWidth: 0 }}><span className={styles.threadName}>{mode === 'ai' ? `Ask AI · ${selected.name}` : selected.name}</span>
-                      <span className={styles.threadSub}>{mode === 'ai' ? 'Knows this group’s expenses and balances' : `${selected.memberIds.length} members`}</span></span>
+                  <button className={styles.threadId} onClick={() => selected && setDetails(!details)} aria-label="Toggle group details">
+                    {inDm && dmTarget
+                      ? <><Avatar user={dmTarget} size={38} /><span style={{ minWidth: 0 }}><span className={styles.threadName}>{dmTarget.name}</span><span className={styles.threadSub}>Direct message</span></span></>
+                      : <><span className={styles.convIcon}>{mode === 'ai' ? <Sparkles size={18} /> : <GroupIcon size={19} />}</span>
+                        <span style={{ minWidth: 0 }}><span className={styles.threadName}>{mode === 'ai' ? `Ask AI · ${selected!.name}` : selected!.name}</span>
+                          <span className={styles.threadSub}>{mode === 'ai' ? 'Knows this group’s expenses and balances' : `${selected!.memberIds.length} members`}</span></span></>}
                   </button>
-                  <span className={styles.memberFaces}>{memberUsers.slice(0, 3).map((u) => <Avatar key={u.id} user={u} size={28} />)}</span>
+                  {!inDm && <span className={styles.memberFaces}>{memberUsers.slice(0, 3).map((u) => <Avatar key={u.id} user={u} size={28} />)}</span>}
                   <div className={styles.headActions}>
                     <button className={`${styles.iconBtn} ${styles.hideMobile}`} aria-label="Search in conversation" onClick={() => notify('Search in conversation is not available yet')}><Search size={17} /></button>
-                    <button className={styles.iconBtn} aria-label="Group details" onClick={() => setDetails(!details)} aria-pressed={details}><MoreVertical size={17} /></button>
+                    {!inDm && <button className={styles.iconBtn} aria-label="Group details" onClick={() => setDetails(!details)} aria-pressed={details}><MoreVertical size={17} /></button>}
                   </div>
                 </header>
 
                 <div className={styles.scrollCol}>
-                  <div className={styles.modeSwitch} role="tablist" aria-label="Chat mode">
-                    <button role="tab" aria-selected={mode === 'group'} className={mode === 'group' ? styles.modeOn : ''} onClick={() => setMode('group')}><MessageSquare size={15} /> Group chat</button>
-                    <button role="tab" aria-selected={mode === 'ai'} className={mode === 'ai' ? styles.modeOn : ''} onClick={() => setMode('ai')}><Sparkles size={15} /> Ask AI</button>
-                  </div>
+                  {!inDm && (
+                    <div className={styles.modeSwitch} role="tablist" aria-label="Chat mode">
+                      <button role="tab" aria-selected={mode === 'group'} className={mode === 'group' ? styles.modeOn : ''} onClick={() => setMode('group')}><MessageSquare size={15} /> Group chat</button>
+                      <button role="tab" aria-selected={mode === 'ai'} className={mode === 'ai' ? styles.modeOn : ''} onClick={() => setMode('ai')}><Sparkles size={15} /> Ask AI</button>
+                    </div>
+                  )}
 
-                  {mode === 'group' && (balanceKnown || myBalance !== 0) && (
+                  {mode === 'group' && !inDm && (balanceKnown || myBalance !== 0) && (
                     <div className={styles.balanceStrip} role="status">
                       <Wallet size={19} style={{ flex: 'none', color: myBalance > 0 ? 'var(--owed)' : myBalance < 0 ? 'var(--owe)' : 'var(--text-3)' }} />
                       <span className={styles.grow}><strong>{myBalance > 0 ? `You’re owed ${money(myBalance)}` : myBalance < 0 ? `You owe ${money(myBalance)}` : 'You’re all settled up'}</strong>
@@ -406,7 +470,7 @@ export function ChatPage() {
                             <span className={styles.msgActions}>
                               <button className={styles.miniBtn} aria-label="React" onClick={() => react(m)}><Smile size={15} /></button>
                               <button className={styles.miniBtn} aria-label="Reply" onClick={() => { setReplyTo(m); inputRef.current?.focus() }}><Reply size={15} /></button>
-                              <button className={styles.miniBtn} aria-label={pinned[selected.id] === m.id ? 'Unpin' : 'Pin'} onClick={() => togglePin(m)}><Pin size={15} /></button>
+                              {!inDm && <button className={styles.miniBtn} aria-label={selected && pinned[selected.id] === m.id ? 'Unpin' : 'Pin'} onClick={() => togglePin(m)}><Pin size={15} /></button>}
                             </span>
                           </div>
                         </div>
@@ -432,8 +496,8 @@ export function ChatPage() {
                     <form className={styles.composer} onSubmit={(e) => { e.preventDefault(); mode === 'group' ? sendGroup() : askAI() }}>
                       <button type="button" className={styles.composerBtn} aria-label="Add expense" onClick={() => setAddingExpense(true)}><ReceiptText size={19} /></button>
                       <textarea ref={inputRef} value={draft} rows={1} aria-label="Message"
-                        placeholder={mode === 'ai' ? `Ask about ${selected.name} expenses…` : `Message ${selected.name}…`}
-                        disabled={mode === 'group' && !selected.conversationId}
+                        placeholder={mode === 'ai' ? `Ask about ${selected?.name} expenses…` : inDm ? `Message ${dmTarget?.name}…` : `Message ${selected?.name}…`}
+                        disabled={mode === 'group' && !activeConvId}
                         onChange={(e) => setDraft(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); mode === 'group' ? sendGroup() : askAI() } }} />
                       <button type="button" className={styles.composerBtn} aria-label="Emoji" onClick={() => setEmojiOpen(!emojiOpen)}><Smile size={19} /></button>
@@ -441,15 +505,15 @@ export function ChatPage() {
                         ? <button type="submit" className={styles.sendBtn} disabled={streaming} aria-label={mode === 'ai' ? 'Ask' : 'Send'}><SendHorizonal size={18} /></button>
                         : <button type="button" className={styles.composerBtn} aria-label="Voice message (not available)" onClick={() => notify('Voice messages are not available yet')}><Mic size={19} /></button>}
                     </form>
-                    {mode === 'group' && !selected.conversationId && <p className={styles.composerHint}><span>This group has no conversation yet.</span></p>}
-                    <div className={styles.composerHint}><span><kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line</span><span>{mode === 'ai' ? 'AI can make mistakes — verify amounts' : selected.name}</span></div>
+                    {mode === 'group' && !activeConvId && <p className={styles.composerHint}><span>This conversation is not available yet.</span></p>}
+                    <div className={styles.composerHint}><span><kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line</span><span>{mode === 'ai' ? 'AI can make mistakes — verify amounts' : inDm ? dmTarget?.name : selected?.name}</span></div>
                   </div>
                 </div>
               </>
             )}
           </section>
 
-          {details && selected && (
+          {details && selected && !inDm && (
             <aside className={styles.details} aria-label="Conversation details">
               <div className={styles.detailsHead}>
                 <button className={`${styles.iconBtn} ${styles.detailsClose}`} onClick={() => setDetails(false)} aria-label="Close details"><X size={17} /></button>
@@ -517,6 +581,37 @@ export function ChatPage() {
         </div>
       </main>
       <MobileNav onAdd={() => setAddingExpense(true)} />
+      {pickerOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 70, display: 'grid', placeItems: 'center', padding: 20, background: 'var(--scrim)' }} onMouseDown={(e) => e.target === e.currentTarget && setPickerOpen(false)}>
+          <div role="dialog" aria-modal="true" aria-labelledby="new-conv-title" style={{ width: 'min(430px, 100%)', maxHeight: 'min(640px, calc(100vh - 40px))', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', background: 'var(--surface)', boxShadow: 'var(--shadow-modal)', padding: '22px 22px 18px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <h2 id="new-conv-title" style={{ fontSize: 17, fontWeight: 600 }}>New conversation</h2>
+              <button className={styles.iconBtn} onClick={() => setPickerOpen(false)} aria-label="Close"><X size={17} /></button>
+            </div>
+            <p style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 14 }}>Message a friend directly, or start a new group.</p>
+            <button className={styles.conv} style={{ border: '1px solid var(--border)', marginBottom: 14 }} onClick={() => { setPickerOpen(false); setCreatingGroup(true) }}>
+              <span className={`${styles.convIcon} ${styles.aiConvIcon}`}><CirclePlus size={19} /></span>
+              <span className={styles.convBody}><span className={styles.convName}>Create a new group</span><span className={styles.convLast}><span>Trip, home, event…</span></span></span>
+            </button>
+            <p className={styles.listLabel} style={{ paddingLeft: 2 }}>Friends</p>
+            {friends.length === 0
+              ? <p className={styles.detailsEmpty}>No friends yet — add friends from Groups &amp; Friends first.</p>
+              : friends.map((f) => (
+                <button key={f.id} className={styles.conv} disabled={dmBusy} onClick={() => startDm(f)}>
+                  <Avatar user={f} size={40} />
+                  <span className={styles.convBody}><span className={styles.convName}>{f.name}</span><span className={styles.convLast}><span>{f.email || 'Direct message'}</span></span></span>
+                </button>
+              ))}
+          </div>
+        </div>
+      )}
+      <CreateGroupModal open={creatingGroup} friends={friends} onClose={() => setCreatingGroup(false)}
+        onCreated={(group) => {
+          setCreatingGroup(false)
+          setGroups((p) => [group, ...p])
+          setSelectedId(group.id); setDmTarget(null); setMode('group'); setMobileThread(true)
+          notify(`Created “${group.name}”`)
+        }} />
       {addingExpense && (
         <AddExpenseModal open={addingExpense} onClose={() => setAddingExpense(false)}
           onSave={(expense, group) => { setAddingExpense(false); notify(`Added “${expense.title}” to ${group.name}`) }}
