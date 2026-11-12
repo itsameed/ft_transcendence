@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, UserPlus } from 'lucide-react'
+import { MoreVertical, Plus, Search, UserPlus } from 'lucide-react'
 import { GroupsGrid } from '../components/dashboard/GroupsGrid'
 import { CreateGroupModal } from '../components/groups/CreateGroupModal'
 import { MobileNav } from '../components/layout/MobileNav'
@@ -33,6 +33,7 @@ export function GroupPage() {
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [menuFor, setMenuFor] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
   const NOW = new Date()
@@ -202,7 +203,15 @@ export function GroupPage() {
                       </Link>
                       <span className={styles.actions}>
                         <Link className={styles.chatLink} to="/chat">Chat</Link>
-                        <button type="button" className={styles.remove} onClick={() => removeFriend(f)}>Remove</button>
+                        <span className={styles.menuWrap}>
+                          <button type="button" className={styles.menuBtn} aria-label={`More actions for ${f.name}`} aria-expanded={menuFor === f.id} onClick={() => setMenuFor(menuFor === f.id ? null : f.id)}><MoreVertical size={17} /></button>
+                          {menuFor === f.id && (
+                            <span className={styles.menu} role="menu">
+                              <Link to={`/users/${f.id}`} className={styles.menuItem} role="menuitem">View profile</Link>
+                              <button type="button" className={`${styles.menuItem} ${styles.menuDanger}`} role="menuitem" onClick={() => { setMenuFor(null); removeFriend(f) }}>Remove friend</button>
+                            </span>
+                          )}
+                        </span>
                       </span>
                     </li>
                   ))}

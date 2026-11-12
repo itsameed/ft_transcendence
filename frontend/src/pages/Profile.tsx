@@ -5,6 +5,7 @@ import { Sidebar } from '../components/layout/Sidebar'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
+import { money } from '../lib/format'
 import type { User } from '../types'
 import pageStyles from './Dashboard.module.css'
 import styles from './Profile.module.css'
@@ -101,7 +102,7 @@ export function ProfilePage() {
             <Card className={styles.stat}><span>Groups</span><strong>{profile.numberOfGroups}</strong></Card>
             <Card className={styles.stat}><span>Friends</span><strong>{profile.friendsCount}</strong></Card>
             <Card className={styles.stat}><span>Expenses</span><strong>{profile.numberOfExpenses}</strong></Card>
-            <Card className={styles.stat}><span>Total tracked</span><strong>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(profile.totalExpenses)}</strong></Card>
+            <Card className={styles.stat}><span>Total tracked</span><strong>{money(profile.totalExpenses)}</strong></Card>
           </section>
 
           <section className={styles.section} aria-labelledby="profile-details">

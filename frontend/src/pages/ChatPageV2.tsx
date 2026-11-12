@@ -386,7 +386,7 @@ export function ChatPage() {
                       <span className={styles.convIcon}><Icon size={19} /></span>
                       <span className={styles.convBody}>
                         <span className={styles.convTop}><span className={styles.convName}>{g.name}</span></span>
-                        <span className={styles.convLast}><span>{isSelected && expenses.length ? `${expenses.length} expenses · ${money(totalSpent)} spent` : `${g.memberIds.length} ${g.memberIds.length === 1 ? 'member' : 'members'} · ${recentBalances[g.id] ? (recentBalances[g.id] > 0 ? `You are owed ${money(recentBalances[g.id])}` : `You owe ${money(recentBalances[g.id])}`) : 'Settled'}`}</span>
+                        <span className={styles.convLast}><span>{isSelected && expenses.length ? `${expenses.length} expenses · ${money(totalSpent)} spent` : `${g.memberIds.length} ${g.memberIds.length === 1 ? 'member' : 'members'} · ${(isSelected ? myBalance : (recentBalances[g.id] ?? 0)) > 0 ? `You are owed ${money(isSelected ? myBalance : recentBalances[g.id])}` : (isSelected ? myBalance : (recentBalances[g.id] ?? 0)) < 0 ? `You owe ${money(isSelected ? myBalance : recentBalances[g.id])}` : 'Settled'}`}</span>
                           {muted[g.id] && <BellOff size={13} style={{ flex: 'none', color: 'var(--text-3)' }} />}</span>
                       </span>
                     </button>
@@ -494,7 +494,7 @@ export function ChatPage() {
                     )}
                     {emojiOpen && <div className={styles.emojiPop}>{QUICK_EMOJI.map((e) => <button key={e} onClick={() => { setDraft((d) => d + e); inputRef.current?.focus() }}>{e}</button>)}</div>}
                     <form className={styles.composer} onSubmit={(e) => { e.preventDefault(); mode === 'group' ? sendGroup() : askAI() }}>
-                      <button type="button" className={styles.composerBtn} aria-label="Add expense" onClick={() => setAddingExpense(true)}><ReceiptText size={19} /></button>
+                      {!inDm && <button type="button" className={styles.composerBtn} aria-label="Add expense" title="Add expense" onClick={() => setAddingExpense(true)}><ReceiptText size={19} /></button>}
                       <textarea ref={inputRef} value={draft} rows={1} aria-label="Message"
                         placeholder={mode === 'ai' ? `Ask about ${selected?.name} expenses…` : inDm ? `Message ${dmTarget?.name}…` : `Message ${selected?.name}…`}
                         disabled={mode === 'group' && !activeConvId}
@@ -533,14 +533,14 @@ export function ChatPage() {
                   {(() => {
                     const settled = myBalance === 0 && detailDebts.length === 0
                     const topOwed = detailDebts.filter((d) => d.amount > 0).sort((a, b) => b.amount - a.amount)[0]
-                    const summary = settled ? 'All settled up'
+                    const summary = settled ? 'All settled up in this group'
                       : myBalance > 0 && topOwed ? `${firstName(topOwed.user.name)} owes you ${money(topOwed.amount)}${detailDebts.length > 1 ? ` · net ${money(myBalance)} you’re owed` : ''}`
                       : myBalance > 0 ? `You’re owed ${money(myBalance)}`
                       : `You owe ${money(-myBalance)}`
                     return (
                       <div className={`${styles.balanceCard} ${settled ? styles.balanceSettled : myBalance > 0 ? styles.balanceOwed : styles.balanceOwe}`} role="status">
                         <span className={styles.balanceSummary}>{summary}</span>
-                        <span className={styles.balanceMeta}>{balanceKnown ? `${money(totalSpent)} spent in this group` : 'Across your recent groups'}</span>
+                        <span className={styles.balanceMeta}>{balanceKnown ? `${money(totalSpent)} spent in this group` : 'Net balance for this group'}</span>
                         {myBalance > 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => notify('Reminder noted — notifications are not sent from chat yet')}>Remind</button>}
                         {myBalance < 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => navigate(`/groups/${selected.id}`)}>Settle up</button>}
                       </div>

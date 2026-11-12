@@ -10,13 +10,11 @@ import { Section, SectionLink } from '../components/ui/Section'
 import { Toast } from '../components/ui/Toast'
 // import { NOW, friendBalances, groups, recentActivity, users } from '../data/mock'
 import { firstName, money } from '../lib/format'
-import { useTheme } from '../lib/useTheme'
 import { FriendBalance, Group, type User } from '../types'
 import styles from './Dashboard.module.css'
 
 export function Dashboard() {
    const [me, setMe] = useState<User | null>(null)
-   const { dark, toggle } = useTheme()
    // const [activity, setActivity] = useState<Activity[]>(recentActivity)
    const [adding, setAdding] = useState(false)
    const [toast, setToast] = useState<string | null>(null)
@@ -127,7 +125,7 @@ export function Dashboard() {
 
          <main className={styles.main}>
             <div className={styles.content}>
-               <Topbar firstName={firstName(me.name)} today={NOW} dark={dark} onToggleTheme={toggle} onAdd={() => setAdding(true)} />
+               <Topbar firstName={firstName(me.name)} today={NOW} onAdd={() => setAdding(true)} />
 
                <BalanceOverview
                   balances={debts}
