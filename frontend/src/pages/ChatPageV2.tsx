@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { io, type Socket } from 'socket.io-client'
 import {
   ArrowLeft, Bell, BellOff, CheckCheck, CirclePlus, Download, FileText, HandCoins,
-  MessageSquare, Mic, MoreVertical, Phone, Pin, ReceiptText, Reply, Search, SendHorizonal,
+  Info, MessageSquare, Mic, Phone, Pin, ReceiptText, Reply, Search, SendHorizonal,
   Smile, Sparkles, Trash2, Video, Wallet, X,
 } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
@@ -385,10 +385,9 @@ export function ChatPage() {
                     <button className={`${styles.conv} ${isSelected && mode === 'group' ? styles.convOn : ''}`} onClick={() => { setSelectedId(g.id); setDmTarget(null); setMode('group'); setMobileThread(true); setReplyTo(null) }} aria-current={isSelected && mode === 'group'}>
                       <span className={styles.convIcon}><Icon size={19} /></span>
                       <span className={styles.convBody}>
-                        <span className={styles.convTop}><span className={styles.convName}>{g.name}</span><span className={styles.convTime}>{g.memberIds.length} {g.memberIds.length === 1 ? 'person' : 'people'}</span></span>
-                        <span className={styles.convLast}><span>{isSelected && expenses.length ? `${expenses.length} expenses · ${money(totalSpent)} spent` : 'Group conversation'}</span>
+                        <span className={styles.convTop}><span className={styles.convName}>{g.name}</span></span>
+                        <span className={styles.convLast}><span>{isSelected && expenses.length ? `${expenses.length} expenses · ${money(totalSpent)} spent` : `${g.memberIds.length} ${g.memberIds.length === 1 ? 'member' : 'members'} · ${recentBalances[g.id] ? (recentBalances[g.id] > 0 ? `You are owed ${money(recentBalances[g.id])}` : `You owe ${money(recentBalances[g.id])}`) : 'Settled'}`}</span>
                           {muted[g.id] && <BellOff size={13} style={{ flex: 'none', color: 'var(--text-3)' }} />}</span>
-                        <span className={styles.convMeta}><span className={styles.pill}>{g.memberIds.length} members</span></span>
                       </span>
                     </button>
                   </div>
@@ -407,12 +406,12 @@ export function ChatPage() {
                       ? <><Avatar user={dmTarget} size={38} /><span style={{ minWidth: 0 }}><span className={styles.threadName}>{dmTarget.name}</span><span className={styles.threadSub}>Direct message</span></span></>
                       : <><span className={styles.convIcon}>{mode === 'ai' ? <Sparkles size={18} /> : <GroupIcon size={19} />}</span>
                         <span style={{ minWidth: 0 }}><span className={styles.threadName}>{mode === 'ai' ? `Ask AI · ${selected!.name}` : selected!.name}</span>
-                          <span className={styles.threadSub}>{mode === 'ai' ? 'Knows this group’s expenses and balances' : `${selected!.memberIds.length} members`}</span></span></>}
+                          <span className={styles.threadSub}>{mode === 'ai' ? 'Knows this group’s expenses and balances' : `${selected!.memberIds.length} ${selected!.memberIds.length === 1 ? 'member' : 'members'}`}</span></span></>}
                   </button>
                   {!inDm && <span className={styles.memberFaces}>{memberUsers.slice(0, 3).map((u) => <Avatar key={u.id} user={u} size={28} />)}</span>}
                   <div className={styles.headActions}>
                     <button className={`${styles.iconBtn} ${styles.hideMobile}`} aria-label="Search in conversation" onClick={() => notify('Search in conversation is not available yet')}><Search size={17} /></button>
-                    {!inDm && <button className={styles.iconBtn} aria-label="Group details" onClick={() => setDetails(!details)} aria-pressed={details}><MoreVertical size={17} /></button>}
+                    {!inDm && <button className={`${styles.iconBtn} ${details ? styles.iconBtnOn : ''}`} aria-label={details ? 'Hide group details' : 'Show group details'} title={details ? 'Hide details' : 'Group info'} onClick={() => setDetails(!details)} aria-pressed={details}><Info size={17} /></button>}
                   </div>
                 </header>
 
@@ -520,8 +519,7 @@ export function ChatPage() {
                 <button className={`${styles.iconBtn} ${styles.detailsClose}`} onClick={() => setDetails(false)} aria-label="Close details"><X size={17} /></button>
                 <span className={styles.convIcon}><GroupIcon size={24} /></span>
                 <h2>{selected.name}</h2>
-                <p>{selected.memberIds.length} members · {expenseCount} expenses</p>
-                <span className={styles.memberFaces}>{memberUsers.slice(0, 5).map((u) => <Avatar key={u.id} user={u} size={26} />)}</span>
+                <p>{expenseCount} expenses</p>
               </div>
               <div className={styles.detailsActions}>
                 <button className={styles.actionTile} onClick={() => notify('Calls are not available in chat yet')}><Phone size={19} />Call</button>
@@ -531,11 +529,23 @@ export function ChatPage() {
               </div>
 
               <section className={styles.detailsSec}><h3>Balances with members</h3>
-                {detailDebts.length > 0 || myBalance !== 0 ? <>
-                  <div className={styles.balanceHero}>
-                    <p className="tabular" style={{ fontSize: 22, fontWeight: 600, color: myBalance > 0 ? 'var(--owed)' : myBalance < 0 ? 'var(--owe)' : 'var(--text)' }}>{myBalance !== 0 ? money(myBalance) : 'Settled'}</p>
-                    <p>{myBalance > 0 ? `You’re owed ${money(myBalance)}` : myBalance < 0 ? `You owe ${money(myBalance)}` : 'You’re all settled up'}{balanceKnown ? ` · ${money(totalSpent)} spent in this group` : ' · across your recent groups'}</p>
-                  </div>
+                {detailDebts.length > 0 || myBalance !== 0 || balanceKnown || Object.keys(recentBalances).length > 0 ? <>
+                  {(() => {
+                    const settled = myBalance === 0 && detailDebts.length === 0
+                    const topOwed = detailDebts.filter((d) => d.amount > 0).sort((a, b) => b.amount - a.amount)[0]
+                    const summary = settled ? 'All settled up'
+                      : myBalance > 0 && topOwed ? `${firstName(topOwed.user.name)} owes you ${money(topOwed.amount)}${detailDebts.length > 1 ? ` · net ${money(myBalance)} you’re owed` : ''}`
+                      : myBalance > 0 ? `You’re owed ${money(myBalance)}`
+                      : `You owe ${money(-myBalance)}`
+                    return (
+                      <div className={`${styles.balanceCard} ${settled ? styles.balanceSettled : myBalance > 0 ? styles.balanceOwed : styles.balanceOwe}`} role="status">
+                        <span className={styles.balanceSummary}>{summary}</span>
+                        <span className={styles.balanceMeta}>{balanceKnown ? `${money(totalSpent)} spent in this group` : 'Across your recent groups'}</span>
+                        {myBalance > 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => notify('Reminder noted — notifications are not sent from chat yet')}>Remind</button>}
+                        {myBalance < 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => navigate(`/groups/${selected.id}`)}>Settle up</button>}
+                      </div>
+                    )
+                  })()}
                   {detailDebts.length === 0 && <p className={styles.detailsEmpty}>No open balances with members of this group.</p>}
                   {detailDebts.map((d) => (
                     <div className={styles.debtRow} key={d.user.id}><Avatar user={d.user} size={30} />
@@ -558,7 +568,14 @@ export function ChatPage() {
               </section>
 
               <section className={styles.detailsSec}><h3>Recent expenses</h3>
-                {expenses.length === 0 ? <p className={styles.detailsEmpty}>{expensesNote || 'No expenses yet — add one from the composer.'}</p> : <>
+                {expenses.length === 0 ? (
+                  <div className={styles.expensesEmpty}>
+                    <span className={styles.mcIcon}><ReceiptText size={18} /></span>
+                    <strong>No expenses yet</strong>
+                    <p>{expensesNote ? 'Expense history is not available for this group yet — you can still add the next one.' : 'Track the first shared cost for this group — it takes ten seconds.'}</p>
+                    <Button variant="primary" size="sm" onClick={() => setAddingExpense(true)}>+ Add expense</Button>
+                  </div>
+                ) : <>
                   {expenses.slice(0, 5).map((e) => {
                     const Icon = categoryIcon[(e.category as keyof typeof categoryIcon)] ?? ReceiptText
                     return (
