@@ -22,7 +22,7 @@ import styles from './ChatNew.module.css'
 
 interface ApiGroup { _id: string; name: string; kind: string; conversationId?: string; members: { userId: { _id: string; username: string; email: string } }[] }
 interface DmConv { conversationId: string; other: User; participants: string[] }
-interface Msg { id: string; senderId: string; senderName: string; content: string; createdAt: string; ai?: boolean }
+interface Msg { id: string; senderId: string; senderName: string; content: string; createdAt: string; ai?: boolean; replyTo?: { name: string; text: string } }
 interface GroupExpense { id: string; title: string; category: string; amount: number; paidBy: User; date: string; myShare: number | null; shares: { userId: string; amount: number }[] | null }
 type Mode = 'group' | 'ai'
 type Filter = 'all' | 'unread' | 'groups' | 'settled'
@@ -252,21 +252,23 @@ export function ChatPage() {
   const visibleGroups = groups.filter((g) => {
     const q = query.trim().toLowerCase()
     if (q && !g.name.toLowerCase().includes(q)) return false
-    if (filter === 'unread') return false // no server unread source; honest empty handled below via counts
-    if (filter === 'settled') return false
+    if (filter === 'unread') return false // no server unread source; honest empty state below
+    if (filter === 'settled') return (recentBalances[g.id] ?? 0) === 0
     return true
   })
 
   async function sendGroup() {
     const content = draft.trim()
     if (!content || !activeConvId) return
+    const replySnapshot = replyTo
     setDraft(''); setReplyTo(null)
     const res = await fetch(`/api/conversations/${activeConvId}/messages`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content }),
     })
     if (!res.ok) { setDraft(content); notify('Could not send — please try again'); return }
+    const quote = replySnapshot ? { name: replySnapshot.senderName, text: replySnapshot.content.slice(0, 90) } : undefined
     const m = await res.json()
-    setMessages((prev) => prev.some((x) => x.id === m._id) ? prev : [...prev, { id: m._id, senderId: me!.id, senderName: me!.name, content: m.content, createdAt: m.createdAt }])
+    setMessages((prev) => prev.some((x) => x.id === m._id) ? prev : [...prev, { id: m._id, senderId: me!.id, senderName: me!.name, content: m.content, createdAt: m.createdAt, replyTo: quote }])
   }
 
   async function askAI(text?: string) {
@@ -353,17 +355,17 @@ export function ChatPage() {
             </div>
             <div className={styles.listScroll}>
               {groups.length === 0 && <div className={styles.emptyList}><strong>No groups yet</strong>Join or create a group to start chatting.</div>}
-              {filter !== 'all' && filter !== 'groups' && (
+              {filter === 'unread' && (
                 <div className={styles.emptyList}><strong>Nothing to show here yet</strong>
-                  {filter === 'unread' ? 'Unread counts are not tracked by the server yet, so this filter stays empty for now.' : 'Settled status comes from group balances, which are not loaded in chat yet.'}</div>
+                  {filter === 'unread' ? 'Unread counts are not tracked by the server yet, so this filter stays empty for now.' : 'No settled groups match.'}</div>
               )}
-              {(filter === 'all' || filter === 'groups') && visibleGroups.length === 0 && groups.length > 0 && (
-                <div className={styles.emptyList}><strong>No conversations found</strong>Try another search.</div>
+              {(filter === 'all' || filter === 'groups' || filter === 'settled') && visibleGroups.length === 0 && groups.length > 0 && (
+                <div className={styles.emptyList}><strong>{filter === 'settled' ? 'No settled groups match' : 'No conversations found'}</strong>{filter === 'settled' ? 'Groups with an open balance are hidden here.' : 'Try another search.'}</div>
               )}
-              {dms.length > 0 && (filter === 'all') && (
+              {dms.filter((d) => !query.trim() || d.other.name.toLowerCase().includes(query.trim().toLowerCase())).length > 0 && filter === 'all' && (
                 <>
                   <p className={styles.listLabel}>Direct messages</p>
-                  {dms.map((d) => (
+                  {dms.filter((d) => !query.trim() || d.other.name.toLowerCase().includes(query.trim().toLowerCase())).map((d) => (
                     <button key={d.conversationId} className={`${styles.conv} ${inDm && dmTarget?.id === d.other.id ? styles.convOn : ''}`} onClick={() => { setSelectedId(null); setDmTarget(d.other); setMode('group'); setMobileThread(true); setReplyTo(null) }} aria-current={inDm && dmTarget?.id === d.other.id}>
                       <Avatar user={d.other} size={40} />
                       <span className={styles.convBody}>
@@ -374,8 +376,8 @@ export function ChatPage() {
                   ))}
                 </>
               )}
-              {(filter === 'all' || filter === 'groups') && <p className={styles.listLabel}>Groups</p>}
-              {(filter === 'all' || filter === 'groups') && visibleGroups.map((g) => {
+              {(filter === 'all' || filter === 'groups' || filter === 'settled') && <p className={styles.listLabel}>Groups</p>}
+              {(filter === 'all' || filter === 'groups' || filter === 'settled') && visibleGroups.map((g) => {
                 const Icon = iconForKind(g.kind)
                 const isSelected = selectedId === g.id
                 return (
@@ -457,7 +459,7 @@ export function ChatPage() {
                               <div className={styles.bubble}>
                                 {m.ai && <span className={styles.aiTag}><Sparkles size={11} /> Splitify AI</span>}
                                 {!grouped && !mine && !m.ai && <span className={styles.who}>{m.senderName}</span>}
-                                {m.id === replyTo?.id && null}
+                                {m.replyTo && <span className={styles.replyQuote}><b>{m.replyTo.name}</b>{m.replyTo.text}</span>}
                                 {m.content || (m.ai ? '…' : '')}
                                 <span className={styles.meta}>{timeOf(m.createdAt)}{mine && mode === 'group' && <CheckCheck size={13} />}</span>
                               </div>
@@ -491,7 +493,6 @@ export function ChatPage() {
                       <div className={styles.replyPreview}><Reply size={15} style={{ color: 'var(--text-2)', flex: 'none' }} /><span className={styles.grow}>Replying to <b>{replyTo.senderName}</b> · {replyTo.content}</span>
                         <button className={styles.miniBtn} onClick={() => setReplyTo(null)} aria-label="Cancel reply"><X size={14} /></button></div>
                     )}
-                    {replyTo && <p className={styles.composerHint}><span>Replies are visual only here — your message is sent as a normal message.</span></p>}
                     {emojiOpen && <div className={styles.emojiPop}>{QUICK_EMOJI.map((e) => <button key={e} onClick={() => { setDraft((d) => d + e); inputRef.current?.focus() }}>{e}</button>)}</div>}
                     <form className={styles.composer} onSubmit={(e) => { e.preventDefault(); mode === 'group' ? sendGroup() : askAI() }}>
                       <button type="button" className={styles.composerBtn} aria-label="Add expense" onClick={() => setAddingExpense(true)}><ReceiptText size={19} /></button>

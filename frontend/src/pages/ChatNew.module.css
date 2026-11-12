@@ -75,7 +75,9 @@
 .msgRowWrap > .msgRow.mineRow { margin-left: auto; }
 .msgRow { display: flex; gap: 9px; margin: 16px 0 0; animation: msgIn .26s cubic-bezier(.2,.9,.3,1); }
 @keyframes msgIn { from { opacity: 0; transform: translateY(6px); } }
-.msgRow.mineRow { flex-direction: row-reverse; }
+.msgRow.mineRow { flex-direction: row; }
+.mineRow .msgActions { order: -1; }
+.mineRow .avatarSlot { display: none; }
 .msgRow.grouped { margin-top: 3px; }
 .avatarSlot { width: 32px; flex: none; }
 .bubbleWrap { min-width: 0; }
@@ -88,11 +90,12 @@
 .replyQuote b { display: block; font-size: 12px; color: var(--text-2); }
 .reactions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
 .mineRow .reactions { justify-content: flex-end; }
+.msgRow { max-width: 100%; }
 .reaction { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); box-shadow: var(--shadow-card); font-size: 13px; font-weight: 500; }
 .reaction:hover { background: var(--surface-2); }
 .reactionMine { border-color: var(--border-strong); background: var(--surface-3); }
-.msgActions { display: flex; gap: 2px; align-self: center; flex: none; opacity: 0; transition: opacity .15s ease; }
-.msgRow:hover .msgActions, .msgRow:focus-within .msgActions { opacity: 1; }
+.msgActions { display: flex; gap: 2px; align-self: center; flex: none; width: 94px; opacity: 0; pointer-events: none; transition: opacity .15s ease; }
+.msgRow:hover .msgActions, .msgRow:focus-within .msgActions { opacity: 1; pointer-events: auto; }
 .miniBtn { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text-3); box-shadow: var(--shadow-card); }
 .miniBtn:hover { background: var(--surface-2); color: var(--text); }
 .systemMsg { align-self: center; margin: 12px 0 2px; padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: 13px; text-align: center; }
