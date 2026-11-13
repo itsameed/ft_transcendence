@@ -43,4 +43,5 @@ practice
 graphify-out
 
 # Local database backups
-database-backups/
+database-backups/*
+!database-backups/.gitkeep

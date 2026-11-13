@@ -273,3 +273,35 @@ Open:
 
 ```text
 https://localhost:8443/service-status.html
+
+## Starting, stopping, and resetting the project
+
+For a new clone, create the environment file:
+
+```bash
+cp .env.example .env
+```
+
+Fill the required values in `.env`, then build and start everything:
+
+```bash
+make start
+```
+
+Stop the project while preserving its data:
+
+```bash
+make down
+```
+
+Keep the same `.env` credentials when using the preserved volumes again.
+
+Delete all containers and local Docker data for a fresh installation:
+
+```bash
+make reset
+```
+
+Type `yes` when the command asks for confirmation.
+
+Docker volumes are stored outside the repository. Deleting the project folder does not delete them. Run `make reset` before deleting the repository only when the stored local data is no longer needed.

@@ -1,12 +1,13 @@
 COMPOSE := docker compose
 
-.PHONY: help up start down restart build rebuild pull logs ps config backup restore
+.PHONY: help up start down reset restart build rebuild pull logs ps config backup restore
 
 help:
 	@echo "Available targets:"
-	@echo "  make start                 Start the server in detached mode"
-	@echo "  make up                    Start services in detached mode"
-	@echo "  make down                  Stop and remove services"
+	@echo "  make start                 Build and start all services"
+	@echo "  make up                    Start services using existing images"
+	@echo "  make down                  Stop services and preserve data"
+	@echo "  make reset                 Stop services and delete local Docker data"
 	@echo "  make build                 Build service images"
 	@echo "  make rebuild               Rebuild images without cache and start services"
 	@echo "  make restart               Restart services"
@@ -17,13 +18,17 @@ help:
 	@echo "  make backup                Create a database backup"
 	@echo "  make restore FILE=<path>   Restore a database backup"
 
-start: up
+start:
+	$(COMPOSE) up -d --build
 
 up:
 	$(COMPOSE) up -d
 
 down:
 	$(COMPOSE) down
+
+reset:
+	@printf "Delete all local Docker data? Type yes to continue: "; read answer; if [ "$$answer" = "yes" ]; then $(COMPOSE) down -v --remove-orphans; else echo "Cancelled"; fi
 
 build:
 	$(COMPOSE) build
