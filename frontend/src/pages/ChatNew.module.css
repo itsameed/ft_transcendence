@@ -47,7 +47,7 @@
 .emptyList strong { display: block; color: var(--text-2); font-size: 14px; margin-bottom: 4px; }
 
 .thread { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--surface); container-type: inline-size; }
-.threadHead { display: flex; align-items: center; gap: 10px; padding: 10px 18px; min-height: 58px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.threadHead { display: flex; align-items: center; gap: 12px; padding: 14px 20px; min-height: 64px; border-bottom: 1px solid var(--border); background: var(--surface); }
 .threadId { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; border: 0; background: none; color: inherit; text-align: left; padding: 0; border-radius: var(--radius-sm); }
 .threadName { display: block; font-size: 15px; font-weight: 600; letter-spacing: -0.015em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .threadSub { display: block; color: var(--text-2); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -56,14 +56,14 @@
 .memberFaces > *:first-child { margin-left: 0; }
 .headActions { display: flex; gap: 6px; flex: none; }
 .scrollCol { overflow-y: auto; display: flex; flex-direction: column; flex: 1; min-height: 0; }
-.modeSwitch { display: inline-flex; gap: 4px; width: var(--thread-measure); margin: 12px auto 0; padding: 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); }
+.modeSwitch { display: inline-flex; gap: 4px; width: var(--thread-measure); margin: 16px auto 0; padding: 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); }
 .modeSwitch button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 6px 14px; border: 0; border-radius: 999px; background: none; color: var(--text-2); font-size: 13px; font-weight: 500; transition: background .15s ease, color .15s ease; }
 .modeSwitch button:hover:not(.modeOn) { color: var(--text); background: var(--hover-wash); }
 .modeOn { background: var(--primary) !important; color: var(--on-primary) !important; font-weight: 600; }
-.balanceStrip { display: flex; align-items: center; gap: 10px; width: var(--thread-measure); margin: 10px auto 0; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-card); }
+.balanceStrip { display: flex; align-items: center; gap: 14px; width: var(--thread-measure); margin: 14px auto 0; padding: 16px 20px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-card); }
 .balanceStrip .grow { flex: 1; min-width: 0; }
-.balanceStrip strong { font-size: 14px; font-weight: 600; }
-.balanceStrip p { color: var(--text-2); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.balanceStrip strong { font-size: 15px; font-weight: 600; line-height: 1.35; }
+.balanceStrip p { color: var(--text-2); font-size: 13px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .stripBtn { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 5px 11px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); font-size: 13px; font-weight: 500; flex: none; transition: background .15s ease, border-color .15s ease; }
 .stripBtn:hover { background: var(--surface-2); border-color: var(--text-3); }
 .stripBtnBrand { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
@@ -72,7 +72,7 @@
 .pinnedBar span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); }
 .pinnedBar button { display: grid; place-items: center; padding: 3px; border: 0; border-radius: 6px; background: none; color: inherit; }
 
-.msgs { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 16px 0 8px; }
+.msgs { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 22px 0 14px; }
 .msgs > * { width: var(--thread-measure); }
 .msgRowWrap > .msgRow { width: fit-content; max-width: min(74%, 620px); }
 .msgRowWrap > .msgRow.mineRow { margin-left: auto; }
@@ -84,7 +84,7 @@
 .msgRow.grouped { margin-top: 3px; }
 .avatarSlot { width: 32px; flex: none; }
 .bubbleWrap { min-width: 0; }
-.bubble { padding: 8px 12px 7px; border: 1px solid var(--border); border-radius: 18px; border-bottom-left-radius: 6px; background: var(--surface); box-shadow: 0 1px 2px rgba(87,70,40,.05); line-height: 1.5; font-size: 14px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.bubble { padding: 10px 14px 8px; border: 1px solid var(--border); border-radius: 18px; border-bottom-left-radius: 6px; background: var(--surface); box-shadow: 0 1px 2px rgba(87,70,40,.05); line-height: 1.5; font-size: 14px; overflow-wrap: anywhere; white-space: pre-wrap; }
 .mineRow .bubble { background: var(--bubble-mine); border-bottom-left-radius: 18px; border-bottom-right-radius: 6px; }
 .bubble .who { display: block; margin-bottom: 2px; color: var(--text-2); font-size: 12px; font-weight: 600; }
 .bubble .meta { display: inline-flex; align-items: center; gap: 4px; float: right; margin: 6px 0 0 9px; color: var(--text-3); font-size: 11px; font-variant-numeric: tabular-nums; }
@@ -121,20 +121,20 @@
 .typingRow { display: flex; align-items: center; gap: 8px; width: var(--thread-measure); margin: 0 auto; padding: 2px 0 6px; color: var(--text-2); font-size: 13px; }
 .typingDots { display: inline-flex; gap: 3px; }
 .typingDots i { width: 5px; height: 5px; border-radius: 50%; background: var(--text-2); animation: msgIn 1.2s infinite alternate; }
-.composerZone { width: var(--thread-measure); margin: 0 auto; padding: 10px 0 14px; }
+.composerZone { width: var(--thread-measure); margin: 6px auto 0; padding: 16px 0 18px; border-top: 1px solid var(--border); }
 .replyPreview { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; padding: 9px 13px; border: 1px solid var(--border); border-left: 3px solid var(--text-3); border-radius: var(--radius-sm); background: var(--surface); box-shadow: var(--shadow-card); font-size: 13px; }
 .replyPreview .grow { flex: 1; min-width: 0; overflow: hidden; color: var(--text-2); text-overflow: ellipsis; white-space: nowrap; }
 .replyPreview b { color: var(--text); }
-.composer { display: flex; align-items: flex-end; gap: 6px; padding: 6px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); box-shadow: var(--shadow-card); transition: border-color .15s ease, box-shadow .15s ease; }
+.composer { display: flex; align-items: flex-end; gap: 8px; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); box-shadow: var(--shadow-card); transition: border-color .15s ease, box-shadow .15s ease; }
 .composer:focus-within { border-color: var(--text-3); box-shadow: 0 0 0 3px var(--surface-3); }
-.composer textarea { flex: 1; min-width: 0; max-height: 120px; padding: 8px 6px 7px; border: 0 !important; background: none; box-shadow: none !important; outline: none; resize: none; font-size: 14px; line-height: 1.45; }
+.composer textarea { flex: 1; min-width: 0; max-height: 120px; padding: 10px 8px 9px; border: 0 !important; background: none; box-shadow: none !important; outline: none; resize: none; font-size: 14px; line-height: 1.45; }
 .composerBtn { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border: 0; border-radius: 50%; background: transparent; color: var(--text-3); }
 .composerBtn:hover { background: var(--hover-wash); color: var(--text); }
 .sendBtn { display: grid; place-items: center; width: 38px; height: 38px; flex: none; border: 0; border-radius: 50%; background: var(--primary); color: var(--on-primary); transition: background .15s ease, transform .1s ease, opacity .15s ease; }
 .sendBtn:hover:not(:disabled) { background: var(--primary-hover); }
 .sendBtn:active:not(:disabled) { transform: scale(.95); }
 .sendBtn:disabled { opacity: .4; cursor: not-allowed; }
-.composerHint { display: flex; justify-content: space-between; gap: 12px; margin-top: 7px; padding: 0 8px; color: var(--text-3); font-size: 11px; }
+.composerHint { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; padding: 0 10px; color: var(--text-3); font-size: 11px; }
 .composerHint kbd { padding: 1px 5px; border: 1px solid var(--border-strong); border-radius: 5px; background: var(--surface-2); font: 600 11px var(--font); }
 .emojiPop { display: flex; gap: 2px; width: max-content; margin-bottom: 9px; padding: 7px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-pop); }
 .emojiPop button { padding: 4px; border: 0; border-radius: 8px; background: none; font-size: 20px; }
