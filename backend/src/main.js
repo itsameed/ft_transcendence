@@ -53,6 +53,13 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static('public'));
 
+// Uploaded avatars. Filenames are unique per upload, so they can be cached hard.
+app.use('/uploads/avatars', express.static(path.join(__dirname, '..', 'uploads', 'avatars'), {
+    immutable: true,
+    maxAge: '30d',
+    fallthrough: true,
+}));
+
 app.use(cookieParser());
 
 app.use(sessionMiddleware);
@@ -78,6 +85,7 @@ const groupTotalExpensesRouter = require('./routes/GroupTotalExpenses.js');
 const logoutRouter = require('./routes/Logout.js');
 const myProfileRouter = require('./routes/MyProfile.js');
 const editProfile = require('./routes/EditProfile.js');
+const avatarRouter = require('./routes/Avatar.js');
 const changePasswordRouter = require('./routes/ChangePassword.js');
 const userProfileRouter = require('./routes/UserProfile.js');
 const googleAuth = require('./routes/googleAuth');
@@ -95,6 +103,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/status-api', serviceStatus);
 app.use('/api/my-profile', myProfileRouter);
 app.use('/api/profile/edit', editProfile);
+app.use('/api/profile/avatar', avatarRouter);
 app.use('/api/profile/change-password', changePasswordRouter);
 app.use('/api/users', userProfileRouter);
 app.use('/api/group-details', groupDetailsRouter);
@@ -279,6 +288,18 @@ app.use((err, req, res, next) => {
         return res.status(400).json({
             message: 'Invalid ID'
         });
+    }
+
+    // Upload rejections are the user's fault, not a server fault.
+    if (err.name === 'MulterError') {
+        const message = err.code === 'LIMIT_FILE_SIZE'
+            ? 'That image is too large. The limit is 5 MB.'
+            : 'That upload could not be accepted.';
+        return res.status(400).json({ message });
+    }
+
+    if (err.message === 'Only image files are allowed') {
+        return res.status(400).json({ message: err.message });
     }
 
     return res.status(500).json({
