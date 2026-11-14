@@ -1,7 +1,7 @@
 /* Chat — heritage layout on platform tokens (global.css). Three/four-pane
    messenger shell inside the platform sidebar layout. */
-.chatMain { padding: 20px 26px 28px; }
-.shell { display: grid; grid-template-columns: var(--list-w, 288px) minmax(0, 1fr); height: calc(100vh - 48px); height: calc(100dvh - 48px); min-height: 480px; max-width: 1240px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); overflow: hidden; }
+.chatMain { padding: 0; }
+.shell { display: grid; grid-template-columns: var(--list-w, 288px) minmax(0, 1fr); height: 100vh; height: 100dvh; min-height: 0; background: var(--surface); overflow: hidden; }
 .shell.detailsOpen { grid-template-columns: 288px minmax(0, 1fr) 288px; }
 :root { --thread-measure: min(880px, 100%); }
 
@@ -202,8 +202,8 @@
   .composerHint span:last-child { display: none; }
 }
 @media (max-width: 860px) {
-  .chatMain { padding: 12px 12px 100px; }
-  .shell, .shell.detailsOpen { grid-template-columns: minmax(0, 1fr); height: calc(100dvh - 112px); min-height: 0; }
+  .chatMain { padding: 0 0 84px; }
+  .shell, .shell.detailsOpen { grid-template-columns: minmax(0, 1fr); height: calc(100dvh - 84px); min-height: 0; }
   .shell:not(.mobileThread) .thread, .shell:not(.mobileThread) .details { display: none; }
   .shell.mobileThread .list { display: none; }
   .details { position: fixed; width: min(320px, 92vw); }
