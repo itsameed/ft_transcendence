@@ -1,16 +1,19 @@
 .sidebar {
   position: sticky;
-  top: 0;
+  top: 20px;
   display: flex;
   flex-direction: column;
   gap: 32px;
   width: 240px;
-  height: 100vh;
-  height: 100dvh;
+  height: calc(100vh - 40px);
+  height: calc(100dvh - 40px);
   flex-shrink: 0;
+  margin: 0 0 20px 20px;
   padding: 28px 16px 20px;
-  border-right: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
+  border-radius: 32px;
   background: var(--panel-gradient);
+  box-shadow: var(--shadow-pop);
   overflow-y: auto;
 }
 
@@ -50,12 +53,20 @@
   color: var(--text-2);
   font-weight: 500;
   text-decoration: none;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
 }
 
 .link:hover {
-  background: var(--hover-wash);
+  background: rgba(143, 191, 159, 0.12);
   color: var(--text);
+  box-shadow:
+    0 0 18px rgba(143, 191, 159, 0,12),
+    insert 0 0 0 1px rgba(143, 191, 159, 0.14);
+  transform: translateX(3px);
 }
 
 .link:active {
@@ -64,9 +75,11 @@
 
 .active,
 .active:hover {
-  background: var(--surface);
+  background: rgba(220, 154, 128, 0.14);
   color: var(--text);
-  box-shadow: var(--shadow-card), 0 0 0 1px var(--border);
+  box-shadow:
+    0 0 20px rgba(220, 154, 128, 0.18),
+    inset 0 0 0 1px rgba(220, 154, 128, 0.18);
 }
 
 .bellWrap {
