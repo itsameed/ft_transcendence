@@ -10,7 +10,7 @@ import type { Group, User } from '../types'
 import dashStyles from './Dashboard.module.css'
 import styles from './Chat.module.css'
 
-interface ApiGroup { _id: string; name: string; kind: string; conversationId?: string; members: { userId: { _id: string; username: string; email: string } }[] }
+interface ApiGroup { _id: string; name: string; kind: string; conversationId?: string; members: { userId: { _id: string; username: string; email: string; avatar?: string | null } }[] }
 interface Msg { id: string; senderId: string; senderName: string; content: string; createdAt: string; ai?: boolean }
 type Mode = 'group' | 'ai'
 
@@ -52,7 +52,7 @@ export function ChatPage() {
         const userMap: Record<string, User> = {}
         if (profile?.user) userMap[profile.user.id] = profile.user
         const mapped: Group[] = (data.groups ?? []).map((g: ApiGroup) => {
-          for (const m of g.members ?? []) if (m.userId) userMap[m.userId._id] = { id: m.userId._id, name: m.userId.username, email: m.userId.email }
+          for (const m of g.members ?? []) if (m.userId) userMap[m.userId._id] = { id: m.userId._id, name: m.userId.username, email: m.userId.email, avatar: m.userId.avatar ?? null }
           return { id: g._id, name: g.name, emoji: '', kind: (g.kind || 'other') as Group['kind'], memberIds: (g.members ?? []).map((m) => m.userId._id), totalSpent: 0, yourBalance: 0, createdAt: '', conversationId: g.conversationId }
         })
         setUsers(userMap); setGroups(mapped)

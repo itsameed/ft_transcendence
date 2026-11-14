@@ -13,9 +13,9 @@ import type { Group, User } from '../types'
 import dashStyles from './Dashboard.module.css'
 import styles from './Group.module.css'
 
-interface ApiMember { userId: { _id: string; username: string; email: string }; role: string }
+interface ApiMember { userId: { _id: string; username: string; email: string; avatar?: string | null }; role: string }
 interface ApiGroup { _id: string; name: string; kind: string; description?: string; conversationId?: string; createdAt: string; members: ApiMember[] }
-interface FriendRequest { _id: string; requester: { _id: string; username: string; email: string } }
+interface FriendRequest { _id: string; requester: { _id: string; username: string; email: string; avatar?: string | null } }
 type Filter = 'all' | 'groups' | 'friends' | 'requests'
 
 const FILTERS: { id: Filter; label: string }[] = [
@@ -59,7 +59,7 @@ export function GroupPage() {
         })))
         if (friendsRes.ok) {
           const d = await friendsRes.json()
-          setFriends((d.friends ?? []).map((f: any) => ({ id: f._id, name: f.username, email: f.email })))
+          setFriends((d.friends ?? []).map((f: any) => ({ id: f._id, name: f.username, email: f.email, avatar: f.avatar ?? null })))
         }
         if (requestsRes.ok) {
           const d = await requestsRes.json()
@@ -97,7 +97,7 @@ export function GroupPage() {
         if (!res.ok) return
         const data = await res.json()
         const friendIds = new Set(friends.map((f) => f.id))
-        setPeople((Array.isArray(data) ? data : []).map((u: any) => ({ id: u._id, name: u.username, email: u.email ?? '' })).filter((u: User) => u.id && u.id !== me?.id && !friendIds.has(u.id)))
+        setPeople((Array.isArray(data) ? data : []).map((u: any) => ({ id: u._id, name: u.username, email: u.email ?? '', avatar: u.avatar ?? null })).filter((u: User) => u.id && u.id !== me?.id && !friendIds.has(u.id)))
       } catch { /* search is best-effort */ }
     }, 250)
     return () => window.clearTimeout(t)
@@ -132,7 +132,7 @@ export function GroupPage() {
   const respond = async (r: FriendRequest, accept: boolean) => {
     if (await act(`/api/friends/request/${r._id}/${accept ? 'accept' : 'reject'}`, { method: 'PATCH' }, accept ? `You and ${r.requester.username} are now friends` : 'Request declined')) {
       setRequests((p) => p.filter((x) => x._id !== r._id))
-      if (accept) setFriends((p) => [...p, { id: r.requester._id, name: r.requester.username, email: r.requester.email }])
+      if (accept) setFriends((p) => [...p, { id: r.requester._id, name: r.requester.username, email: r.requester.email, avatar: r.requester.avatar ?? null }])
     }
   }
 
@@ -189,7 +189,7 @@ export function GroupPage() {
                 {requests.map((r) => (
                   <li key={r._id} className={styles.row}>
                     <Link className={styles.rowLink} to={`/users/${r.requester._id}`}>
-                      <Avatar user={{ id: r.requester._id, name: r.requester.username, email: r.requester.email }} size={34} />
+                      <Avatar user={{ id: r.requester._id, name: r.requester.username, email: r.requester.email, avatar: r.requester.avatar ?? null }} size={34} />
                       <span className={styles.who}><strong>{r.requester.username}</strong><small>sent you a friend request</small></span>
                     </Link>
                     <span className={styles.actions}>

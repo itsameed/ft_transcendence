@@ -26,7 +26,7 @@ interface GroupDetail {
 }
 
 function mapUser(raw: any): User {
-  return { id: String(raw?._id ?? raw?.id ?? ''), name: raw?.username ?? raw?.name ?? 'Unknown', email: raw?.email ?? '' }
+  return { id: String(raw?._id ?? raw?.id ?? ''), name: raw?.username ?? raw?.name ?? 'Unknown', email: raw?.email ?? '', avatar: raw?.avatar ?? null }
 }
 
 export function GroupDetailPage() {
@@ -83,7 +83,7 @@ export function GroupDetailPage() {
         if (profile?.user) setMe(profile.user)
         fetch('/api/friends')
           .then((r) => (r.ok ? r.json() : null))
-          .then((d) => { if (d?.friends) setFriends(d.friends.map((f: any) => ({ id: f._id, name: f.username, email: f.email }))) })
+          .then((d) => { if (d?.friends) setFriends(d.friends.map((f: any) => ({ id: f._id, name: f.username, email: f.email, avatar: f.avatar ?? null }))) })
           .catch(() => { /* picker stays empty; error surfaces on open */ })
         const data = await groupRes.json()
         const g = data.group

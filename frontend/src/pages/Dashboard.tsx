@@ -77,7 +77,7 @@ export function Dashboard() {
                const u = item?.user
                const id = String(u?._id ?? u?.id ?? item?.payerId ?? item?.debtorId ?? '')
                if (!id) return
-               if (u?.username) userMap[id] = { id, name: u.username, email: u.email ?? '' }
+               if (u?.username) userMap[id] = { id, name: u.username, email: u.email ?? '', avatar: u.avatar ?? null }
                const amount = Number(item?.totalAmount ?? item?.amount ?? 0)
                if (!Number.isFinite(amount) || amount === 0) return
                balanceMap.set(id, (balanceMap.get(id) ?? 0) + sign * amount)
@@ -95,7 +95,7 @@ export function Dashboard() {
                   for (const m of g.members ?? []) {
                      const u = m.userId
                      const id = String(u?._id ?? u ?? '')
-                     if (id && u?.username) userMap[id] = { id, name: u.username, email: u.email ?? '' }
+                     if (id && u?.username) userMap[id] = { id, name: u.username, email: u.email ?? '', avatar: u.avatar ?? null }
                   }
                }
             }
