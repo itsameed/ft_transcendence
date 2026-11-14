@@ -10,6 +10,7 @@ import { Section, SectionLink } from '../components/ui/Section'
 import { Toast } from '../components/ui/Toast'
 // import { NOW, friendBalances, groups, recentActivity, users } from '../data/mock'
 import { firstName, money } from '../lib/format'
+import { sendReminder } from '../lib/remind'
 import { FriendBalance, Group, type User } from '../types'
 import styles from './Dashboard.module.css'
 
@@ -134,7 +135,7 @@ export function Dashboard() {
                   users={users}
                   groupCount={groups.length}
                   onSettle={(u, amount) => notify(`Recorded ${money(amount)} paid to ${firstName(u.name)}`)}
-                  onRemind={(u) => notify(`Reminder sent to ${firstName(u.name)}`)}
+                  onRemind={async (u) => { const r = await sendReminder(u.id, firstName(u.name)); notify(r.message) }}
                />
 
                <Section title="Groups" action={<SectionLink href="/groups">All groups</SectionLink>}>

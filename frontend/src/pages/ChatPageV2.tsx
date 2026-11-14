@@ -16,6 +16,7 @@ import { CreateGroupModal } from '../components/groups/CreateGroupModal'
 import { iconForKind } from '../lib/GroupKinds'
 import { categoryIcon } from '../lib/categories'
 import { firstName, money, relativeDay } from '../lib/format'
+import { sendReminder } from '../lib/remind'
 import type { Group, User } from '../types'
 import dashStyles from './Dashboard.module.css'
 import styles from './ChatNew.module.css'
@@ -247,6 +248,7 @@ export function ChatPage() {
   const balanceKnown = expenses.some((e) => e.shares)
   const myBalance = balanceKnown ? shareBalance : (selected ? recentBalances[selected.id] ?? 0 : 0)
   const detailDebts = balanceKnown ? debts : globalDebts.filter((d) => selected?.memberIds.includes(d.user.id))
+  const topDebtor = detailDebts.filter((d) => d.amount > 0).sort((a, b) => b.amount - a.amount)[0] as { user: User; amount: number } | undefined
 
   const pinnedMsg = selected ? messages.find((m) => m.id === pinned[selected.id]) : undefined
   const visibleGroups = groups.filter((g) => {
@@ -428,7 +430,7 @@ export function ChatPage() {
                       <Wallet size={19} style={{ flex: 'none', color: myBalance > 0 ? 'var(--owed)' : myBalance < 0 ? 'var(--owe)' : 'var(--text-3)' }} />
                       <span className={styles.grow}><strong>{myBalance > 0 ? `You’re owed ${money(myBalance)}` : myBalance < 0 ? `You owe ${money(myBalance)}` : 'You’re all settled up'}</strong>
                         <p>{balanceKnown ? `${money(totalSpent)} spent together · ${expenseCount} expenses` : 'Across your recent groups'}</p></span>
-                      {myBalance > 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => notify('Reminder noted — notifications are not sent from chat yet')}>Remind</button>}
+                      {myBalance > 0 && topDebtor && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={async () => { const r = await sendReminder(topDebtor.user.id, firstName(topDebtor.user.name)); notify(r.message) }}>Remind</button>}
                       {myBalance < 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => setDetails(true)}>Settle up</button>}
                       <button className={styles.stripBtn} onClick={() => setDetails(true)}>Balances</button>
                     </div>
@@ -532,16 +534,16 @@ export function ChatPage() {
                 {detailDebts.length > 0 || myBalance !== 0 || balanceKnown || Object.keys(recentBalances).length > 0 ? <>
                   {(() => {
                     const settled = myBalance === 0 && detailDebts.length === 0
-                    const topOwed = detailDebts.filter((d) => d.amount > 0).sort((a, b) => b.amount - a.amount)[0]
+                    const topDebtor = detailDebts.filter((d) => d.amount > 0).sort((a, b) => b.amount - a.amount)[0]
                     const summary = settled ? 'All settled up in this group'
-                      : myBalance > 0 && topOwed ? `${firstName(topOwed.user.name)} owes you ${money(topOwed.amount)}${detailDebts.length > 1 ? ` · net ${money(myBalance)} you’re owed` : ''}`
+                      : myBalance > 0 && topDebtor ? `${firstName(topDebtor.user.name)} owes you ${money(topDebtor.amount)}${detailDebts.length > 1 ? ` · net ${money(myBalance)} you’re owed` : ''}`
                       : myBalance > 0 ? `You’re owed ${money(myBalance)}`
                       : `You owe ${money(-myBalance)}`
                     return (
                       <div className={`${styles.balanceCard} ${settled ? styles.balanceSettled : myBalance > 0 ? styles.balanceOwed : styles.balanceOwe}`} role="status">
                         <span className={styles.balanceSummary}>{summary}</span>
                         <span className={styles.balanceMeta}>{balanceKnown ? `${money(totalSpent)} spent in this group` : 'Net balance for this group'}</span>
-                        {myBalance > 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => notify('Reminder noted — notifications are not sent from chat yet')}>Remind</button>}
+                        {myBalance > 0 && topDebtor && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={async () => { const r = await sendReminder(topDebtor.user.id, firstName(topDebtor.user.name)); notify(r.message) }}>Remind</button>}
                         {myBalance < 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => navigate(`/groups/${selected.id}`)}>Settle up</button>}
                       </div>
                     )
@@ -552,7 +554,7 @@ export function ChatPage() {
                       <span className={styles.grow}><strong>{d.user.name}</strong><small>{d.amount > 0 ? 'owes you' : 'you owe'}</small></span>
                       <span className={`${styles.debtAmt} ${d.amount > 0 ? styles.owedText : styles.oweText}`}>{money(d.amount)}</span>
                       {d.amount > 0
-                        ? <Button size="sm" onClick={() => notify(`Reminder noted for ${firstName(d.user.name)} — not sent from chat yet`)}>Remind</Button>
+                        ? <Button size="sm" onClick={async () => { const r = await sendReminder(d.user.id, firstName(d.user.name)); notify(r.message) }}>Remind</Button>
                         : <Button size="sm" variant="primary" onClick={() => notify('Settlements are recorded from the group page')}>Settle</Button>}
                     </div>
                   ))}
