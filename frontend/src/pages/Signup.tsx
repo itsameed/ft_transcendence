@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '../lib/useTheme'
+import { AvatarPicker } from '../components/ui/AvatarPicker'
 import { Button } from '../components/ui/Button'
 import { GoogleButton, OrDivider } from '../components/auth/GoogleButton'
 import { Logo } from '../components/layout/Sidebar'
+import { DEFAULT_AVATARS } from '../lib/avatars'
 import styles from './Signup.module.css'
 
 export function Signup() {
@@ -17,6 +19,25 @@ export function Signup() {
    const [confirmPassword, setConfirmPassword] = useState('')
    const [error, setError] = useState<string | null>(null)
    const [loading, setLoading] = useState(false)
+   const [avatarId, setAvatarId] = useState<string>(DEFAULT_AVATARS[0].id)
+   const [avatarFile, setAvatarFile] = useState<File | null>(null)
+   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+
+   // Revoke the object URL when the photo is replaced or the page unmounts.
+   useEffect(() => {
+      if (!avatarPreview) return
+      return () => URL.revokeObjectURL(avatarPreview)
+   }, [avatarPreview])
+
+   function pickPhoto(file: File) {
+      setAvatarPreview(URL.createObjectURL(file))
+      setAvatarFile(file)
+   }
+
+   function clearPhoto() {
+      setAvatarPreview(null)
+      setAvatarFile(null)
+   }
 
 
    const handleSubmit = async (e: React.FormEvent) => {
@@ -31,13 +52,16 @@ export function Signup() {
       }
 
       try {
-         const response = await fetch('/auth/signup', {
-            method: 'POST',
-            headers: {
-               'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ fullName: fullname, username, email, password }),
-         })
+         // Multipart so the optional photo rides along with the same request.
+         const body = new FormData()
+         body.append('fullName', fullname)
+         body.append('username', username)
+         body.append('email', email)
+         body.append('password', password)
+         if (avatarFile) body.append('avatar', avatarFile)
+         else body.append('avatar', avatarId)
+
+         const response = await fetch('/auth/signup', { method: 'POST', body })
          const data = await response.json()
          if (!response.ok) {
             setError(data.message || 'Signup failed')
@@ -154,6 +178,15 @@ export function Signup() {
                         />
                      </div>
                   </div>
+
+                  <AvatarPicker
+                     value={avatarId}
+                     onChange={(id) => { setAvatarId(id); clearPhoto() }}
+                     preview={avatarPreview}
+                     onFile={pickPhoto}
+                     onClearPhoto={clearPhoto}
+                     disabled={loading}
+                  />
 
                   <Button
                      type="submit"
