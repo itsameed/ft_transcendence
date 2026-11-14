@@ -1,4 +1,5 @@
 class promptBuilder {
+<<<<<<< Updated upstream
   build(query, docs) {
     const lines = [];
 
@@ -34,8 +35,47 @@ class promptBuilder {
       'Retrieved snippets:\n' + context + '\n\n' +
       'User question: ' + query + '\n\n' +
       'Answer:';
+=======
+  build(query, docs, history, stats) {
+    if (!history) history = [];
 
-    return prompt;
+    const context = docs.map(doc => '- ' + doc.text).join('\n');
+
+    let conversation = '';
+    if (history.length > 0) {
+      conversation = history.map(function (msg) {
+        return msg.role + ': ' + msg.content;
+      }).join('\n');
+    }
+
+    // إلا كانت الإحصائيات متوفرة، كنزيدوها للسياق
+    let statsText = '';
+    if (stats) {
+      statsText = `\n\nالإحصائيات العامة للمجموعة:\nالمجموع الإجمالي: ${stats.total} MAD\nعدد المصاريف: ${stats.expenseCount}`;
+    }
+>>>>>>> Stashed changes
+
+    return (
+      'أنت مساعد مالي داخل تطبيق تقسيم المصاريف. ' +
+      'أجب بنفس لغة السؤال (الدارجة أو العربية أو الفرنسية أو الإنجليزية). ' +
+      'أجب فقط عن المصاريف والديون والمجموعات والأعضاء. ' +
+      'اعتمد على البيانات المقدمة فقط، ولا تخترع أي معلومة أو رقم. ' +
+      'إذا كانت المعلومات غير كافية، صرّح بذلك بوضوح.\n' +
+      'استعمل تاريخ المحادثة فقط لفهم الإشارات والأسئلة التابعة ' +
+      '(مثل "هو"، "هي"، "و"، "أيضا"، "وماذا عن...").\n\n' +
+      'قواعد مهمة جدا:\n' +
+      '1. أجب بنص عادي فقط. لا تستعمل أي Markdown إطلاقا (لا تستعمل ** أو # أو `).\n' +
+      '2. لا تكتب خطوات الحساب (مثل 118 + 148 + ... = ...).\n' +
+      '3. للأسئلة البسيطة: أجب بجملة واحدة قصيرة وواضحة مع الرقم النهائي مباشرة.\n' +
+      '4. إذا طلب المستخدم تقرير مفصل، نظم الإجابة على شكل نقاط تبدأ بـ "- " فقط.\n' +
+      '5. لا تكرر السؤال، أجب مباشرة.\n\n' +
+      'تاريخ المحادثة:\n' +
+      (conversation || 'لا توجد محادثة سابقة') +
+      '\n\nالبيانات:\n' + (context || 'لا توجد بيانات') +
+      statsText +
+      '\n\nالسؤال الحالي: ' + query +
+      '\nالإجابة:'
+    );
   }
 }
 

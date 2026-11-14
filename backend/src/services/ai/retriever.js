@@ -18,6 +18,7 @@ function cosine(a, b) {
   return dot / (Math.sqrt(na) * Math.sqrt(nb));
 }
 
+<<<<<<< Updated upstream
 class retriever 
 {
   constructor(sem) 
@@ -42,11 +43,43 @@ class retriever
 
       sems[i] = s;
 
+=======
+
+
+class retriever
+{
+  constructor(sem)
+  {
+    this.sem = sem;
+  }
+
+
+
+  retrieve(qv, topk, querytext)
+  {
+    if (!topk)
+      topk = 15;
+
+    if (!qv)
+      return [];
+
+    const sems = {};
+    let semMax = 0;
+
+    for (let i = 0; i < this.sem.vectors.length; i++)
+    {
+      const s = cosine(qv, this.sem.vectors[i]);
+      sems[i] = s;
+>>>>>>> Stashed changes
       if (s > semMax)
         semMax = s;
     }
 
+<<<<<<< Updated upstream
     if (semMax > 0) 
+=======
+    if (semMax > 0)
+>>>>>>> Stashed changes
     {
       for (const k in sems)
         sems[k] = sems[k] / semMax;
@@ -54,12 +87,20 @@ class retriever
 
     const out = [];
 
+<<<<<<< Updated upstream
     for (const k in sems) 
+=======
+    for (const k in sems)
+>>>>>>> Stashed changes
     {
       const i = parseInt(k, 10);
       const sem = sems[i];
 
+<<<<<<< Updated upstream
       if (sem >= MIN) 
+=======
+      if (sem >= MIN)
+>>>>>>> Stashed changes
       {
         out.push({
           text: this.sem.chunks[i],

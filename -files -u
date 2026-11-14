@@ -1,0 +1,8 @@
+backend/src/routes/ai/chat.js
+backend/src/services/ai/dataSource.js
+backend/src/services/ai/promptBuilder.js
+backend/src/services/ai/ragEngine.js
+backend/src/services/ai/retriever.js
+backend/src/services/ai/textUtils.js
+frontend/src/pages/Chat.module.css
+frontend/src/pages/Chat.tsx
