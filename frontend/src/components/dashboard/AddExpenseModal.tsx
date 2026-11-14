@@ -12,7 +12,7 @@ type SplitMode = 'equal' | 'exact' | 'percent'
 interface Props {
   open: boolean
   onClose: () => void
-  onSave: (expense: Expense, group: Group) => void
+  onSave: (expense: Expense, group: Group) => void | Promise<void>
   groups: Group[]
   users: Record<string, User>
   me: string
@@ -112,27 +112,55 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
   }, [group, included, mode, total, custom])
 
   const balanced = Math.abs(remaining) < 0.01
-  const valid = total > 0 && title.trim() !== '' && included.length > 0 && balanced
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const valid = total > 0 && title.trim() !== '' && included.length > 0 && balanced && !saving
 
-  function save() {
+  async function save() {
     if (!valid) return
+    setSaving(true)
+    setSaveError('')
     const now = new Date()
     const hh = String(now.getHours()).padStart(2, '0')
     const mm = String(now.getMinutes()).padStart(2, '0')
-    onSave(
-      {
-        type: 'expense',
-        id: `e_${now.getTime()}`,
-        groupId,
-        title: title.trim(),
-        category,
-        amount: total,
-        paidBy,
-        shares: Object.entries(shares).map(([userId, value]) => ({ userId, amount: Math.round(value * 100) / 100 })),
-        createdAt: `${date}T${hh}:${mm}:00`,
-      },
-      group,
-    )
+    try {
+      // Persist first: the backend creates the expense from these fields.
+      // equal -> participants share evenly; exact/percent -> customSplit.
+      const res = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          groupId,
+          amount: total,
+          description: title.trim(),
+          splitMethod: mode === 'equal' ? 'equal' : 'custom',
+          participants: JSON.stringify(included),
+          customSplits: JSON.stringify(
+            mode === 'equal' ? [] : Object.entries(shares).map(([userId, value]) => ({ user: userId, amount: Math.round(value * 100) / 100 })),
+          ),
+        }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.message ?? 'Could not save the expense.')
+      await onSave(
+        {
+          type: 'expense',
+          id: `e_${now.getTime()}`,
+          groupId,
+          title: title.trim(),
+          category,
+          amount: total,
+          paidBy,
+          shares: Object.entries(shares).map(([userId, value]) => ({ userId, amount: Math.round(value * 100) / 100 })),
+          createdAt: `${date}T${hh}:${mm}:00`,
+        },
+        group,
+      )
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Could not save the expense.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (!open) return null
@@ -290,12 +318,13 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
             </p>
           </div>
 
+          {saveError && <p role="alert" style={{ color: 'var(--owe)', fontSize: 13, padding: '0 28px' }}>{saveError}</p>}
           <footer className={styles.footer}>
-            <Button type="button" variant="ghost" onClick={onClose}>
+            <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>
               Cancel
             </Button>
             <Button type="submit" variant="primary" disabled={!valid}>
-              Save expense
+              {saving ? 'Saving…' : 'Save expense'}
             </Button>
           </footer>
         </form>
