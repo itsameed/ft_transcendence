@@ -4,7 +4,7 @@ import { io, type Socket } from 'socket.io-client'
 import {
   ArrowLeft, Bell, BellOff, CheckCheck, CirclePlus, Download, FileText, HandCoins,
   Info, MessageSquare, Mic, Phone, Pin, ReceiptText, Reply, Search, SendHorizonal,
-  Smile, Sparkles, Trash2, Video, Wallet, X,
+  Smile, Trash2, Video, Wallet, X,
 } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
@@ -23,39 +23,26 @@ import styles from './ChatNew.module.css'
 
 interface ApiGroup { _id: string; name: string; kind: string; conversationId?: string; members: { userId: { _id: string; username: string; email: string } }[] }
 interface DmConv { conversationId: string; other: User; participants: string[] }
-interface Msg { id: string; senderId: string; senderName: string; content: string; createdAt: string; ai?: boolean; replyTo?: { name: string; text: string } }
+interface Msg { id: string; senderId: string; senderName: string; content: string; createdAt: string; replyTo?: { name: string; text: string } }
 interface GroupExpense { id: string; title: string; category: string; amount: number; paidBy: User; date: string; myShare: number | null; shares: { userId: string; amount: number }[] | null }
-type Mode = 'group' | 'ai'
 type Filter = 'all' | 'unread' | 'groups' | 'settled'
 type ReactionMap = Record<string, Record<string, string[]>>
 type LocalMap = Record<string, string>
 
-const AI_SUGGESTIONS = ['Who owes whom?', 'How do we settle up fastest?', 'What did we spend on?', 'Draft a payment reminder']
 const QUICK_EMOJI = ['👍', '❤️', '😂', '🎉', '👀', '🙏']
 const timeOf = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 const loadLocal = <T,>(key: string, fallback: T): T => { try { return JSON.parse(localStorage.getItem(key) ?? '') as T } catch { return fallback } }
 const saveLocal = (key: string, value: unknown) => { try { localStorage.setItem(key, JSON.stringify(value)) } catch { /* private mode */ } }
-
-function parseSSE(chunk: string, onEvent: (name: string, data: any) => void) {
-  for (const block of chunk.split('\n\n')) {
-    const name = /^event: (.+)$/m.exec(block)?.[1]
-    const data = /^data: (.+)$/m.exec(block)?.[1]
-    if (name && data) { try { onEvent(name, JSON.parse(data)) } catch { /* partial */ } }
-  }
-}
 
 export function ChatPage() {
   const [me, setMe] = useState<User | null>(null)
   const [groups, setGroups] = useState<Group[]>([])
   const [users, setUsers] = useState<Record<string, User>>({})
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [mode, setMode] = useState<Mode>('group')
   const [messages, setMessages] = useState<Msg[]>([])
-  const [aiMessages, setAiMessages] = useState<Msg[]>([])
   const [draft, setDraft] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [streaming, setStreaming] = useState(false)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
   const [details, setDetails] = useState(true)
@@ -87,7 +74,7 @@ export function ChatPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const selected = groups.find((g) => g.id === selectedId) ?? null
-  const thread = mode === 'group' ? messages : aiMessages
+  const thread = messages
   const activeConvId = dmTarget && selected === null ? dms.find((d) => d.other.id === dmTarget.id)?.conversationId : selected?.conversationId
   const inDm = Boolean(dmTarget) && !selected
 
@@ -223,7 +210,7 @@ export function ChatPage() {
     return () => { socket.disconnect(); socketRef.current = null }
   }, [me?.id, activeConvId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [thread.length, mode, selectedId, typingName])
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [thread.length, selectedId, typingName])
   useEffect(() => {
     if (activeConvId) setReadAt((p) => ({ ...p, [activeConvId]: new Date().toISOString() }))
   }, [activeConvId, messages.length])
@@ -273,38 +260,10 @@ export function ChatPage() {
     setMessages((prev) => prev.some((x) => x.id === m._id) ? prev : [...prev, { id: m._id, senderId: me!.id, senderName: me!.name, content: m.content, createdAt: m.createdAt, replyTo: quote }])
   }
 
-  async function askAI(text?: string) {
-    const question = (text ?? draft).trim()
-    if (!question || !selected || streaming) return
-    setDraft(''); setStreaming(true)
-    const aiId = `ai-${Date.now()}`
-    setAiMessages((p) => [...p,
-      { id: `q-${Date.now()}`, senderId: me!.id, senderName: me!.name, content: question, createdAt: new Date().toISOString() },
-      { id: aiId, senderId: 'ai', senderName: 'Splitify AI', content: '', createdAt: new Date().toISOString(), ai: true }])
-    try {
-      const res = await fetch(`/api/chat/group/${selected.id}/stream`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question }),
-      })
-      if (!res.body) throw new Error('No stream')
-      const reader = res.body.getReader(); const decoder = new TextDecoder(); let buffer = ''
-      for (;;) {
-        const { done, value } = await reader.read(); if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        const parts = buffer.split('\n\n'); buffer = parts.pop() ?? ''
-        parseSSE(parts.join('\n\n') + '\n\n', (name, data) => {
-          if (name === 'token') setAiMessages((p) => p.map((m) => m.id === aiId ? { ...m, content: m.content + (data.text ?? '') } : m))
-          if (name === 'error') setAiMessages((p) => p.map((m) => m.id === aiId ? { ...m, content: data.message ?? 'An error occurred.' } : m))
-        })
-      }
-    } catch {
-      setAiMessages((p) => p.map((m) => m.id === aiId ? { ...m, content: 'Could not reach the AI — please try again.' } : m))
-    } finally { setStreaming(false) }
-  }
-
   async function startDm(friend: User) {
     const existing = dms.find((d) => d.other.id === friend.id)
     setPickerOpen(false)
-    if (existing) { setSelectedId(null); setDmTarget(existing.other); setMode('group'); setMobileThread(true); return }
+    if (existing) { setSelectedId(null); setDmTarget(existing.other); setMobileThread(true); return }
     setDmBusy(true)
     try {
       const res = await fetch('/api/conversations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: friend.id }) })
@@ -313,7 +272,7 @@ export function ChatPage() {
       const conv: DmConv = { conversationId: String(data._id), participants: (data.participants ?? []).map(String), other: friend }
       setDms((p) => [conv, ...p.filter((d) => d.conversationId !== conv.conversationId)])
       setUsers((p) => ({ ...p, [friend.id]: friend }))
-      setSelectedId(null); setDmTarget(friend); setMode('group'); setMobileThread(true)
+      setSelectedId(null); setDmTarget(friend); setMobileThread(true)
     } catch (err) {
       notify(err instanceof Error ? err.message : 'Could not start the conversation.')
     } finally { setDmBusy(false) }
@@ -368,7 +327,7 @@ export function ChatPage() {
                 <>
                   <p className={styles.listLabel}>Direct messages</p>
                   {dms.filter((d) => !query.trim() || d.other.name.toLowerCase().includes(query.trim().toLowerCase())).map((d) => (
-                    <button key={d.conversationId} className={`${styles.conv} ${inDm && dmTarget?.id === d.other.id ? styles.convOn : ''}`} onClick={() => { setSelectedId(null); setDmTarget(d.other); setMode('group'); setMobileThread(true); setReplyTo(null) }} aria-current={inDm && dmTarget?.id === d.other.id}>
+                    <button key={d.conversationId} className={`${styles.conv} ${inDm && dmTarget?.id === d.other.id ? styles.convOn : ''}`} onClick={() => { setSelectedId(null); setDmTarget(d.other); setMobileThread(true); setReplyTo(null) }} aria-current={inDm && dmTarget?.id === d.other.id}>
                       <Avatar user={d.other} size={40} />
                       <span className={styles.convBody}>
                         <span className={styles.convTop}><span className={styles.convName}>{d.other.name}</span></span>
@@ -384,7 +343,7 @@ export function ChatPage() {
                 const isSelected = selectedId === g.id
                 return (
                   <div key={g.id}>
-                    <button className={`${styles.conv} ${isSelected && mode === 'group' ? styles.convOn : ''}`} onClick={() => { setSelectedId(g.id); setDmTarget(null); setMode('group'); setMobileThread(true); setReplyTo(null) }} aria-current={isSelected && mode === 'group'}>
+                    <button className={`${styles.conv} ${isSelected ? styles.convOn : ''}`} onClick={() => { setSelectedId(g.id); setDmTarget(null); setMobileThread(true); setReplyTo(null) }} aria-current={isSelected}>
                       <span className={styles.convIcon}><Icon size={19} /></span>
                       <span className={styles.convBody}>
                         <span className={styles.convTop}><span className={styles.convName}>{g.name}</span></span>
@@ -406,9 +365,9 @@ export function ChatPage() {
                   <button className={styles.threadId} onClick={() => selected && setDetails(!details)} aria-label="Toggle group details">
                     {inDm && dmTarget
                       ? <><Avatar user={dmTarget} size={38} /><span style={{ minWidth: 0 }}><span className={styles.threadName}>{dmTarget.name}</span><span className={styles.threadSub}>Direct message</span></span></>
-                      : <><span className={styles.convIcon}>{mode === 'ai' ? <Sparkles size={18} /> : <GroupIcon size={19} />}</span>
-                        <span style={{ minWidth: 0 }}><span className={styles.threadName}>{mode === 'ai' ? `Ask AI · ${selected!.name}` : selected!.name}</span>
-                          <span className={styles.threadSub}>{mode === 'ai' ? 'Knows this group’s expenses and balances' : `${selected!.memberIds.length} ${selected!.memberIds.length === 1 ? 'member' : 'members'}`}</span></span></>}
+                      : <><span className={styles.convIcon}><GroupIcon size={19} /></span>
+                        <span style={{ minWidth: 0 }}><span className={styles.threadName}>{selected!.name}</span>
+                          <span className={styles.threadSub}>{`${selected!.memberIds.length} ${selected!.memberIds.length === 1 ? 'member' : 'members'}`}</span></span></>}
                   </button>
                   {!inDm && <span className={styles.memberFaces}>{memberUsers.slice(0, 3).map((u) => <Avatar key={u.id} user={u} size={28} />)}</span>}
                   <div className={styles.headActions}>
@@ -418,14 +377,7 @@ export function ChatPage() {
                 </header>
 
                 <div className={styles.scrollCol}>
-                  {!inDm && (
-                    <div className={styles.modeSwitch} role="tablist" aria-label="Chat mode">
-                      <button role="tab" aria-selected={mode === 'group'} className={mode === 'group' ? styles.modeOn : ''} onClick={() => setMode('group')}><MessageSquare size={15} /> Group chat</button>
-                      <button role="tab" aria-selected={mode === 'ai'} className={mode === 'ai' ? styles.modeOn : ''} onClick={() => setMode('ai')}><Sparkles size={15} /> Ask AI</button>
-                    </div>
-                  )}
-
-                  {mode === 'group' && !inDm && (balanceKnown || myBalance !== 0) && (
+                  {!inDm && (balanceKnown || myBalance !== 0) && (
                     <div className={styles.balanceStrip} role="status">
                       <Wallet size={19} style={{ flex: 'none', color: myBalance > 0 ? 'var(--owed)' : myBalance < 0 ? 'var(--owe)' : 'var(--text-3)' }} />
                       <span className={styles.grow}><strong>{myBalance > 0 ? `You’re owed ${money(myBalance)}` : myBalance < 0 ? `You owe ${money(myBalance)}` : 'You’re all settled up'}</strong>
@@ -435,7 +387,7 @@ export function ChatPage() {
                       <button className={styles.stripBtn} onClick={() => setDetails(true)}>Balances</button>
                     </div>
                   )}
-                  {mode === 'group' && pinnedMsg && (
+                  {pinnedMsg && (
                     <div className={styles.pinnedBar}><Pin size={14} style={{ flex: 'none' }} /><span><b>Pinned · </b>{pinnedMsg.content}</span>
                       <button aria-label="Unpin" onClick={() => togglePin(pinnedMsg)}><X size={14} /></button></div>
                   )}
@@ -453,16 +405,13 @@ export function ChatPage() {
                         <div key={m.id} className={styles.msgRowWrap}>
                           {showDay && <div className={styles.dayDivider}><span>{day}</span></div>}
                           <div className={`${styles.msgRow} ${mine ? styles.mineRow : ''} ${grouped ? styles.grouped : ''}`}>
-                            <span className={styles.avatarSlot}>{!grouped && !mine && (m.ai
-                              ? <span className={`${styles.convIcon} ${styles.aiConvIcon}`} style={{ width: 32, height: 32, borderRadius: '50%' }}><Sparkles size={15} /></span>
-                              : <Avatar user={sender} size={32} />)}</span>
+                            <span className={styles.avatarSlot}>{!grouped && !mine && <Avatar user={sender} size={32} />}</span>
                             <div className={styles.bubbleWrap}>
                               <div className={styles.bubble}>
-                                {m.ai && <span className={styles.aiTag}><Sparkles size={11} /> Splitify AI</span>}
-                                {!grouped && !mine && !m.ai && <span className={styles.who}>{m.senderName}</span>}
+                                {!grouped && !mine && <span className={styles.who}>{m.senderName}</span>}
                                 {m.replyTo && <span className={styles.replyQuote}><b>{m.replyTo.name}</b>{m.replyTo.text}</span>}
-                                {m.content || (m.ai ? '…' : '')}
-                                <span className={styles.meta}>{timeOf(m.createdAt)}{mine && mode === 'group' && <CheckCheck size={13} />}</span>
+                                {m.content}
+                                <span className={styles.meta}>{timeOf(m.createdAt)}{mine && <CheckCheck size={13} />}</span>
                               </div>
                               {Object.keys(msgReactions).length > 0 && (
                                 <div className={styles.reactions}>{Object.entries(msgReactions).map(([emoji, by]) => (
@@ -479,36 +428,31 @@ export function ChatPage() {
                         </div>
                       )
                     })}
-                    {thread.length === 0 && <p className={styles.systemMsg}>{mode === 'ai' ? 'Ask anything about this group’s expenses.' : 'No messages yet — say hello.'}</p>}
+                    {thread.length === 0 && <p className={styles.systemMsg}>No messages yet — say hello.</p>}
                     <div ref={bottomRef} />
                   </div>
 
-                  {mode === 'group' && typingName && <div className={styles.typingRow}><span className={styles.typingDots}><i /><i /><i /></span>{typingName} sent a message</div>}
-                  {mode === 'ai' && streaming && <div className={styles.typingRow}><span className={styles.typingDots}><i /><i /><i /></span>Splitify AI is thinking…</div>}
-                  {mode === 'ai' && !streaming && (
-                    <div className={styles.suggestions}>{AI_SUGGESTIONS.map((s) => <button key={s} className={styles.suggestion} onClick={() => askAI(s)}><Sparkles size={13} />{s}</button>)}</div>
-                  )}
-
+                  {typingName && <div className={styles.typingRow}><span className={styles.typingDots}><i /><i /><i /></span>{typingName} sent a message</div>}
                   <div className={styles.composerZone}>
                     {replyTo && (
                       <div className={styles.replyPreview}><Reply size={15} style={{ color: 'var(--text-2)', flex: 'none' }} /><span className={styles.grow}>Replying to <b>{replyTo.senderName}</b> · {replyTo.content}</span>
                         <button className={styles.miniBtn} onClick={() => setReplyTo(null)} aria-label="Cancel reply"><X size={14} /></button></div>
                     )}
                     {emojiOpen && <div className={styles.emojiPop}>{QUICK_EMOJI.map((e) => <button key={e} onClick={() => { setDraft((d) => d + e); inputRef.current?.focus() }}>{e}</button>)}</div>}
-                    <form className={styles.composer} onSubmit={(e) => { e.preventDefault(); mode === 'group' ? sendGroup() : askAI() }}>
+                    <form className={styles.composer} onSubmit={(e) => { e.preventDefault(); sendGroup() }}>
                       {!inDm && <button type="button" className={styles.composerBtn} aria-label="Add expense" title="Add expense" onClick={() => setAddingExpense(true)}><ReceiptText size={19} /></button>}
                       <textarea ref={inputRef} value={draft} rows={1} aria-label="Message"
-                        placeholder={mode === 'ai' ? `Ask about ${selected?.name} expenses…` : inDm ? `Message ${dmTarget?.name}…` : `Message ${selected?.name}…`}
-                        disabled={mode === 'group' && !activeConvId}
+                        placeholder={inDm ? `Message ${dmTarget?.name}…` : `Message ${selected?.name}…`}
+                        disabled={!activeConvId}
                         onChange={(e) => setDraft(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); mode === 'group' ? sendGroup() : askAI() } }} />
+                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendGroup() } }} />
                       <button type="button" className={styles.composerBtn} aria-label="Emoji" onClick={() => setEmojiOpen(!emojiOpen)}><Smile size={19} /></button>
                       {draft.trim()
-                        ? <button type="submit" className={styles.sendBtn} disabled={streaming} aria-label={mode === 'ai' ? 'Ask' : 'Send'}><SendHorizonal size={18} /></button>
+                        ? <button type="submit" className={styles.sendBtn} aria-label="Send"><SendHorizonal size={18} /></button>
                         : <button type="button" className={styles.composerBtn} aria-label="Voice message (not available)" onClick={() => notify('Voice messages are not available yet')}><Mic size={19} /></button>}
                     </form>
-                    {mode === 'group' && !activeConvId && <p className={styles.composerHint}><span>This conversation is not available yet.</span></p>}
-                    <div className={styles.composerHint}><span><kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line</span><span>{mode === 'ai' ? 'AI can make mistakes — verify amounts' : inDm ? dmTarget?.name : selected?.name}</span></div>
+                    {!activeConvId && <p className={styles.composerHint}><span>This conversation is not available yet.</span></p>}
+                    <div className={styles.composerHint}><span><kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line</span><span>{inDm ? dmTarget?.name : selected?.name}</span></div>
                   </div>
                 </div>
               </>
@@ -629,7 +573,7 @@ export function ChatPage() {
         onCreated={(group) => {
           setCreatingGroup(false)
           setGroups((p) => [group, ...p])
-          setSelectedId(group.id); setDmTarget(null); setMode('group'); setMobileThread(true)
+          setSelectedId(group.id); setDmTarget(null); setMobileThread(true)
           notify(`Created “${group.name}”`)
         }} />
       {addingExpense && (
