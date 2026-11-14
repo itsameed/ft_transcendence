@@ -12,8 +12,13 @@ passport.use(new GoogleStrategy({
 async (accessToken, refreshToken, profile, done) => {
     try {
         let user = await User.findOne({ email: profile.emails[0].value });
-        
+
         if (user) {
+            // Link the Google identity to the existing password account.
+            if (!user.googleId) {
+                user.googleId = profile.id;
+                await user.save();
+            }
             return done(null, user);
         }
         

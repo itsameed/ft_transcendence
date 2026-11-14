@@ -85,7 +85,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const searchUser = require('./routes/searchUser.js');
 const serviceStatus = require('./routes/serviceStatus.js');
 
-app.use('/auth/google', googleAuth);
+app.use('/', googleAuth);
 app.use('/', dashboardRouter);
 app.use('/auth/login', loginPageRouter);
 app.use('/auth/signup', signupPageRouter);

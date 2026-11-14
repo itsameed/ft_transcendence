@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '../lib/useTheme'
 import { Button } from '../components/ui/Button'
+import { GoogleButton, OrDivider } from '../components/auth/GoogleButton'
 import { Logo } from '../components/layout/Sidebar'
 import styles from './Signup.module.css'
 
@@ -163,6 +164,9 @@ export function Signup() {
                      {loading ? 'Creating account...' : 'Create Account'}
                   </Button>
                </form>
+
+               <OrDivider />
+               <GoogleButton label="Sign up with Google" />
 
                <p className={styles.footer}>
                   Already have an account?{' '}
