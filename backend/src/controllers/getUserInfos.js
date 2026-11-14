@@ -24,6 +24,7 @@ async function getUserInfos(req, res, next) {
          id: currentUser._id,
          name: currentUser.displayName || currentUser.username,
          email: currentUser.email,
+         avatar: currentUser.avatar || null,
          joinedAt: formattedDate,
          totalExpenses: TotalExpenses,
          friendsCount: FriendsCount,

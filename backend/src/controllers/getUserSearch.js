@@ -7,7 +7,7 @@ async function getUserSearch(req, res, next) {
         const searchResults = await UserSchema.find({
             _id: { $ne: req.session.userId },
             username: { $regex: slice, $options: 'i' }
-        }).sort({ username: 1 }).limit(10).select("username email");
+        }).sort({ username: 1 }).limit(10).select("username email avatar");
         return res.json(searchResults);
     } catch (err) {
         return next(err);

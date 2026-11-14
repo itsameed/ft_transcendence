@@ -17,7 +17,7 @@ async function getPublicProfile(req, res, next) {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
 
-    const user = await User.findById(userId).select('username displayName email joinedAt');
+    const user = await User.findById(userId).select('username displayName email joinedAt avatar');
     if (!user) return res.status(404).json({ message: 'User not found.' });
 
     const isSelf = userId === me;
@@ -46,6 +46,7 @@ async function getPublicProfile(req, res, next) {
         name: user.displayName || user.username,
         username: user.username,
         email: user.email,
+        avatar: user.avatar || null,
         joinedAt: formatDay(user.joinedAt),
         isSelf,
         relationship,
