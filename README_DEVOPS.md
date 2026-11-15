@@ -40,9 +40,30 @@ GF_SECURITY_ADMIN_PASSWORD=
 
 `MONGO_URL` can remain empty because Docker Compose creates it from the MongoDB username and password.
 
-Google authentication, email and AI variables are optional during local testing. Their values can remain empty or disabled when those features are not being tested.
+To use the AI assistant, generate a Groq API key and add it to the private `.env` file:
 
-Never commit the private `.env` file.
+```env
+GROQ_API_KEY=
+```
+
+The embeddings configuration is optional:
+
+```env
+EMBEDDINGS_API_KEY=
+EMBEDDINGS_BASE_URL=api.jina.ai
+EMBEDDINGS_MODEL=jina-embeddings-v3
+EMBEDDINGS_PATH=/v1/embeddings
+```
+
+After changing `.env`, recreate the backend container so Docker loads the new values:
+
+```bash
+docker compose up -d --force-recreate backend
+```
+
+Google authentication and email variables are optional during local testing. Their values can remain empty or disabled when those features are not being tested.
+
+Never commit the private `.env` file. Real API keys and passwords must never be added to `.env.example`.
 
 ## Start the project
 
