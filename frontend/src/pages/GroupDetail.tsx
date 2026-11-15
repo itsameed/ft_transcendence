@@ -4,6 +4,7 @@ import { ArrowLeft, Crown, MessageSquare, UserPlus } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { AddMembersModal } from '../components/groups/AddMembersModal'
+import { SettleUpModal } from '../components/groups/SettleUpModal'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -20,6 +21,12 @@ interface GroupExpense {
 }
 
 interface GroupMember { user: User; role: string; joinedAt: string }
+interface GroupBalances {
+  myBalance: number
+  totalSpent: number
+  youOwe: { user: User; amount: number }[]
+  oweYou: { user: User; amount: number }[]
+}
 interface GroupDetail {
   id: string; name: string; kind: string; description: string
   createdBy: User; createdAt: string; conversationId?: string; members: GroupMember[]
@@ -37,6 +44,8 @@ export function GroupDetailPage() {
   const [expensesNote, setExpensesNote] = useState('')
   const [friends, setFriends] = useState<User[]>([])
   const [adding, setAdding] = useState(false)
+  const [settling, setSettling] = useState(false)
+  const [balances, setBalances] = useState<GroupBalances | null>(null)
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -68,6 +77,22 @@ export function GroupDetailPage() {
     loadExpenses()
     return () => { cancelled = true }
   }, [groupId, navigate])
+
+  async function loadBalances() {
+    try {
+      const res = await fetch(`/api/groups/${groupId}/balances`)
+      if (!res.ok) return
+      const data = await res.json()
+      setBalances({
+        myBalance: Number(data.myBalance ?? 0),
+        totalSpent: Number(data.totalSpent ?? 0),
+        youOwe: (data.youOwe ?? []).map((d: any) => ({ user: mapUser(d.user), amount: Number(d.amount ?? 0) })),
+        oweYou: (data.oweYou ?? []).map((d: any) => ({ user: mapUser(d.user), amount: Number(d.amount ?? 0) })),
+      })
+    } catch { /* the section falls back to the expense totals */ }
+  }
+
+  useEffect(() => { loadBalances() }, [groupId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     async function load() {
@@ -145,6 +170,63 @@ export function GroupDetailPage() {
             )}
           </Card>
 
+          <section className={styles.section} aria-labelledby="group-balances">
+            <div className={styles.sectionHeadingRow}>
+              <div className={styles.sectionHeading}>
+                <h2 id="group-balances">Balances</h2>
+                <p>
+                  {balances
+                    ? balances.myBalance > 0
+                      ? `You are owed ${money(balances.myBalance)} in this group.`
+                      : balances.myBalance < 0
+                        ? `You owe ${money(-balances.myBalance)} in this group.`
+                        : 'You are all settled up in this group.'
+                    : 'Who owes whom, after recorded payments.'}
+                </p>
+              </div>
+              {balances && balances.youOwe.length > 0 && (
+                <Button variant="primary" size="sm" onClick={() => setSettling(true)}>
+                  Settle up
+                </Button>
+              )}
+            </div>
+
+            {notice && <p className={styles.note} role="status">{notice}</p>}
+
+            {balances && (balances.youOwe.length > 0 || balances.oweYou.length > 0) ? (
+              <ul className={styles.groupList}>
+                {balances.youOwe.map((d) => (
+                  <li key={`owe-${d.user.id}`} className={styles.groupRow}>
+                    <Avatar user={d.user} size={34} />
+                    <span className={styles.expenseMain}>
+                      <strong>{d.user.name}</strong>
+                      <small>you owe</small>
+                    </span>
+                    <span className={styles.expenseAmount}>
+                      <strong className="tabular">{money(d.amount)}</strong>
+                    </span>
+                  </li>
+                ))}
+                {balances.oweYou.map((d) => (
+                  <li key={`owed-${d.user.id}`} className={styles.groupRow}>
+                    <Avatar user={d.user} size={34} />
+                    <span className={styles.expenseMain}>
+                      <strong>{d.user.name}</strong>
+                      <small>owes you</small>
+                    </span>
+                    <span className={styles.expenseAmount}>
+                      <strong className="tabular">{money(d.amount)}</strong>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.intro}>
+                {balances ? 'No open balances — every expense has been settled.' : 'Balances are not available for this group yet.'}
+              </p>
+            )}
+          </section>
+
           <section className={styles.section} aria-labelledby="group-expenses">
             <div className={styles.sectionHeading}>
               <h2 id="group-expenses">Expenses ({expenses.length})</h2>
@@ -204,6 +286,18 @@ export function GroupDetailPage() {
         </div>
       </main>
       <MobileNav />
+      <SettleUpModal
+        open={settling}
+        groupId={group.id}
+        groupName={group.name}
+        debts={balances?.youOwe ?? []}
+        onClose={() => setSettling(false)}
+        onSettled={(message) => {
+          setSettling(false)
+          setNotice(message)
+          loadBalances()
+        }}
+      />
       <AddMembersModal
         open={adding}
         groupId={group.id}
