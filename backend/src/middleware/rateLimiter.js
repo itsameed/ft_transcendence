@@ -1,17 +1,27 @@
 const rateLimit = require('express-rate-limit');
 
 const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100,                  // 100 requests per window
-    message: 'Too many requests, please try again later',
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     standardHeaders: true,
     legacyHeaders: false,
+    message: {
+        message: 'Too many requests. Please try again later.'
+    },
 });
 
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 5,
-    message: 'Too many login attempts, try again in 15 minutes',
+
+    skipSuccessfulRequests: true,
+
+    standardHeaders: true,
+    legacyHeaders: false,
+
+    message: {
+        message: 'Too many failed login attempts. Try again in 15 minutes.'
+    },
 });
 
-module.exports = {loginLimiter, generalLimiter};
+module.exports = { loginLimiter, generalLimiter };

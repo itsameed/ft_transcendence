@@ -29,13 +29,29 @@ export function Login() {
         },
         body: JSON.stringify({ email: handler, password }),
       })
-      const data = await response.json()
-      if (!response.ok) {
-        setError(data.message || 'Login failed')
-      } else {
-        console.log('Login successful:', data)
-        navigate('/dashboard')
-      }
+      const rawResponse = await response.text()
+let data: { message?: string } = {}
+
+try {
+  data = rawResponse ? JSON.parse(rawResponse) : {}
+} catch {
+  // Display plain-text server errors, but never display an HTML error page.
+  if (rawResponse && !rawResponse.trim().startsWith('<')) {
+    data.message = rawResponse
+  }
+}
+
+if (!response.ok) {
+  const fallbackMessage =
+    response.status === 429
+      ? 'Too many login attempts. Please wait 15 minutes and try again.'
+      : `Login failed (${response.status}). Please try again.`
+
+  setError(data.message || fallbackMessage)
+} else {
+  console.log('Login successful:', data)
+  navigate('/dashboard')
+}
     } catch (err) {
       console.error('Login error:', err)
       if (err instanceof Error) {
