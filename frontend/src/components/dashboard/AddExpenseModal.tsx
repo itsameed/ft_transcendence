@@ -134,6 +134,7 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
           amount: total,
           description: title.trim(),
           splitMethod: mode === 'equal' ? 'equal' : 'custom',
+          paidBy,
           participants: JSON.stringify(included),
           customSplits: JSON.stringify(
             mode === 'equal' ? [] : Object.entries(shares).map(([userId, value]) => ({ user: userId, amount: Math.round(value * 100) / 100 })),

@@ -206,3 +206,10 @@
   color: var(--owe);
   font-size: 13px;
 }
+
+.hint {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.5;
+}

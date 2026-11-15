@@ -1,6 +1,7 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/Schemas/User');
+const { pickDefaultAvatar } = require('../config/avatars');
 
 // console.log("here is the client id : ", process.env.GOOGLE_CLIENT_ID);
 
@@ -28,7 +29,7 @@ async (accessToken, refreshToken, profile, done) => {
             password: null, // No password for Google users
             googleId: profile.id,
             isVerified: profile.emails[0].verified, // Google already verified it!
-            avatar: profile.photos[0]?.value || null
+            avatar: profile.photos[0]?.value || pickDefaultAvatar(profile.emails[0].value)
         });
         
         await user.save();

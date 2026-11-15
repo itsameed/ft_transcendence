@@ -42,6 +42,12 @@ practice
 .editorconfig
 graphify-out
 
+# User-uploaded avatars (persisted in a Docker volume in production)
+backend/uploads/
+
 # Local database backups
 database-backups/*
 !database-backups/.gitkeep
+
+
+graphify.md

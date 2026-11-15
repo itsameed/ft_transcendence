@@ -9,7 +9,7 @@ import { Topbar } from '../components/layout/Topbar'
 import { Section, SectionLink } from '../components/ui/Section'
 import { Toast } from '../components/ui/Toast'
 // import { NOW, friendBalances, groups, recentActivity, users } from '../data/mock'
-import { firstName, money } from '../lib/format'
+import { firstName } from '../lib/format'
 import { sendReminder } from '../lib/remind'
 import { FriendBalance, Group, type User } from '../types'
 import styles from './Dashboard.module.css'
@@ -77,7 +77,7 @@ export function Dashboard() {
                const u = item?.user
                const id = String(u?._id ?? u?.id ?? item?.payerId ?? item?.debtorId ?? '')
                if (!id) return
-               if (u?.username) userMap[id] = { id, name: u.username, email: u.email ?? '' }
+               if (u?.username) userMap[id] = { id, name: u.username, email: u.email ?? '', avatar: u.avatar ?? null }
                const amount = Number(item?.totalAmount ?? item?.amount ?? 0)
                if (!Number.isFinite(amount) || amount === 0) return
                balanceMap.set(id, (balanceMap.get(id) ?? 0) + sign * amount)
@@ -95,7 +95,7 @@ export function Dashboard() {
                   for (const m of g.members ?? []) {
                      const u = m.userId
                      const id = String(u?._id ?? u ?? '')
-                     if (id && u?.username) userMap[id] = { id, name: u.username, email: u.email ?? '' }
+                     if (id && u?.username) userMap[id] = { id, name: u.username, email: u.email ?? '', avatar: u.avatar ?? null }
                   }
                }
             }
@@ -134,7 +134,13 @@ export function Dashboard() {
                   balances={debts}
                   users={users}
                   groupCount={groups.length}
-                  onSettle={(u, amount) => notify(`Recorded ${money(amount)} paid to ${firstName(u.name)}`)}
+                  onSettle={(u) => {
+                     // A settlement belongs to a group, so send the user to a
+                     // shared group where the debt can be recorded properly.
+                     const shared = groups.find((g) => g.memberIds.includes(u.id))
+                     if (shared) navigate(`/groups/${shared.id}`)
+                     else notify(`You don't share a group with ${firstName(u.name)} yet.`)
+                  }}
                   onRemind={async (u) => { const r = await sendReminder(u.id, firstName(u.name)); notify(r.message) }}
                />
 

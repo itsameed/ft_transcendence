@@ -202,8 +202,8 @@ const getFriends = async (req, res, next) => {
         { receiver: currentUserId, status: "ACCEPTED" }
       ]
     })
-      .populate("requester", "username email")
-      .populate("receiver", "username email");
+      .populate("requester", "username email avatar")
+      .populate("receiver", "username email avatar");
 
     const friends = friendships.map((friendship) => {
       if (friendship.requester._id.toString() === currentUserId) {
@@ -229,7 +229,7 @@ const getFriendRequests = async (req, res, next) => {
     const requests = await Friendship.find({
       receiver: currentUserId,
       status: "PENDING"
-    }).populate("requester", "username email");
+    }).populate("requester", "username email avatar");
 
     return res.status(200).json({
       requests

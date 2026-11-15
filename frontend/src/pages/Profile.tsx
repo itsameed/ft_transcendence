@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Avatar } from '../components/ui/Avatar'
+import { AvatarPicker } from '../components/ui/AvatarPicker'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { money } from '../lib/format'
+import { isDefaultAvatar } from '../lib/avatars'
 import type { User } from '../types'
 import pageStyles from './Dashboard.module.css'
 import styles from './Profile.module.css'
@@ -26,7 +28,18 @@ export function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [avatarId, setAvatarId] = useState<string | null>(null)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [avatarSaving, setAvatarSaving] = useState(false)
+  const [avatarMessage, setAvatarMessage] = useState('')
+  const [avatarError, setAvatarError] = useState('')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!avatarPreview) return
+    return () => URL.revokeObjectURL(avatarPreview)
+  }, [avatarPreview])
 
   useEffect(() => {
     async function loadProfile() {
@@ -39,6 +52,7 @@ export function ProfilePage() {
         setProfile(user)
         setUsername(user.name)
         setEmail(user.email)
+        setAvatarId(isDefaultAvatar(user.avatar) ? user.avatar!.replace('/avatars/', '').replace('.svg', '') : null)
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Could not load your profile.')
       } finally {
@@ -73,6 +87,44 @@ export function ProfilePage() {
     }
   }
 
+  function pickPhoto(file: File) {
+    setAvatarPreview(URL.createObjectURL(file))
+    setAvatarFile(file)
+    setAvatarMessage('')
+    setAvatarError('')
+  }
+
+  function clearPhoto() {
+    setAvatarPreview(null)
+    setAvatarFile(null)
+  }
+
+  async function saveAvatar() {
+    setAvatarSaving(true)
+    setAvatarMessage('')
+    setAvatarError('')
+    try {
+      const body = new FormData()
+      if (avatarFile) body.append('avatar', avatarFile)
+      else if (avatarId) body.append('avatar', avatarId)
+      else throw new Error('Choose an avatar or upload a photo.')
+
+      const response = await fetch('/api/profile/avatar', { method: 'POST', body })
+      if (response.status === 401) { navigate('/login'); return }
+      const data = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(data?.message ?? 'Could not save your avatar.')
+
+      setProfile((current) => current ? { ...current, avatar: data.avatar } : current)
+      setAvatarId(isDefaultAvatar(data.avatar) ? data.avatar.replace('/avatars/', '').replace('.svg', '') : null)
+      clearPhoto()
+      setAvatarMessage('Avatar updated.')
+    } catch (saveError) {
+      setAvatarError(saveError instanceof Error ? saveError.message : 'Could not save your avatar.')
+    } finally {
+      setAvatarSaving(false)
+    }
+  }
+
   if (loading) return <div className={styles.state} role="status">Loading profile…</div>
   if (!profile) return <div className={styles.state} role="alert">{error || 'Profile unavailable.'}</div>
 
@@ -90,13 +142,43 @@ export function ProfilePage() {
           </header>
 
           <Card className={styles.identity}>
-            <Avatar user={profile} size={64} />
+            <Avatar user={{ ...profile, avatar: avatarPreview ?? profile.avatar }} size={64} />
             <div className={styles.identityText}>
               <h2>{profile.name}</h2>
               <p>{profile.email}</p>
               <span>Member since {profile.joinedAt}</span>
             </div>
           </Card>
+
+          <section className={styles.section} aria-labelledby="profile-avatar">
+            <div className={styles.sectionHeading}>
+              <h2 id="profile-avatar">Profile photo</h2>
+              <p>Upload a photo of your own, or pick one of the defaults.</p>
+            </div>
+            <Card>
+              <div className={styles.avatarForm}>
+                <AvatarPicker
+                  value={avatarId}
+                  onChange={(id) => { setAvatarId(id); clearPhoto(); setAvatarMessage(''); setAvatarError('') }}
+                  preview={avatarPreview}
+                  onFile={pickPhoto}
+                  onClearPhoto={clearPhoto}
+                  disabled={avatarSaving}
+                />
+                <div className={styles.formFooter}>
+                  <span className={avatarError ? styles.error : styles.message} role={avatarError ? 'alert' : 'status'}>{avatarError || avatarMessage}</span>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={saveAvatar}
+                    disabled={avatarSaving || (!avatarFile && !avatarId)}
+                  >
+                    {avatarSaving ? 'Saving...' : 'Save photo'}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </section>
 
           <section className={styles.stats} aria-label="Your activity">
             <Card className={styles.stat}><span>Groups</span><strong>{profile.numberOfGroups}</strong></Card>
