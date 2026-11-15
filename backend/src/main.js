@@ -1,4 +1,6 @@
 const path = require('path');
+const helmet = require('helmet');
+const { generalLimiter } = require('./config/rateLimit');
 
 require('dotenv').config({
     path: path.resolve(__dirname, '../../.env')
@@ -49,6 +51,8 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(helmet());
+app.use(generalLimiter);
 app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static('public'));
