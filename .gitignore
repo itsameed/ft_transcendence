@@ -49,5 +49,8 @@ backend/uploads/
 database-backups/*
 !database-backups/.gitkeep
 
+# TypeScript build info
+*.tsbuildinfo
 
-graphify.md
+# Vercel local project settings
+.vercel/
