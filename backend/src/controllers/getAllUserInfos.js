@@ -1,9 +1,10 @@
-const roundNearest = (num) => Math.round(num);
 const Group = require('../models/Schemas/Group');
 
 
 const Expense = require('../models/Schemas/Expenses');
+const Settlement = require('../models/Schemas/Settlement');
 const User = require('../models/Schemas/User');
+const { computeGroupBalances, computePairwiseDebts } = require('../services/balances');
 
 async function getRecentGroupBalances(userId) {
     const groups = await Group.find({ 'members.userId': userId })
@@ -17,268 +18,122 @@ async function getRecentGroupBalances(userId) {
 
     const groupIds = groups.map(group => group._id);
 
-    const expenses = await Expense.find({ group: { $in: groupIds } });
-
-    const balances = {};
-    groups.forEach(group => {
-        balances[group._id.toString()] = 0;
-    });
-
-    for (let i = 0; i < expenses.length; i++) {
-        const exp = expenses[i];
-        const groupId = exp.group.toString();
-        
-        const isPayer = exp.payer.toString() === userId.toString();
-        const isParticipant = exp.participants.some(
-            p => p.toString() === userId.toString()
-        );
-
-        if (isPayer || isParticipant) {
-            const userShare = getUserShare(exp, userId);
-            const amountUserPaid = isPayer ? exp.amount : 0;
-            balances[groupId] += (amountUserPaid - userShare);
-        }
-    }
+    const [expenses, settlements] = await Promise.all([
+        Expense.find({ group: { $in: groupIds } }),
+        Settlement.find({ group: { $in: groupIds }, status: 'accepted' }),
+    ]);
 
     const result = groups.map(group => {
         const groupId = group._id.toString();
-        const rawBalance = balances[groupId];
         const memberIds = group.members.map(member => member.userId);
-        
+        const net = computeGroupBalances(
+            expenses.filter(e => e.group.toString() === groupId),
+            settlements.filter(s => s.group.toString() === groupId),
+            memberIds.map(String),
+        );
+
         return {
             groupId: group._id,
             name: group.name,
             createdAt: group.createdAt,
             membersCount: group.members.length,
             memberIds: memberIds,
-            balance: Math.round(rawBalance * 100) / 100
+            balance: net[String(userId)] ?? 0,
         };
     });
 
     return result;
 }
 
-function getUserShare(expense, targetUserId) {
-    if (expense.splitMethod === 'custom') {
-        const splitEntry = expense.customSplit.find(
-            s => s.user.toString() === targetUserId.toString()
-        );
-        return splitEntry ? splitEntry.amount : 0;
-    }
-
-    const participantCount = expense.participants.length;
-    if (participantCount === 0) return 0;
-    
-    return expense.amount / participantCount;
-}
-
 async function getRecentDebts(userId) {
-    const expenses = await Expense.find({
-        $or: [
-            { payer: userId },
-            { participants: userId }
-        ]
-    }).sort({ date: -1 });
+    const me = String(userId);
 
-    let youOweList = [];
-    let oweYouList = [];
+    const [expenses, settlements] = await Promise.all([
+        Expense.find({
+            $or: [
+                { payer: userId },
+                { participants: userId }
+            ]
+        }).sort({ date: -1 }),
+        Settlement.find({
+            $or: [{ fromUser: userId }, { toUser: userId }],
+            status: 'accepted',
+        }),
+    ]);
 
-    for (let i = 0; i < expenses.length; i++) {
-        const expense = expenses[i];
-        const iAmPayer = expense.payer.toString() === userId.toString();
+    const { youOwe, oweYou } = computePairwiseDebts(expenses, settlements, me);
 
-        if (iAmPayer) {
-            for (let j = 0; j < expense.participants.length; j++) {
-                const participantId = expense.participants[j].toString();
-                if (participantId === userId.toString()) continue;
-                const share = getShare(expense, participantId);
-                if (share <= 0) continue;
-
-                let found = false;
-                for (let k = 0; k < oweYouList.length; k++) {
-                    if (oweYouList[k].debtorId === participantId) {
-                        oweYouList[k].amount += share;
-                        if (expense.date > oweYouList[k].lastDate) {
-                            oweYouList[k].lastDate = expense.date;
-                        }
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    oweYouList.push({
-                        debtorId: participantId,
-                        amount: share,
-                        lastDate: expense.date
-                    });
-                }
-            }
-        } else {
-            const payerId = expense.payer.toString();
-            const share = getShare(expense, userId);
-            if (share <= 0) continue;
-
-            let found = false;
-            for (let k = 0; k < youOweList.length; k++) {
-                if (youOweList[k].payerId === payerId) {
-                    youOweList[k].amount += share;
-                    if (expense.date > youOweList[k].lastDate) {
-                        youOweList[k].lastDate = expense.date;
-                    }
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
-                youOweList.push({
-                    payerId: payerId,
-                    amount: share,
-                    lastDate: expense.date
-                });
-            }
+    const lastDateFor = (otherId) => {
+        let latest = null;
+        for (const expense of expenses) {
+            const payer = String(expense.payer);
+            const involved = payer === me
+                ? (expense.participants ?? []).some(p => String(p) === otherId)
+                : payer === otherId;
+            if (!involved) continue;
+            if (!latest || expense.date > latest) latest = expense.date;
         }
-    }
+        return latest;
+    };
 
-    youOweList.sort((a, b) => b.lastDate - a.lastDate);
-    oweYouList.sort((a, b) => b.lastDate - a.lastDate);
+    const allIds = [...youOwe.map(d => d.userId), ...oweYou.map(d => d.userId)];
+    const users = await User.find({ _id: { $in: allIds } }).select('_id username avatar');
+    const userById = new Map(users.map(u => [String(u._id), u]));
 
-    youOweList = youOweList.slice(0, 4);
-    oweYouList = oweYouList.slice(0, 4);
+    const toFinal = (list) => list
+        .map(({ userId: otherId, amount }) => ({
+            user: userById.get(otherId) ?? null,
+            totalAmount: amount,
+            lastExpense: lastDateFor(otherId),
+        }))
+        .filter(entry => entry.user)
+        .sort((a, b) => b.totalAmount - a.totalAmount)
+        .slice(0, 4);
 
-    const allIds = [];
-    for (let i = 0; i < youOweList.length; i++) {
-        allIds.push(youOweList[i].payerId);
-    }
-    for (let i = 0; i < oweYouList.length; i++) {
-        allIds.push(oweYouList[i].debtorId);
-    }
-
-    const users = await User.find({ _id: { $in: allIds } })
-        .select('_id username avatar');
-
-    let totalYouOweSum = 0;
-    const youOweFinal = [];
-    
-    for (let i = 0; i < youOweList.length; i++) {
-        const item = youOweList[i];
-        const user = users.find(u => u._id.toString() === item.payerId);
-        
-        totalYouOweSum += item.amount;
-        
-        youOweFinal.push({
-            user: user,
-            totalAmount: Math.round(item.amount * 100) / 100,
-            lastExpense: item.lastDate
-        });
-    }
-
-    let totalOweYouSum = 0;
-    const oweYouFinal = [];
-    
-    for (let i = 0; i < oweYouList.length; i++) {
-        const item = oweYouList[i];
-        const user = users.find(u => u._id.toString() === item.debtorId);
-        
-        totalOweYouSum += item.amount;
-        
-        oweYouFinal.push({
-            user: user,
-            totalAmount: Math.round(item.amount * 100) / 100,
-            lastExpense: item.lastDate
-        });
-    }
+    const youOweFinal = toFinal(youOwe);
+    const oweYouFinal = toFinal(oweYou);
 
     return {
-        totalYouOwe: Math.round(totalYouOweSum * 100) / 100,
+        totalYouOwe: Math.round(youOweFinal.reduce((sum, e) => sum + e.totalAmount, 0) * 100) / 100,
         youOwe: youOweFinal,
-        totalOweYou: Math.round(totalOweYouSum * 100) / 100,
-        oweYou: oweYouFinal
+        totalOweYou: Math.round(oweYouFinal.reduce((sum, e) => sum + e.totalAmount, 0) * 100) / 100,
+        oweYou: oweYouFinal,
     };
 }
-
-//helper function to get a specific user's share in a custom split or equal split
-function getShare(expense, targetUserId) {
-    if (expense.splitMethod === 'custom') {
-        for (let i = 0; i < expense.customSplit.length; i++) {
-            if (expense.customSplit[i].user.toString() === targetUserId.toString()) {
-                return expense.customSplit[i].amount;
-            }
-        }
-        return 0;
-    }
-
-    if (expense.participants.length === 0) return 0;
-    return expense.amount / expense.participants.length;
-}
-
-function calculateUserBalance(ExpenseArray, userId, group) {
-    try {
-    let userOwes = 0;
-    let OwedToUser = 0;
-    
-    ExpenseArray.forEach(expense => {
-        if (String(expense.payer) === String(userId)) {
-            if(expense.splitMethod === 'equal') {
-                if (expense.participants && expense.participants.length > 0)
-                    OwedToUser += (expense.amount - (expense.amount / expense.participants.length));
-            }
-            else if (expense.splitMethod === 'custom') {
-                for ( let j = 0; j < expense.customSplit.length; j++) {
-                    if (String(expense.customSplit[j].user) !== String(userId))
-                        OwedToUser += expense.customSplit[j].amount;
-                }
-            }
-        }
-        else {
-            
-            if(expense.splitMethod === 'equal') {
-                if (expense.participants && expense.participants.length > 0)
-                    userOwes += (expense.amount / expense.participants.length);
-            }
-            else if (expense.splitMethod === 'custom') {
-                for ( let j = 0; j < expense.customSplit.length; j++) {
-                    if (String(expense.customSplit[j].user) === String(userId))
-                        userOwes += expense.customSplit[j].amount;
-                }
-            }
-        }
-    });
-    return {
-        groupName: group.name,
-        groupMembersCount: group.members.length,
-        userOwes: roundNearest(userOwes),
-        OwedToUser: roundNearest(OwedToUser),
-        NetBalance: roundNearest(OwedToUser - userOwes),
-    };
-    } catch (error) {
-        console.error("Error calculating user balance:", error);
-        throw error;
-    }
-}
-
 
 async function getUserBalance(req, res, next)
 {
     const userId = req.session.userId;
     try {
-    const formattedGroups = [];
-    
-    const userGroups = await Group.find({ "members.userId": userId }).lean();
-    let totalBalance = 0;
-    for (let group of userGroups) {
-        console.log("current group is : ", group.name);
-        const expenses = await Expense.find({group: group._id});
-        const balance = calculateUserBalance(expenses, userId, group);
-        totalBalance += balance;     
-    }
-    const userRecentDebts = await getRecentDebts(userId);
-    const userRecentGroups = await getRecentGroupBalances(userId);
-    return res.json({userTotalBalance: {totalBalance}, groups: {userRecentGroups}, debts: {userRecentDebts},});
+        const userGroups = await Group.find({ "members.userId": userId }).lean();
+        const groupIds = userGroups.map(group => group._id);
+
+        const [expenses, settlements] = await Promise.all([
+            Expense.find({ group: { $in: groupIds } }),
+            Settlement.find({ group: { $in: groupIds }, status: 'accepted' }),
+        ]);
+
+        let totalBalance = 0;
+        for (const group of userGroups) {
+            const groupId = group._id.toString();
+            const net = computeGroupBalances(
+                expenses.filter(e => e.group.toString() === groupId),
+                settlements.filter(s => s.group.toString() === groupId),
+                (group.members ?? []).map(m => String(m.userId)),
+            );
+            totalBalance += net[String(userId)] ?? 0;
+        }
+
+        const userRecentDebts = await getRecentDebts(userId);
+        const userRecentGroups = await getRecentGroupBalances(userId);
+        return res.json({
+            userTotalBalance: { totalBalance: Math.round(totalBalance * 100) / 100 },
+            groups: { userRecentGroups },
+            debts: { userRecentDebts },
+        });
     } catch (error) {
         console.error("Error getting user balance:", error);
-        throw error;
+        return next(error);
     }
 }
 

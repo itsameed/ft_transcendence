@@ -9,7 +9,8 @@ const {
   rejectFriendRequest,
   getFriends,
   getFriendRequests,
-  removeFriend
+  removeFriend,
+  remindFriend
 } = require("../controllers/friendController");
 
 router.post("/request", apiAuth, sendFriendRequest);
@@ -23,5 +24,7 @@ router.get("/", apiAuth, getFriends);
 router.get("/requests", apiAuth, getFriendRequests);
 
 router.delete("/", apiAuth, removeFriend);
+
+router.post("/:userId/remind", apiAuth, remindFriend);
 
 module.exports = router;

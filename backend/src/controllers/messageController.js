@@ -45,7 +45,7 @@ const sendMessage = async (req, res, next) => {
       content: content.trim()
     });
 
-    await message.populate("senderId", "_id username");
+    await message.populate("senderId", "_id username avatar");
 
     const io = req.app.get("io");
 
@@ -115,7 +115,7 @@ const getMessages = async (req, res, next) => {
     const messages = await Message.find({
       conversationId
     })
-      .populate("senderId", "_id username")
+      .populate("senderId", "_id username avatar")
       .sort({ createdAt: 1 });
 
     return res.status(200).json(messages);

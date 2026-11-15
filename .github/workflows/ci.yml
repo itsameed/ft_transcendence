@@ -4,7 +4,7 @@ name: CI
 # full production build as the push gate.
 on:
   push:
-    branches: [main, zakaria]
+    branches: [main, zakaria, devops]
   pull_request:
 
 jobs:
@@ -18,14 +18,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: frontend-v2/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend deps
-        working-directory: frontend-v2
+        working-directory: frontend
         run: npm ci
 
       - name: Typecheck
-        working-directory: frontend-v2
+        working-directory: frontend
         run: npx tsc -b
 
       - name: Backend syntax check
@@ -46,12 +46,29 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: frontend-v2/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend deps
-        working-directory: frontend-v2
+        working-directory: frontend
         run: npm ci
 
       - name: Build
-        working-directory: frontend-v2
+        working-directory: frontend
         run: npm run build
+
+
+  docker-check:
+    name: Docker configuration and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create test environment file
+        run: cp .env.example .env
+
+      - name: Validate Docker Compose
+        run: docker compose config --quiet
+
+      - name: Build application images
+        run: docker compose build backend frontend

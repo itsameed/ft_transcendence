@@ -21,7 +21,8 @@ const notificationSchema = new mongoose.Schema(
                 "PAYMENT_RECEIVED",
                 "TRIP_INVITATION",
                 "CHAT_MESSAGE",
-                "RECURRING_EXPENSE"
+                "RECURRING_EXPENSE",
+                "PAYMENT_REMINDER"
             ],
             required: true
         },

@@ -2,17 +2,13 @@ const UserSchema = require('../models/Schemas/User.js');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const printLogsDate = require('./printLogs.js');
-// const passport = require('passport');
-// const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { uniqueNamesGenerator } = require('unique-names-generator');
 const { adjectives, colors, animals } = require('../models/DisplayNames/displayNames.js');
-// const { ConnectionClosedEvent } = require('mongodb');
-
+const { saveAvatar } = require('../config/sharp');
+const { resolveDefaultAvatar, pickDefaultAvatar } = require('../config/avatars');
 
 async function loadNewUser(req, res, next) {
-    console.log(req.body);
-    let { fullName, displayName, email, password, bio, phoneNumber, gender } = req.body;
-    // console.log();
+    let { fullName, displayName, email, password, bio, gender, avatar } = req.body;
     if (!fullName || !email || !password) {
         return res.status(400).json({message: 'username, email, and password are required.'});
     }
@@ -29,6 +25,21 @@ async function loadNewUser(req, res, next) {
         const hashedPassword = await bcrypt.hash(password, 10);
         const verificationToken = crypto.randomBytes(32).toString('hex');
         const verificationTokenExpires = Date.now() + (24 * 60 * 60 * 1000);
+
+        // A chosen default wins; otherwise an uploaded photo; otherwise a
+        // deterministic default so no account is ever left without an avatar.
+        let avatarPath = resolveDefaultAvatar(avatar);
+        if (!avatarPath && req.file) {
+            try {
+                avatarPath = await saveAvatar(req.file, `signup-${Date.now()}`);
+            } catch {
+                return res.status(400).json({ message: 'That file is not a readable image.' });
+            }
+        }
+        if (!avatarPath) {
+            avatarPath = pickDefaultAvatar(email);
+        }
+
         const newUser = await UserSchema.create({
             username: fullName,
             displayName,
@@ -36,15 +47,14 @@ async function loadNewUser(req, res, next) {
             password: hashedPassword,
             bio,
             gender,
+            avatar: avatarPath,
             isVerified: false,
             verificationToken,
             verificationTokenExpires,
         });
 
-        // req.session.userId = newUser._id;
-        // req.session.username = newUser.username;
         printLogsDate(`User with Id ${newUser._id} signed up at : `);
-        return res.status(201).json({ message: 'User created successfully.', userId: newUser._id ,username: newUser.username, displayName: newUser.displayName, email: newUser.email, bio: newUser.bio, gender: newUser.gender});
+        return res.status(201).json({ message: 'User created successfully.', userId: newUser._id ,username: newUser.username, displayName: newUser.displayName, email: newUser.email, bio: newUser.bio, gender: newUser.gender, avatar: newUser.avatar});
     } catch (error) {
         if (error.code === 11000) {
             return res.status(409).json({ message: 'This email or username is already registered.' });

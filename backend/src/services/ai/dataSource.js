@@ -1,202 +1,120 @@
-const User = require('../../models/Schemas/User');
 const Group = require('../../models/Schemas/Group');
 const Expense = require('../../models/Schemas/Expenses');
 const Settlement = require('../../models/Schemas/Settlement');
-
+const User = require('../../models/Schemas/User');
 
 async function loadGroupDocuments(userId, groupId) {
-  const group = await Group.findOne({
-    _id: groupId,
-    $or: [
-      { createdBy: userId },
-      { 'members.userId': userId }
-    ]
-  })
-    .populate('members.userId', 'username')
-    .populate('createdBy', 'username')
-    .lean();
+    try {
+        const group = await Group.findOne({
+            _id: groupId,
+            $or: [
+                { createdBy: userId },
+                { 'members.userId': userId }
+            ]
+        })
+            .populate('members.userId', 'username')
+            .populate('createdBy', 'username')
+            .lean();
 
-  if (!group) {
-    return null;
-  }
-
-  const expenses = await Expense.find({ group: groupId })
-    .sort({ date: -1 })
-    .limit(200)
-    .populate('payer', 'username')
-    .populate('participants', 'username')
-    .lean();
-
-  const settlements = await Settlement.find({ group: groupId })
-    .populate('fromUser', 'username')
-    .populate('toUser', 'username')
-    .lean();
-
-  const totalAgg = await Expense.aggregate([
-    { $match: { group: group._id } },
-    { $group: { _id: null, total: { $sum: '$amount' } } }
-  ]);
-
-  let total = 0;
-  if (totalAgg.length > 0) {
-    total = totalAgg[0].total;
-  }
-
-  const docs = [];
-
-  // ----- Members -----
-  const memberNames = [];
-  if (group.members) {
-    for (let i = 0; i < group.members.length; i++) {
-      const m = group.members[i];
-      if (m && m.userId && m.userId.username) {
-        memberNames.push(m.userId.username);
-      }
-    }
-  }
-
-  // ----- Owner name -----
-  let ownerName = 'مجهول';
-  if (group.createdBy && group.createdBy.username) {
-    ownerName = group.createdBy.username;
-  }
-
-  // ----- Group doc -----
-  docs.push(
-    'المجموعة الحالية اسمها "' + group.name + '" ' +
-    'وصاحبها هو ' + ownerName + '، ' +
-    'وتضم الأعضاء: ' + memberNames.join('، ') + '. ' +
-    'إجمالي مصاريف هذه المجموعة: ' + total + ' درهم.'
-  );
-
-  // ----- Expenses -----
-  for (let i = 0; i < expenses.length; i++) {
-    const e = expenses[i];
-
-    let payer = 'مجهول';
-    if (e.payer) {
-      payer = e.payer.username;
-    }
-
-    const parts = [];
-    if (e.participants) {
-      for (let j = 0; j < e.participants.length; j++) {
-        if (e.participants[j] && e.participants[j].username) {
-          parts.push(e.participants[j].username);
+        if (!group) {
+            return null;
         }
-      }
-    }
 
-    let description = 'بدون وصف';
-    if (e.description) {
-      description = e.description;
-    }
+        const user = await User.findById(userId).select('username').lean();
 
-    docs.push(
-      'مصروف بعنوان "' + description + '" ' +
-      'بمبلغ ' + e.amount + ' درهم ' +
-      'دفعه ' + payer + ' ' +
-      'بتاريخ ' + formatDate(e.date) + ' ' +
-      'وتم تقسيمه بين: ' + parts.join('، ') + '.'
-    );
-  }
-
-  // ----- Settlements -----
-  for (let i = 0; i < settlements.length; i++) {
-    const s = settlements[i];
-
-    let from = 'مجهول';
-    if (s.fromUser) {
-      from = s.fromUser.username;
-    }
-
-    let to = 'مجهول';
-    if (s.toUser) {
-      to = s.toUser.username;
-    }
-
-    docs.push(from + ' دفع لـ ' + to + ' بمبلغ ' + s.amount + ' درهم.');
-  }
-
-  return {
-    groupName: group.name,
-    docs: docs
-  };
-}
-
-
-async function loadUserContext(userId, groupId) {
-  const user = await User.findById(userId, 'username email').lean();
-  if (!user) {
-    return null;
-  }
-
-  let currentGroup = null;
-  let userRole = 'member';
-
-  if (groupId) {
-    currentGroup = await Group.findOne({
-      _id: groupId,
-      $or: [
-        { createdBy: userId },
-        { 'members.userId': userId }
-      ]
-    })
-      .populate('createdBy', 'username')
-      .populate('members.userId', 'username')
-      .lean();
-
-    if (currentGroup && currentGroup.createdBy) {
-      if (currentGroup.createdBy._id.toString() === userId.toString()) {
-        userRole = 'owner';
-      }
-    }
-  }
-
-  // Map new schema → what chat.js expects
-  let mapped = null;
-  if (currentGroup) {
-    const memberUsers = [];
-    if (currentGroup.members) {
-      for (let i = 0; i < currentGroup.members.length; i++) {
-        const m = currentGroup.members[i];
-        if (m && m.userId) {
-          memberUsers.push(m.userId);
+        if (!user) {
+            return null;
         }
-      }
+
+        const expenses = await Expense.find({ group: groupId })
+            .sort({ date: -1 })
+            .limit(200)
+            .populate('payer', 'username')
+            .populate('participants', 'username')
+            .populate('customSplit.user', 'username')
+            .lean();
+
+        const settlements = await Settlement.find({ group: groupId })
+            .sort({ date: -1 })
+            .limit(200)
+            .populate('fromUser', 'username')
+            .populate('toUser', 'username')
+            .lean();
+
+        const docs = [];
+
+        docs.push(`Current User: ${user.username}`);
+
+        let members = '';
+        for (let i = 0; i < group.members.length; i++) {
+            const name = group.members[i].userId.username;
+            if (members !== '') {
+                members += ', ';
+            }
+            members += name;
+        }
+
+        docs.push(
+            `Group: ${group.name}. ` +
+            `Description: ${group.description || 'None'}. ` +
+            `Owner: ${group.createdBy.username}. ` +
+            `Members: ${members}.`
+        );
+
+        for (let i = 0; i < expenses.length; i++) {
+            const expense = expenses[i];
+            let participants = '';
+
+            for (let j = 0; j < expense.participants.length; j++) {
+                if (participants !== '') {
+                    participants += ', ';
+                }
+                participants += expense.participants[j].username;
+            }
+
+            let text =
+                `Expense: ${expense.description}. ` +
+                `Amount: ${expense.amount} MAD. ` +
+                `Paid by: ${expense.payer.username}. ` +
+                `Date: ${expense.date}. ` +
+                `Split method: ${expense.splitMethod}. ` +
+                `Participants: ${participants || 'Not specified'}.`;
+
+            if (expense.splitMethod === 'custom') {
+                let shares = '';
+                for (let j = 0; j < expense.customSplit.length; j++) {
+                    const split = expense.customSplit[j];
+                    if (shares !== '') {
+                        shares += ', ';
+                    }
+                    shares += `${split.user.username}: ${split.amount} MAD`;
+                }
+                text += ` Custom shares: ${shares}.`;
+            }
+
+            docs.push(text);
+        }
+
+        for (let i = 0; i < settlements.length; i++) {
+            const settlement = settlements[i];
+            docs.push(
+                `Settlement: ${settlement.fromUser.username} ` +
+                `paid ${settlement.toUser.username} ` +
+                `${settlement.amount} MAD. ` +
+                `Status: ${settlement.status}. ` +
+                `Date: ${settlement.date}.`
+            );
+        }
+
+        return {
+            docs,
+            groupName: group.name
+        };
+
+    } catch (err) {
+        console.error('[dataSource] Error:', err.message);
+        return null;
     }
-
-    mapped = {
-      _id: currentGroup._id,
-      groupName: currentGroup.name,
-      owner: currentGroup.createdBy,
-      members: memberUsers
-    };
-  }
-
-  return {
-    username: user.username,
-    email: user.email,
-    role: userRole,
-    currentGroup: mapped
-  };
 }
 
-// ============================================================
-// Helpers
-// ============================================================
-function formatDate(date) {
-  if (!date) {
-    return '';
-  }
-  const d = new Date(date);
-  return d.toISOString().slice(0, 10);
-}
-
-// ============================================================
-// Exports
-// ============================================================
-module.exports = {
-  loadGroupDocuments,
-  loadUserContext
-};
+module.exports = { loadGroupDocuments };
