@@ -554,7 +554,7 @@ export function ChatPage() {
                       <span className={`${styles.debtAmt} ${d.amount > 0 ? styles.owedText : styles.oweText}`}>{money(d.amount)}</span>
                       {d.amount > 0
                         ? <Button size="sm" onClick={async () => { const r = await sendReminder(d.user.id, firstName(d.user.name)); notify(r.message) }}>Remind</Button>
-                        : <Button size="sm" variant="primary" onClick={() => notify('Settlements are recorded from the group page')}>Settle</Button>}
+                        : <Button size="sm" variant="primary" onClick={() => navigate(`/groups/${selected?.id}`)}>Settle</Button>}
                     </div>
                   ))}
                 </> : <p className={styles.detailsEmpty}>No open balances with members of this group.</p>}

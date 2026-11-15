@@ -9,7 +9,7 @@ import { Topbar } from '../components/layout/Topbar'
 import { Section, SectionLink } from '../components/ui/Section'
 import { Toast } from '../components/ui/Toast'
 // import { NOW, friendBalances, groups, recentActivity, users } from '../data/mock'
-import { firstName, money } from '../lib/format'
+import { firstName } from '../lib/format'
 import { sendReminder } from '../lib/remind'
 import { FriendBalance, Group, type User } from '../types'
 import styles from './Dashboard.module.css'
@@ -134,7 +134,13 @@ export function Dashboard() {
                   balances={debts}
                   users={users}
                   groupCount={groups.length}
-                  onSettle={(u, amount) => notify(`Recorded ${money(amount)} paid to ${firstName(u.name)}`)}
+                  onSettle={(u) => {
+                     // A settlement belongs to a group, so send the user to a
+                     // shared group where the debt can be recorded properly.
+                     const shared = groups.find((g) => g.memberIds.includes(u.id))
+                     if (shared) navigate(`/groups/${shared.id}`)
+                     else notify(`You don't share a group with ${firstName(u.name)} yet.`)
+                  }}
                   onRemind={async (u) => { const r = await sendReminder(u.id, firstName(u.name)); notify(r.message) }}
                />
 
