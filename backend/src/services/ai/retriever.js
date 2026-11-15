@@ -21,62 +21,6 @@ function cosine(a, b)
     return dot / (Math.sqrt(na) * Math.sqrt(nb));
 }
 
-function isaggregativequestion(query)
-{
-    if (!query)
-    {
-        return false;
-    }
-
-    const q = query.toLowerCase();
-
-    const keywords = [
-        'all', 'every', 'each', 'total', 'sum', 'how much',
-        'list', 'give me', 'show me', 'detailed', 'exhaustive',
-        'breakdown', 'complete', 'full',
-        'كل', 'جميع', 'المجموع', 'مجموع', 'كم', 'اعطني', 'أعطني',
-        'قائمة', 'بالتفصيل', 'التفصيل', 'الممل', 'الطويل',
-        'كامل', 'إجمالي', 'اجمالي',
-        'tous', 'tout', 'somme', 'total', 'combien', 'liste',
-        'détail', 'complet'
-    ];
-
-    for (let i = 0; i < keywords.length; i++)
-    {
-        if (q.indexOf(keywords[i]) !== -1)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-function isdatachunk(text)
-{
-    if (!text)
-    {
-        return false;
-    }
-
-    if (text.indexOf('Note for the assistant') !== -1)
-    {
-        return false;
-    }
-
-    if (text.indexOf('The current user asking') !== -1)
-    {
-        return false;
-    }
-
-    if (text.indexOf('The group "') !== -1 && text.indexOf('members') !== -1)
-    {
-        return false;
-    }
-
-    return true;
-}
-
 class retriever
 {
     constructor(sem)
@@ -90,38 +34,6 @@ class retriever
         {
             topk = 15;
         }
-
-        if (querytext && isaggregativequestion(querytext))
-        {
-            const all = [];
-
-            for (let i = 0; i < this.sem.chunks.length; i++)
-            {
-                const chunktext = this.sem.chunks[i];
-
-                if (!isdatachunk(chunktext))
-                {
-                    continue;
-                }
-
-                all.push({
-                    text: chunktext,
-                    score: 1.0,
-                    semantic: 1.0
-                });
-            }
-
-            console.log(
-                '[retriever] aggregative: returning ' +
-                all.length +
-                ' data chunks (from ' +
-                this.sem.chunks.length +
-                ' total)'
-            );
-
-            return all;
-        }
-
         if (qv)
         {
             const sems = {};

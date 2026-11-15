@@ -1,16 +1,18 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '../lib/useTheme'
 import { Button } from '../components/ui/Button'
+import { GoogleButton, OrDivider } from '../components/auth/GoogleButton'
 import { Logo } from '../components/layout/Sidebar'
 import styles from './Login.module.css'
 
 export function Login() {
   const { dark, toggle } = useTheme()
+  const [params] = useSearchParams()
   const [handler, setHandler] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(params.get('error') === 'google' ? 'Google sign-in did not complete. Please try again.' : null)
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
@@ -107,6 +109,9 @@ export function Login() {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
+
+          <OrDivider />
+          <GoogleButton />
 
           <p className={styles.footer}>
             Don't have an account?{' '}

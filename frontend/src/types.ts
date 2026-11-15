@@ -7,6 +7,10 @@ export interface User {
   id: UserId
   name: string
   email: string
+  role?: 'user' | 'admin'
+  status?: 'active' | 'suspended'
+  /** Public URL of a default or uploaded avatar. Falls back to a monogram. */
+  avatar?: string | null
 }
 
 export type GroupKind = 'trip' | 'home' | 'event' | 'other' | 'dinner'

@@ -202,8 +202,8 @@ const getFriends = async (req, res, next) => {
         { receiver: currentUserId, status: "ACCEPTED" }
       ]
     })
-      .populate("requester", "username email")
-      .populate("receiver", "username email");
+      .populate("requester", "username email avatar")
+      .populate("receiver", "username email avatar");
 
     const friends = friendships.map((friendship) => {
       if (friendship.requester._id.toString() === currentUserId) {
@@ -229,7 +229,7 @@ const getFriendRequests = async (req, res, next) => {
     const requests = await Friendship.find({
       receiver: currentUserId,
       status: "PENDING"
-    }).populate("requester", "username email");
+    }).populate("requester", "username email avatar");
 
     return res.status(200).json({
       requests
@@ -296,11 +296,70 @@ const removeFriend = async (req, res, next) => {
 };
 
 
+const Notification = require("../models/Schemas/Notification");
+
+const REMIND_COOLDOWN_MS = 60 * 60 * 1000;
+
+const remindFriend = async (req, res, next) => {
+  try {
+    const currentUserId = req.user.id;
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    if (String(currentUserId) === String(userId)) {
+      return res.status(400).json({ message: "You cannot remind yourself" });
+    }
+
+    const target = await User.findById(userId).select("username");
+    if (!target) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const last = await Notification.findOne({
+      userId,
+      senderId: currentUserId,
+      type: "PAYMENT_REMINDER",
+      createdAt: { $gt: new Date(Date.now() - REMIND_COOLDOWN_MS) },
+    }).select("createdAt");
+    if (last) {
+      const retryAfterSec = Math.ceil(
+        (last.createdAt.getTime() + REMIND_COOLDOWN_MS - Date.now()) / 1000
+      );
+      return res.status(429).json({
+        message: `You already reminded ${target.username} recently. Try again in ${Math.max(1, Math.ceil(retryAfterSec / 60))} min.`,
+        retryAfterSec,
+      });
+    }
+
+    const me = await User.findById(currentUserId).select("username");
+    const myName = me?.username ?? "A friend";
+    const notification = await createNotification({
+      userId,
+      senderId: currentUserId,
+      type: "PAYMENT_REMINDER",
+      title: "Payment reminder",
+      message: `${myName} reminded you about an open balance. Open Splitify to settle up.`,
+    });
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`user:${userId}`).emit("newNotification", notification);
+    }
+
+    return res.status(201).json({ message: `Reminder sent to ${target.username}` });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
   getFriends,
   getFriendRequests,
-  removeFriend
+  removeFriend,
+  remindFriend
 };

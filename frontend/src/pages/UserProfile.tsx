@@ -13,7 +13,7 @@ import styles from './Profile.module.css'
 
 interface PublicGroup { id: string; name: string; kind: string; createdAt: string }
 interface PublicUser {
-  id: string; name: string; username: string; email: string; joinedAt: string
+  id: string; name: string; username: string; email: string; joinedAt: string; avatar?: string | null
   isSelf: boolean; relationship: 'self' | 'friends' | 'request-sent' | 'request-received' | 'none'
 }
 
@@ -65,7 +65,7 @@ export function UserProfilePage() {
   }
   if (!me || !person) return <div className={styles.state}>Loading profile…</div>
 
-  const self: User = { id: person.id, name: person.name, email: person.email }
+  const self: User = { id: person.id, name: person.name, email: person.email, avatar: person.avatar ?? null }
 
   return (
     <div className={pageStyles.app}>

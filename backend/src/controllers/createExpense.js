@@ -1,8 +1,9 @@
 const Expense = require('../models/Schemas/Expenses.js');
+const printLogsDate = require('./printLogs.js');
 
 
 async function createExpense(req, res, next) {
-    const { groupId, amount, description, splitMethod } = req.body;
+    const { groupId, amount, description, splitMethod, paidBy, payer } = req.body;
     if (!groupId || !amount || !splitMethod) {
         return res.status(400).json({ message: 'Invalid expense details.' });
     }
@@ -19,10 +20,12 @@ async function createExpense(req, res, next) {
         return res.status(400).json({ message: 'At least one participant is required.' });
     }
 
+    const payerId = paidBy || payer || req.session.userId;
+
     try {
         await Expense.create({
             group: groupId,
-            payer: req.session.userId,
+            payer: payerId,
             participants,
             amount: Number(amount),
             description,

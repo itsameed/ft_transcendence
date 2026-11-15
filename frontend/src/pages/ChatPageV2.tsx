@@ -16,11 +16,12 @@ import { CreateGroupModal } from '../components/groups/CreateGroupModal'
 import { iconForKind } from '../lib/GroupKinds'
 import { categoryIcon } from '../lib/categories'
 import { firstName, money, relativeDay } from '../lib/format'
+import { sendReminder } from '../lib/remind'
 import type { Group, User } from '../types'
 import dashStyles from './Dashboard.module.css'
 import styles from './ChatNew.module.css'
 
-interface ApiGroup { _id: string; name: string; kind: string; conversationId?: string; members: { userId: { _id: string; username: string; email: string } }[] }
+interface ApiGroup { _id: string; name: string; kind: string; conversationId?: string; members: { userId: { _id: string; username: string; email: string; avatar?: string | null } }[] }
 interface DmConv { conversationId: string; other: User; participants: string[] }
 interface Msg { id: string; senderId: string; senderName: string; content: string; createdAt: string; ai?: boolean; replyTo?: { name: string; text: string } }
 interface GroupExpense { id: string; title: string; category: string; amount: number; paidBy: User; date: string; myShare: number | null; shares: { userId: string; amount: number }[] | null }
@@ -118,7 +119,7 @@ export function ChatPage() {
             const amount = Number(item.totalAmount ?? 0)
             if (!id || !Number.isFinite(amount) || amount === 0) return
             const prev = byUser.get(id)
-            byUser.set(id, { user: prev?.user ?? { id, name: item.user.username, email: item.user.email ?? '' }, amount: Math.round(((prev?.amount ?? 0) + sign * amount) * 100) / 100 })
+            byUser.set(id, { user: prev?.user ?? { id, name: item.user.username, email: item.user.email ?? '', avatar: item.user.avatar ?? null }, amount: Math.round(((prev?.amount ?? 0) + sign * amount) * 100) / 100 })
           }
           for (const item of rd?.youOwe ?? []) addDebt(item, -1)
           for (const item of rd?.oweYou ?? []) addDebt(item, 1)
@@ -131,14 +132,14 @@ export function ChatPage() {
         const userMap: Record<string, User> = {}
         if (profile?.user) userMap[profile.user.id] = profile.user
         const mapped: Group[] = (data.groups ?? []).map((g: ApiGroup) => {
-          for (const m of g.members ?? []) if (m.userId) userMap[m.userId._id] = { id: m.userId._id, name: m.userId.username, email: m.userId.email }
+          for (const m of g.members ?? []) if (m.userId) userMap[m.userId._id] = { id: m.userId._id, name: m.userId.username, email: m.userId.email, avatar: m.userId.avatar ?? null }
           return { id: g._id, name: g.name, emoji: '', kind: (g.kind || 'other') as Group['kind'], memberIds: (g.members ?? []).map((m) => m.userId._id), totalSpent: 0, yourBalance: 0, createdAt: '', conversationId: g.conversationId }
         })
         setUsers(userMap); setGroups(mapped)
         const wanted = params.get('group')
         setSelectedId(mapped.find((g) => g.id === wanted)?.id ?? mapped[0]?.id ?? null)
         fetch('/api/friends').then((r) => (r.ok ? r.json() : null)).then((d) => {
-          if (d?.friends) setFriends(d.friends.map((f: any) => ({ id: String(f._id), name: f.username, email: f.email ?? '' })))
+          if (d?.friends) setFriends(d.friends.map((f: any) => ({ id: String(f._id), name: f.username, email: f.email ?? '', avatar: f.avatar ?? null })))
         }).catch(() => { /* picker shows an empty state */ })
         fetch('/api/conversations').then((r) => (r.ok ? r.json() : null)).then((list) => {
           if (!Array.isArray(list) || !profile?.user) return
@@ -171,7 +172,7 @@ export function ChatPage() {
         const rows = (Array.isArray(data) ? data : data.expenses ?? []) as any[]
         const mapped: GroupExpense[] = rows.map((e) => {
           const payerRaw = e.payer ?? e.paidBy
-          const payer: User = { id: String(payerRaw?._id ?? payerRaw?.id ?? payerRaw ?? ''), name: payerRaw?.username ?? payerRaw?.name ?? 'Unknown', email: payerRaw?.email ?? '' }
+          const payer: User = { id: String(payerRaw?._id ?? payerRaw?.id ?? payerRaw ?? ''), name: payerRaw?.username ?? payerRaw?.name ?? 'Unknown', email: payerRaw?.email ?? '', avatar: payerRaw?.avatar ?? null }
           const shares = Array.isArray(e.shares) ? e.shares.map((s: any) => ({ userId: String(s.userId?._id ?? s.userId), amount: Number(s.amount ?? 0) })) : null
           return {
             id: String(e._id ?? e.id ?? `${e.description}-${e.date}`), title: e.description ?? e.title ?? 'Expense',
@@ -247,6 +248,7 @@ export function ChatPage() {
   const balanceKnown = expenses.some((e) => e.shares)
   const myBalance = balanceKnown ? shareBalance : (selected ? recentBalances[selected.id] ?? 0 : 0)
   const detailDebts = balanceKnown ? debts : globalDebts.filter((d) => selected?.memberIds.includes(d.user.id))
+  const topDebtor = detailDebts.filter((d) => d.amount > 0).sort((a, b) => b.amount - a.amount)[0] as { user: User; amount: number } | undefined
 
   const pinnedMsg = selected ? messages.find((m) => m.id === pinned[selected.id]) : undefined
   const visibleGroups = groups.filter((g) => {
@@ -428,7 +430,7 @@ export function ChatPage() {
                       <Wallet size={19} style={{ flex: 'none', color: myBalance > 0 ? 'var(--owed)' : myBalance < 0 ? 'var(--owe)' : 'var(--text-3)' }} />
                       <span className={styles.grow}><strong>{myBalance > 0 ? `You’re owed ${money(myBalance)}` : myBalance < 0 ? `You owe ${money(myBalance)}` : 'You’re all settled up'}</strong>
                         <p>{balanceKnown ? `${money(totalSpent)} spent together · ${expenseCount} expenses` : 'Across your recent groups'}</p></span>
-                      {myBalance > 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => notify('Reminder noted — notifications are not sent from chat yet')}>Remind</button>}
+                      {myBalance > 0 && topDebtor && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={async () => { const r = await sendReminder(topDebtor.user.id, firstName(topDebtor.user.name)); notify(r.message) }}>Remind</button>}
                       {myBalance < 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => setDetails(true)}>Settle up</button>}
                       <button className={styles.stripBtn} onClick={() => setDetails(true)}>Balances</button>
                     </div>
@@ -456,7 +458,6 @@ export function ChatPage() {
                               : <Avatar user={sender} size={32} />)}</span>
                             <div className={styles.bubbleWrap}>
                               <div className={styles.bubble}>
-                                {m.ai && <span className={styles.aiTag}><Sparkles size={11} /> Splitify AI</span>}
                                 {!grouped && !mine && !m.ai && <span className={styles.who}>{m.senderName}</span>}
                                 {m.replyTo && <span className={styles.replyQuote}><b>{m.replyTo.name}</b>{m.replyTo.text}</span>}
                                 {m.content || (m.ai ? '…' : '')}
@@ -532,16 +533,16 @@ export function ChatPage() {
                 {detailDebts.length > 0 || myBalance !== 0 || balanceKnown || Object.keys(recentBalances).length > 0 ? <>
                   {(() => {
                     const settled = myBalance === 0 && detailDebts.length === 0
-                    const topOwed = detailDebts.filter((d) => d.amount > 0).sort((a, b) => b.amount - a.amount)[0]
+                    const topDebtor = detailDebts.filter((d) => d.amount > 0).sort((a, b) => b.amount - a.amount)[0]
                     const summary = settled ? 'All settled up in this group'
-                      : myBalance > 0 && topOwed ? `${firstName(topOwed.user.name)} owes you ${money(topOwed.amount)}${detailDebts.length > 1 ? ` · net ${money(myBalance)} you’re owed` : ''}`
+                      : myBalance > 0 && topDebtor ? `${firstName(topDebtor.user.name)} owes you ${money(topDebtor.amount)}${detailDebts.length > 1 ? ` · net ${money(myBalance)} you’re owed` : ''}`
                       : myBalance > 0 ? `You’re owed ${money(myBalance)}`
                       : `You owe ${money(-myBalance)}`
                     return (
                       <div className={`${styles.balanceCard} ${settled ? styles.balanceSettled : myBalance > 0 ? styles.balanceOwed : styles.balanceOwe}`} role="status">
                         <span className={styles.balanceSummary}>{summary}</span>
                         <span className={styles.balanceMeta}>{balanceKnown ? `${money(totalSpent)} spent in this group` : 'Net balance for this group'}</span>
-                        {myBalance > 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => notify('Reminder noted — notifications are not sent from chat yet')}>Remind</button>}
+                        {myBalance > 0 && topDebtor && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={async () => { const r = await sendReminder(topDebtor.user.id, firstName(topDebtor.user.name)); notify(r.message) }}>Remind</button>}
                         {myBalance < 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => navigate(`/groups/${selected.id}`)}>Settle up</button>}
                       </div>
                     )
@@ -552,8 +553,8 @@ export function ChatPage() {
                       <span className={styles.grow}><strong>{d.user.name}</strong><small>{d.amount > 0 ? 'owes you' : 'you owe'}</small></span>
                       <span className={`${styles.debtAmt} ${d.amount > 0 ? styles.owedText : styles.oweText}`}>{money(d.amount)}</span>
                       {d.amount > 0
-                        ? <Button size="sm" onClick={() => notify(`Reminder noted for ${firstName(d.user.name)} — not sent from chat yet`)}>Remind</Button>
-                        : <Button size="sm" variant="primary" onClick={() => notify('Settlements are recorded from the group page')}>Settle</Button>}
+                        ? <Button size="sm" onClick={async () => { const r = await sendReminder(d.user.id, firstName(d.user.name)); notify(r.message) }}>Remind</Button>
+                        : <Button size="sm" variant="primary" onClick={() => navigate(`/groups/${selected?.id}`)}>Settle</Button>}
                     </div>
                   ))}
                 </> : <p className={styles.detailsEmpty}>No open balances with members of this group.</p>}

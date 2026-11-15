@@ -111,6 +111,11 @@
 }
 
 
+.avatarForm {
+  display: grid;
+  gap: 18px;
+}
+
 .formFooter {
   display: flex;
   align-items: center;

@@ -1,10 +1,10 @@
 import {
-  Bell, Clock, CreditCard, MessageSquare, Receipt, UserPlus, Users, type LucideIcon,
+  Bell, BellRing, Clock, CreditCard, MessageSquare, Receipt, UserPlus, Users, type LucideIcon,
 } from 'lucide-react'
 
 export type NotificationType =
   | 'GROUP_INVITATION' | 'FRIEND_REQUEST' | 'EXPENSE_ADDED' | 'PAYMENT_RECEIVED'
-  | 'TRIP_INVITATION' | 'CHAT_MESSAGE' | 'RECURRING_EXPENSE'
+  | 'TRIP_INVITATION' | 'CHAT_MESSAGE' | 'RECURRING_EXPENSE' | 'PAYMENT_REMINDER'
 
 export interface AppNotification {
   id: string
@@ -25,6 +25,7 @@ export const notificationIcon: Record<NotificationType, LucideIcon> = {
   TRIP_INVITATION: Users,
   CHAT_MESSAGE: MessageSquare,
   RECURRING_EXPENSE: Clock,
+  PAYMENT_REMINDER: BellRing,
 }
 
 export function iconForNotification(type: string): LucideIcon {
