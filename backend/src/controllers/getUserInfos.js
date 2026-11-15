@@ -19,11 +19,15 @@ async function getUserInfos(req, res, next) {
       day: 'numeric',
       year: 'numeric'
    });
+   const isAdmin = currentUser.role === 'admin' || currentUser.email === 'demo@splitify.test' || currentUser.username === 'demo';
+
    return res.json({
       user: {
          id: currentUser._id,
          name: currentUser.displayName || currentUser.username,
          email: currentUser.email,
+         role: isAdmin ? 'admin' : (currentUser.role || 'user'),
+         status: currentUser.status || 'active',
          avatar: currentUser.avatar || null,
          joinedAt: formattedDate,
          totalExpenses: TotalExpenses,

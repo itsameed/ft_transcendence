@@ -14,6 +14,17 @@ export const NAV = [
   { label: 'Settings', icon: Settings, to: '/settings' },
 ]
 
+function AdminLink({ me }: { me: User }) {
+  if (me.role !== 'admin') return null
+
+  return (
+    <NavLink to="/admin" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
+      <Settings size={18} strokeWidth={1.75} />
+      Admin panel
+    </NavLink>
+  )
+}
+
 export function Logo() {
   return (
     <span className={styles.logo}>
@@ -38,6 +49,7 @@ export function Sidebar({ me }: { me: User }) {
             {label}
           </NavLink>
         ))}
+        <AdminLink me={me} />
         <NotificationBell userId={me.id} />
       </nav>
 

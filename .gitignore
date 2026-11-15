@@ -48,3 +48,6 @@ backend/uploads/
 # Local database backups
 database-backups/*
 !database-backups/.gitkeep
+
+
+graphify.md
