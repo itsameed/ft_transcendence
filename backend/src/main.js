@@ -1,6 +1,6 @@
 const path = require('path');
 const helmet = require('helmet');
-const { generalLimiter } = require('./config/rateLimit');
+const { generalLimiter } = require('./middleware/rateLimiter.js');
 
 require('dotenv').config({
     path: path.resolve(__dirname, '../../.env')
