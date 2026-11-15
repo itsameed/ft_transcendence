@@ -25,6 +25,13 @@ const GroupInvitation = require('../src/models/Schemas/GroupInvitation');
 
 const PASSWORD = 'Password123!';
 const PRIMARY_EMAIL = 'demo@splitify.test';
+const ADMIN_CREDENTIALS = {
+  username: 'admin',
+  password: 'admin',
+  email: 'admin@splitify.test',
+  displayName: 'Admin User',
+  bio: 'Platform administrator'
+};
 
 const AVATARS = ['aurora', 'clay', 'stone', 'slate', 'moss', 'plum', 'sand', 'ink'];
 const avatarFor = (i) => `/avatars/${AVATARS[i % AVATARS.length]}.svg`;
@@ -66,6 +73,31 @@ async function seed() {
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
 
   const users = {};
+  const adminUser = await User.findOneAndUpdate(
+    { email: ADMIN_CREDENTIALS.email },
+    {
+      $setOnInsert: {
+        username: ADMIN_CREDENTIALS.username,
+        displayName: ADMIN_CREDENTIALS.displayName,
+        email: ADMIN_CREDENTIALS.email,
+        bio: ADMIN_CREDENTIALS.bio,
+        password: await bcrypt.hash(ADMIN_CREDENTIALS.password, 10),
+        avatar: avatarFor(0),
+        isVerified: true,
+        joinedAt: daysAgo(365),
+        role: 'admin',
+        status: 'active',
+      },
+    },
+    {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true,
+    }
+  );
+
+  users.admin = adminUser;
+
   for (const [index, person] of PEOPLE.entries()) {
     users[person.username] = await User.create({
       ...person,
@@ -73,7 +105,7 @@ async function seed() {
       avatar: avatarFor(index),
       isVerified: true,
       joinedAt: daysAgo(120 - index * 5),
-      role: person.username === 'demo' ? 'admin' : 'user',
+      role: 'user',
     });
   }
 

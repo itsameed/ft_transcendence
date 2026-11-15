@@ -9,7 +9,13 @@ async function loginAuth(req, res, next) {
     }
 
     try {
-        const user = await UserSchema.findOne({ email });
+        const identifier = String(email).trim();
+        const user = await UserSchema.findOne({
+            $or: [
+                { email: identifier.toLowerCase() },
+                { username: identifier }
+            ]
+        });
         if (!user) {
             return res.status(401).json({ message: 'Invalid credentials. Please try again.' });
         }
@@ -23,7 +29,7 @@ async function loginAuth(req, res, next) {
             return res.status(403).json({ message: 'Your account is suspended' });
         }
 
-        const isAdmin = user.role === 'admin' || user.email === 'demo@splitify.test' || user.username === 'demo';
+        const isAdmin = user.role === 'admin' || user.username === 'admin' || user.email === 'admin@splitify.test';
 
         req.session.userId = user._id;
         req.session.username = user.username;
