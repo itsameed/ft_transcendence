@@ -27,7 +27,21 @@
   margin: 0 auto;
 }
 
+@media (max-width: 1100px) {
+  .main {
+    padding: 36px 28px 64px;
+  }
+
+  .content {
+    gap: 36px;
+  }
+}
+
 @media (max-width: 860px) {
+    .app {
+    background-attachment: scroll;
+    background-position: center top;
+  }
   .main {
     padding: 20px 16px 120px;
   }

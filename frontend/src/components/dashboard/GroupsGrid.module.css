@@ -108,11 +108,12 @@
 
 @container (max-width: 480px) {
   .grid {
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
   }
   .tile {
     min-height: 152px;
-    padding: 18px;
+    padding: 0;
   }
 }
 
