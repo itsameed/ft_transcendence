@@ -83,17 +83,47 @@
 }
 
 .rows { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+
 .row {
-  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
-  transition: border-color 0.15s ease, background 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border: 1px solid rgba(255, 244, 232, 0.18);
+  border-radius: 16px;
+  background: rgba(24, 19, 16, 0.78);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(14px);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
 }
-.row:hover { border-color: var(--border-strong); }
+
+.row:hover {
+  border-color: rgba(255, 138, 43, 0.5);
+  background: rgba(24, 19, 16, 0.9);
+  transform: translateY(-2px);
+}
+
 .rowLink { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; min-height: 44px; color: inherit; text-decoration: none; border-radius: 10px; }
 .rowLink:hover .who strong { text-decoration: underline; text-underline-offset: 3px; }
 .who { display: flex; flex-direction: column; min-width: 0; }
-.who strong { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.who small { color: var(--text-3); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.who strong {
+  overflow: hidden;
+  color: #fff4e8;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.who small {
+  overflow: hidden;
+  color: rgba(255, 244, 232, 0.55);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .actions { margin-left: auto; display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
 .chatLink { display: inline-flex; align-items: center; min-height: 36px; color: var(--text-2); font-size: 13px; font-weight: 500; text-decoration: none; padding: 7px 10px; border-radius: 8px; transition: background 0.15s ease, color 0.15s ease; }
 .chatLink:hover { color: var(--text); background: var(--hover-wash); }
@@ -110,16 +140,46 @@
 .menuItem:hover { background: var(--surface-2); }
 .menuDanger { color: var(--owe); }
 .friendGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
-.friendCard { display: flex; flex-direction: column; gap: 10px; padding: 15px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-card); transition: border-color .15s ease; }
-.friendCard:hover { border-color: var(--border-strong); }
+
+.friendCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 17px;
+  border: 1px solid rgba(255, 244, 232, 0.18);
+  border-radius: 18px;
+  background: rgba(24, 19, 16, 0.8);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(14px);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.friendCard:hover {
+  border-color: rgba(255, 138, 43, 0.52);
+  transform: translateY(-3px);
+}
+
 .friendHead { display: flex; align-items: center; gap: 11px; min-width: 0; color: inherit; text-decoration: none; }
 .friendHead:hover .who strong { text-decoration: underline; text-underline-offset: 3px; }
 .friendBadge { display: inline-flex; align-self: flex-start; align-items: center; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.friendBadge[data-tone='owed'] { background: rgba(58, 114, 84, .12); color: var(--owed); }
-.friendBadge[data-tone='owe'] { background: rgba(162, 86, 59, .12); color: var(--owe); }
-.friendBadge[data-tone='settled'] { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-weight: 500; }
-:global([data-theme='dark']) .friendBadge[data-tone='owed'] { background: rgba(143, 191, 159, .14); }
-:global([data-theme='dark']) .friendBadge[data-tone='owe'] { background: rgba(220, 154, 128, .14); }
+
+.friendBadge[data-tone='owed'] {
+  background: rgba(68, 150, 91, 0.2);
+  color: #83e29c;
+}
+
+.friendBadge[data-tone='owe'] {
+  background: rgba(188, 67, 48, 0.2);
+  color: #ff806d;
+}
+
+.friendBadge[data-tone='settled'] {
+  border: 1px solid rgba(255, 244, 232, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 244, 232, 0.7);
+  font-weight: 500;
+}
+
 .friendActions { display: flex; align-items: center; gap: 4px; margin-top: auto; }
 @media (max-width: 900px) { .friendGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .friendGrid { grid-template-columns: minmax(0, 1fr); } }
