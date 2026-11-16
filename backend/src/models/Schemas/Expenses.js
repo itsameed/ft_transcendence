@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { MAX_EXPENSE_AMOUNT } = require('../../config/expenseLimits');
 
 const ExpenseSchema = new mongoose.Schema({
     group: {
@@ -18,6 +19,7 @@ const ExpenseSchema = new mongoose.Schema({
     amount: {
         type: Number,
         required: true,
+        max: [MAX_EXPENSE_AMOUNT, 'Expense amount cannot exceed 100,000 MAD.'],
     },
     description: {
         type: String,

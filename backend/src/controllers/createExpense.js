@@ -1,4 +1,5 @@
 const Expense = require('../models/Schemas/Expenses.js');
+const { MAX_EXPENSE_AMOUNT } = require('../config/expenseLimits');
 const printLogsDate = require('./printLogs.js');
 
 
@@ -7,6 +8,11 @@ async function createExpense(req, res, next) {
     if (!groupId || !amount || !splitMethod) {
         return res.status(400).json({ message: 'Invalid expense details.' });
     }
+    const expenseAmount = Number(amount);
+    if (!Number.isFinite(expenseAmount) || expenseAmount <= 0 || expenseAmount > MAX_EXPENSE_AMOUNT) {
+        return res.status(400).json({ message: 'Expense amount must be greater than 0 and no more than 100,000 MAD.' });
+    }
+
     let participants;
     let customSplit;
     try {
@@ -27,7 +33,7 @@ async function createExpense(req, res, next) {
             group: groupId,
             payer: payerId,
             participants,
-            amount: Number(amount),
+            amount: expenseAmount,
             description,
             splitMethod,
             customSplit,

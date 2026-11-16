@@ -20,6 +20,7 @@ interface Props {
 }
 
 const CATEGORIES = Object.keys(categoryLabel) as Category[]
+const MAX_EXPENSE_AMOUNT = 100000
 
 const SPLIT_MODES: [SplitMode, string][] = [
   ['equal', 'Equally'],
@@ -61,6 +62,7 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
 
   const group = groups.find((g) => g.id === groupId)!
   const total = parseFloat(amount) || 0
+  const exceedsMax = total > MAX_EXPENSE_AMOUNT
 
   // Fresh form every time the dialog opens.
   useEffect(() => {
@@ -114,7 +116,7 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
   const balanced = Math.abs(remaining) < 0.01
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
-  const valid = total > 0 && title.trim() !== '' && included.length > 0 && balanced && !saving
+  const valid = total > 0 && !exceedsMax && title.trim() !== '' && included.length > 0 && balanced && !saving
 
   async function save() {
     if (!valid) return
@@ -200,7 +202,10 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
             <span className="visually-hidden">Amount</span>
             <input
               autoFocus
+              type="number"
               inputMode="decimal"
+              max={MAX_EXPENSE_AMOUNT}
+              step="0.01"
               placeholder="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ''))}
@@ -208,6 +213,7 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
             />
             <span>{CURRENCY}</span>
           </label>
+          {exceedsMax && <p className={styles.amountError} role="alert">Maximum expense is 100,000 MAD.</p>}
 
           <input
             className={styles.input}
