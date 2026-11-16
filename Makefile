@@ -24,6 +24,13 @@ start:
 up:
 	$(COMPOSE) up -d
 
+dev: up
+	@echo "Starting backend (nodemon, :3000) + frontend (vite, :5174) — Ctrl+C stops both"
+	@trap 'kill 0' INT TERM EXIT; \
+	(cd backend && npm run dev) & \
+	(cd frontend-v2 && npm run dev) & \
+	wait
+
 down:
 	$(COMPOSE) down
 
