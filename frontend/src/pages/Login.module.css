@@ -1,12 +1,16 @@
 .authWrapper {
-  min-height: 100vh;
-  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background-color: var(--bg);
-  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #1b120e;
+  background-image:
+    linear-gradient(rgba(20, 12, 8, 0.72), rgba(20, 12, 8, 0.88)),
+    url('/images/dashboard/shared-apartment.webp');
+  background-position: center;
+  background-size: cover;
+  color: #fff4e8;
   font-family: var(--font);
-  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .topNav {
@@ -50,11 +54,12 @@
 .card {
   width: 100%;
   max-width: 440px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
   padding: 36px 32px;
-  box-shadow: var(--shadow-pop);
+  border: 1px solid rgba(255, 244, 232, 0.2);
+  border-radius: 24px;
+  background: rgba(24, 19, 16, 0.88);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(16px);
   animation: appear 0.28s var(--ease);
 }
 
@@ -70,17 +75,18 @@
 }
 
 .title {
-  font-size: 24px;
+  margin: 0 0 7px;
+  color: #fff4e8;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 32px;
   font-weight: 600;
-  letter-spacing: -0.025em;
-  color: var(--text);
-  margin: 0 0 6px;
+  letter-spacing: -0.035em;
 }
 
 .subtitle {
-  font-size: 14px;
-  color: var(--text-2);
   margin: 0;
+  color: rgba(255, 244, 232, 0.62);
+  font-size: 14px;
 }
 
 .form {
@@ -98,24 +104,26 @@
 .field label {
   font-size: 13px;
   font-weight: 500;
-  color: var(--text);
+  color: #fff4e8;
 }
 
 .input {
   width: 100%;
   height: var(--field-height);
   padding: 0 14px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-strong);
-  background: var(--surface-2);
-  color: var(--text);
-  font-size: 14px;
-  font-family: inherit;
+  border: 1px solid rgba(255, 244, 232, 0.2);
+  border-radius: 12px;
   outline: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff4e8;
+  font-family: inherit;
+  font-size: 14px;
 }
 
 .input:focus {
-  background: var(--surface);
+  border-color: rgba(255, 138, 43, 0.72);
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 0 0 3px rgba(255, 138, 43, 0.14);
 }
 
 .errorAlert {
@@ -138,18 +146,11 @@
 }
 
 .footer {
-  margin-top: 24px;
-  text-align: center;
-  font-size: 13px;
-  color: var(--text-2);
+  color: rgba(255, 244, 232, 0.62);
 }
 
 .link {
-  color: var(--text);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  transition: opacity 0.15s;
+  color: #ff8a2b;
 }
 
 .link:hover {
