@@ -3,12 +3,8 @@ import type { Group } from '../../types'
 import { money } from '../../lib/format'
 import { iconForKind } from '../../lib/GroupKinds'
 import styles from './GroupsGrid.module.css'
+import { imageForGroup } from '../../lib/groupImages'
 
-const groupImages = [
-   '/images/dashboard/mountain-trip.webp',
-   '/images/dashboard/shared-apartment.webp',
-   '/images/dashboard/dinner-together.webp',
-]
 
 /** One quiet line of context under the group name. */
 function describe(group: Group): string {
@@ -18,10 +14,10 @@ function describe(group: Group): string {
 export function GroupsGrid({ groups, onCreate }: { groups: Group[]; now?: Date; onCreate?: () => void }) {
    return (
       <div className={styles.grid}>
-         {groups.map((g, index) => {
+         {groups.map((g) => {
             const tone = g.yourBalance > 0 ? 'owed' : g.yourBalance < 0 ? 'owe' : 'settled'
             const Icon = iconForKind(g.kind)
-            const image = groupImages[index]
+            const image = imageForGroup(g)
             return (
                <Link key={g.id} to={`/groups/${g.id}`} className={styles.tile}>
                   {image ? (
