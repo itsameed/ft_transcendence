@@ -3,8 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { io, type Socket } from 'socket.io-client'
 import {
   ArrowLeft, Bell, BellOff, CheckCheck, CirclePlus, Download, FileText, HandCoins,
-  Info, MessageSquare, Mic, Phone, Pin, ReceiptText, Reply, Search, SendHorizonal,
-  Smile, Sparkles, Trash2, Video, Wallet, X,
+  Info, MessageSquare, Mic, Pin, ReceiptText, Reply, Search, SendHorizonal,
+  Smile, Sparkles, Trash2, Wallet, X,
 } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
@@ -21,7 +21,7 @@ import type { Group, User } from '../types'
 import dashStyles from './Dashboard.module.css'
 import styles from './ChatNew.module.css'
 
-interface ApiGroup { _id: string; name: string; kind: string; conversationId?: string; members: { userId: { _id: string; username: string; email: string; avatar?: string | null } }[] }
+interface ApiGroup { _id: string; name: string; kind: string; conversationId?: string; members: { role?: string; userId: { _id: string; username: string; email: string; avatar?: string | null } }[] }
 interface DmConv { conversationId: string; other: User; participants: string[] }
 interface Msg { id: string; senderId: string; senderName: string; content: string; createdAt: string; ai?: boolean; replyTo?: { name: string; text: string } }
 interface GroupExpense { id: string; title: string; category: string; amount: number; paidBy: User; date: string; myShare: number | null; shares: { userId: string; amount: number }[] | null }
@@ -47,6 +47,7 @@ function parseSSE(chunk: string, onEvent: (name: string, data: any) => void) {
 export function ChatPage() {
   const [me, setMe] = useState<User | null>(null)
   const [groups, setGroups] = useState<Group[]>([])
+  const [groupOwners, setGroupOwners] = useState<Record<string, string>>({})
   const [users, setUsers] = useState<Record<string, User>>({})
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [mode, setMode] = useState<Mode>('group')
@@ -69,6 +70,8 @@ export function ChatPage() {
   const [dms, setDms] = useState<DmConv[]>([])
   const [dmTarget, setDmTarget] = useState<User | null>(null)
   const [dmBusy, setDmBusy] = useState(false)
+  const [leavingGroup, setLeavingGroup] = useState(false)
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
   const [expenses, setExpenses] = useState<GroupExpense[]>([])
   const [expensesNote, setExpensesNote] = useState('')
   const [globalDebts, setGlobalDebts] = useState<{ user: User; amount: number }[]>([])
@@ -87,6 +90,7 @@ export function ChatPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const selected = groups.find((g) => g.id === selectedId) ?? null
+  const isGroupOwner = Boolean(selected && me && groupOwners[selected.id] === me.id)
   const thread = mode === 'group' ? messages : aiMessages
   const activeConvId = dmTarget && selected === null ? dms.find((d) => d.other.id === dmTarget.id)?.conversationId : selected?.conversationId
   const inDm = Boolean(dmTarget) && !selected
@@ -130,12 +134,15 @@ export function ChatPage() {
         }
         const data = groupsRes.ok ? await groupsRes.json() : { groups: [] }
         const userMap: Record<string, User> = {}
+        const ownerMap: Record<string, string> = {}
         if (profile?.user) userMap[profile.user.id] = profile.user
         const mapped: Group[] = (data.groups ?? []).map((g: ApiGroup) => {
           for (const m of g.members ?? []) if (m.userId) userMap[m.userId._id] = { id: m.userId._id, name: m.userId.username, email: m.userId.email, avatar: m.userId.avatar ?? null }
+          const owner = g.members?.find((member) => member.role === 'owner')?.userId._id
+          if (owner) ownerMap[g._id] = owner
           return { id: g._id, name: g.name, emoji: '', kind: (g.kind || 'other') as Group['kind'], memberIds: (g.members ?? []).map((m) => m.userId._id), totalSpent: 0, yourBalance: 0, createdAt: '', conversationId: g.conversationId }
         })
-        setUsers(userMap); setGroups(mapped)
+        setUsers(userMap); setGroups(mapped); setGroupOwners(ownerMap)
         const wanted = params.get('group')
         setSelectedId(mapped.find((g) => g.id === wanted)?.id ?? mapped[0]?.id ?? null)
         fetch('/api/friends').then((r) => (r.ok ? r.json() : null)).then((d) => {
@@ -334,6 +341,64 @@ export function ChatPage() {
     notify(pinned[selected.id] === m.id ? 'Message unpinned' : 'Message pinned to this conversation')
   }
 
+  async function removeGroupMember(user: User) {
+    if (!selected || !isGroupOwner || user.id === me?.id) return
+    if (!window.confirm(`Remove ${user.name} from ${selected.name}?`)) return
+
+    setRemovingMemberId(user.id)
+    try {
+      const response = await fetch(`/api/groups/${selected.id}/members/${user.id}`, { method: 'DELETE' })
+      const data = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(data?.message ?? 'Could not remove this member.')
+
+      setGroups((current) => current.map((group) =>
+        group.id === selected.id
+          ? { ...group, memberIds: group.memberIds.filter((id) => id !== user.id) }
+          : group
+      ))
+      notify(`${user.name} was removed from the group`)
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Could not remove this member.')
+    } finally {
+      setRemovingMemberId(null)
+    }
+  }
+
+  async function leaveSelectedGroup() {
+    if (!selected || isGroupOwner) return
+    const groupId = selected.id
+    const groupName = selected.name
+    if (!window.confirm(`Leave ${groupName}? You will lose access to its chat.`)) return
+
+    setLeavingGroup(true)
+    try {
+      const response = await fetch(`/api/groups/${groupId}/leave`, { method: 'DELETE' })
+      const data = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(data?.message ?? 'Could not leave this group.')
+
+      const remainingGroups = groups.filter((group) => group.id !== groupId)
+      setGroups(remainingGroups)
+      setGroupOwners((owners) => {
+        const nextOwners = { ...owners }
+        delete nextOwners[groupId]
+        return nextOwners
+      })
+      setSelectedId(remainingGroups[0]?.id ?? null)
+      setDmTarget(null)
+      setMode('group')
+      setDetails(remainingGroups.length > 0)
+      setMobileThread(remainingGroups.length > 0)
+      setMessages([])
+      setExpenses([])
+      setReplyTo(null)
+      notify(`You left ${groupName}`)
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Could not leave this group.')
+    } finally {
+      setLeavingGroup(false)
+    }
+  }
+
   if (loading || !me) return <div className="page-state" role={error ? 'alert' : 'status'}>{error ?? 'Loading…'}</div>
 
   const GroupIcon = selected ? iconForKind(selected.kind) : MessageSquare
@@ -523,8 +588,8 @@ export function ChatPage() {
                 <p>{expenseCount} expenses</p>
               </div>
               <div className={styles.detailsActions}>
-                <button className={styles.actionTile} onClick={() => notify('Calls are not available in chat yet')}><Phone size={19} />Call</button>
-                <button className={styles.actionTile} onClick={() => notify('Calls are not available in chat yet')}><Video size={19} />Video</button>
+                <button className={styles.actionTile} onClick={() => notify('Calls are not available in chat yet')}>Call</button>
+                <button className={styles.actionTile} onClick={() => notify('Calls are not available in chat yet')}>Video</button>
                 <button className={`${styles.actionTile} ${muted[selected.id] ? styles.actionTileOn : ''}`} onClick={() => { setMuted((p) => ({ ...p, [selected.id]: !p[selected.id] })); notify(muted[selected.id] ? 'Notifications on for this group' : 'Conversation muted (this device only)') }}>{muted[selected.id] ? <BellOff size={19} /> : <Bell size={19} />}{muted[selected.id] ? 'Muted' : 'Mute'}</button>
                 <button className={styles.actionTile} onClick={() => notify('Search in conversation is not available yet')}><Search size={19} />Search</button>
               </div>
@@ -562,9 +627,22 @@ export function ChatPage() {
 
               <section className={styles.detailsSec}><h3>Members · {memberUsers.length}</h3>
                 {memberUsers.map((u) => (
-                  <button className={styles.memberRow} key={u.id} onClick={() => navigate(`/users/${u.id}`)}>
-                    <Avatar user={u} size={30} /><span className={styles.grow}><strong>{u.name}{u.id === me.id && <> <span className={styles.roleBadge}>You</span></>}</strong><small>{u.email}</small></span>
-                  </button>
+                  <div className={styles.memberRow} key={u.id}>
+                    <button className={styles.memberLink} onClick={() => navigate(`/users/${u.id}`)}>
+                      <Avatar user={u} size={30} /><span className={styles.grow}><strong>{u.name}{(u.id === me.id || u.id === groupOwners[selected.id]) && <> <span className={styles.roleBadge}>{u.id === me.id ? 'You' : 'Owner'}</span></>}</strong><small>{u.email}</small></span>
+                    </button>
+                    {isGroupOwner && u.id !== me.id && u.id !== groupOwners[selected.id] && (
+                      <button
+                        className={styles.memberRemove}
+                        type="button"
+                        disabled={removingMemberId !== null}
+                        onClick={() => removeGroupMember(u)}
+                        aria-label={`Remove ${u.name} from group`}
+                      >
+                        {removingMemberId === u.id ? 'Removing…' : 'Remove'}
+                      </button>
+                    )}
+                  </div>
                 ))}
               </section>
 
@@ -593,7 +671,9 @@ export function ChatPage() {
                 <button className={styles.linkRow} onClick={() => setAddingExpense(true)}><ReceiptText size={16} /> Add expense</button>
                 <button className={styles.linkRow} onClick={() => navigate(`/groups/${selected.id}`)}><HandCoins size={16} /> Open group page</button>
                 <button className={styles.linkRow} onClick={() => notify('Chat history download is not available yet')}><Download size={16} /> Download chat history</button>
-                <button className={`${styles.linkRow} ${styles.linkDanger}`} onClick={() => notify('Leaving a group is done from the group page')}><Trash2 size={16} /> Leave group</button>
+                {isGroupOwner
+                  ? <p className={styles.detailsEmpty}>Group owners cannot leave this group.</p>
+                  : <button className={`${styles.linkRow} ${styles.linkDanger}`} onClick={leaveSelectedGroup} disabled={leavingGroup}><Trash2 size={16} />{leavingGroup ? 'Leaving…' : 'Leave group'}</button>}
               </section>
             </aside>
           )}
@@ -628,6 +708,7 @@ export function ChatPage() {
         onCreated={(group) => {
           setCreatingGroup(false)
           setGroups((p) => [group, ...p])
+          setGroupOwners((owners) => ({ ...owners, [group.id]: me.id }))
           setSelectedId(group.id); setDmTarget(null); setMode('group'); setMobileThread(true)
           notify(`Created “${group.name}”`)
         }} />

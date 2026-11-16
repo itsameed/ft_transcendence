@@ -147,7 +147,7 @@
 .detailsHead p { color: var(--text-2); font-size: 13px; }
 .detailsClose { position: absolute; top: 12px; right: 12px; }
 .detailsActions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; padding: 6px 12px 14px; border-bottom: 1px solid var(--border); }
-.actionTile { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 2px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-2); font-size: 11px; font-weight: 500; }
+.actionTile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 8px 2px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-2); font-size: 11px; font-weight: 500; }
 .actionTile:hover { background: var(--hover-wash); color: var(--text); }
 .actionTileOn { background: var(--surface-3); color: var(--text); }
 .detailsSec { padding: 18px 16px 6px; }
@@ -163,11 +163,15 @@
 .debtRow small { color: var(--text-3); font-size: 12px; }
 .debtAmt { flex: none; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .owedText { color: var(--owed); } .oweText { color: var(--owe); }
-.memberRow { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0 -8px; padding: 6px 8px; border: 0; border-radius: var(--radius-sm); background: none; color: inherit; text-align: left; }
+.memberRow { display: flex; align-items: center; gap: 4px; width: 100%; margin: 0 -8px; padding: 6px 8px; border-radius: var(--radius-sm); color: inherit; }
 .memberRow:hover { background: var(--hover-wash); }
+.memberLink { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 0; border: 0; background: none; color: inherit; text-align: left; }
 .memberRow .grow { flex: 1; min-width: 0; }
 .memberRow strong { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; }
 .memberRow small { display: block; overflow: hidden; color: var(--text-3); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.memberRemove { flex: none; padding: 4px 7px; border: 0; border-radius: 6px; background: transparent; color: var(--owe); font-size: 11px; font-weight: 600; }
+.memberRemove:hover { background: var(--surface-3); }
+.memberRemove:disabled { cursor: wait; opacity: .65; }
 .roleBadge { padding: 2px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: 11px; font-weight: 500; }
 .expenseRow { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
 .expenseMain { flex: 1; min-width: 0; }
