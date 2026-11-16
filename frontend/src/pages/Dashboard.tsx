@@ -128,7 +128,7 @@ export function Dashboard() {
 
          <main className={styles.main}>
             <div className={styles.content}>
-               <Topbar firstName={firstName(me.name)} today={NOW} onAdd={() => setAdding(true)} />
+               <Topbar today={NOW} onAdd={() => setAdding(true)} />
 
                <BalanceOverview
                   balances={debts}

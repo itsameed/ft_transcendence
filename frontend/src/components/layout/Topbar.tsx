@@ -1,16 +1,14 @@
 import { Plus } from 'lucide-react'
-import { greeting } from '../../lib/format'
 import { Button } from '../ui/Button'
 import { Logo } from './Sidebar'
 import styles from './Topbar.module.css'
 
 interface Props {
-  firstName: string
   today: Date
   onAdd: () => void
 }
 
-export function Topbar({ firstName, today, onAdd }: Props) {
+export function Topbar({ today, onAdd }: Props) {
   return (
     <header className={styles.topbar}>
       <div className={styles.mobileBrand}>
@@ -18,9 +16,7 @@ export function Topbar({ firstName, today, onAdd }: Props) {
       </div>
 
       <div className={styles.greeting}>
-        <h1>
-          {greeting(today)}, {firstName}
-        </h1>
+        <h1>Good times, fairly shared.</h1>
         <p>{today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
       </div>
 
