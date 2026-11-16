@@ -22,19 +22,21 @@
   align-items: center;
   gap: 10px;
   padding: 0 12px;
-  font-size: 17px;
+  color: #fff4e8;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 28px;
+  font-style: italic;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .mark {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--primary);
-  color: var(--on-primary);
+  width: 38px;
+  height: 38px;
+  color: #ff7a1a;
+  filter: drop-shadow(0 4px 10px rgba(255, 122, 26, 0.3));
 }
 
 .nav {

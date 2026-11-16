@@ -1,4 +1,4 @@
-import { LayoutGrid, MessageSquare, Moon, Settings, Split, Sun, UsersRound } from 'lucide-react'
+import { Handshake, LayoutGrid, MessageSquare, Moon, Settings, Sun, UsersRound } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import type { User } from '../../types'
 import { useTheme } from '../../lib/useTheme'
@@ -29,7 +29,7 @@ export function Logo() {
   return (
     <span className={styles.logo}>
       <span className={styles.mark} aria-hidden>
-        <Split size={15} strokeWidth={2.2} />
+       <Handshake size={30} strokeWidth={2} />
       </span>
       Splitify
     </span>
