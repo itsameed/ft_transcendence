@@ -6,7 +6,8 @@
   grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: 24px;
-  background: var(--scrim);
+  background: rgba(8, 5, 3, 0.76);
+  backdrop-filter: blur(8px);
   animation: fade 0.2s ease-out;
 }
 
@@ -16,10 +17,14 @@
   width: min(540px, 100%);
   min-width: 0;
   max-height: min(880px, calc(100vh - 48px));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+  border: 1px solid rgba(255, 244, 232, 0.22);
+  border-radius: 24px;
+  background: rgba(25, 20, 17, 0.96);
+  box-shadow:
+    0 0 24px rgba(255, 122, 26, 0.08),
+    0 28px 80px rgba(0, 0, 0, 0.48);
+  color: #fff4e8;
   animation: pop 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.1);
 }
 
@@ -43,8 +48,10 @@
 }
 
 .header h2 {
-  font-size: 17px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 28px;
   font-weight: 600;
+  letter-spacing: -0.025em;
 }
 
 .close {
@@ -59,10 +66,12 @@
   color: var(--text-3);
   transition: background 0.15s ease, color 0.15s ease;
 }
+
 .close:hover {
-  background: var(--surface-2);
-  color: var(--text);
+  background: rgba(255, 138, 43, 0.12);
+  color: #ff9b4a;
 }
+
 .close:active {
   background: var(--surface-3);
 }
@@ -92,6 +101,7 @@
 .amount input {
   max-width: 100%;
   min-width: 1.5ch;
+  color: #fff4e8;
   border: 0;
   outline: 0;
   background: transparent;
@@ -100,13 +110,14 @@
   letter-spacing: -0.035em;
   text-align: right;
 }
+
 .amount input::placeholder {
-  color: var(--text-3);
-  opacity: 0.5;
+  color: rgba(255, 244, 232, 0.34);
+  opacity: 1;
 }
 
 .amount span {
-  color: var(--text-3);
+  color: rgba(255, 244, 232, 0.58);
   font-size: 18px;
   font-weight: 500;
 }
@@ -117,21 +128,24 @@
 .shareInput label {
   height: var(--field-height);
   padding: 0 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
+  border: 1px solid rgba(255, 244, 232, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff4e8;
   outline: 0;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .input:focus,
 .field input:focus,
-.select select:focus {
-  background: var(--surface);
-}
+.select select:focus,
 .shareInput label:focus-within {
-  background: var(--surface);
-  border-color: var(--text-3);
-  box-shadow: var(--focus-ring);
+  border-color: rgba(255, 138, 43, 0.72);
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 0 0 3px rgba(255, 138, 43, 0.14);
 }
 
 .input::placeholder {
@@ -152,7 +166,7 @@
 }
 
 .field > span {
-  color: var(--text-2);
+  color: rgba(255, 244, 232, 0.72);
   font-size: 13px;
   font-weight: 500;
 }
@@ -186,28 +200,17 @@
 .split {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
-}
-
-.splitHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 12px;
-}
-
-.splitHead h3 {
-  font-size: 15px;
-  font-weight: 600;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 244, 232, 0.14);
 }
 
 .segmented {
   display: flex;
   padding: 3px;
-  border-radius: 10px;
-  background: var(--surface-2);
+  border: 1px solid rgba(255, 244, 232, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .segmented button {
@@ -216,19 +219,23 @@
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: var(--text-2);
+  color: rgba(255, 244, 232, 0.62);
   font-size: 13px;
   font-weight: 500;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
+
 .segmented button:hover:not(.segOn) {
-  color: var(--text);
+  color: #fff4e8;
 }
 
 .segmented .segOn {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px var(--border);
+  background: #ff8a2b;
+  color: #21130a;
+  box-shadow: 0 0 16px rgba(255, 122, 26, 0.2);
+  font-weight: 700;
 }
 
 .members {
@@ -342,8 +349,18 @@
   gap: 8px;
   margin: 4px -28px 0;
   padding: 16px 28px 22px;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
+  border-top: 1px solid rgba(255, 244, 232, 0.14);
+  background: rgba(25, 20, 17, 0.98);
+}
+
+.footer button:last-child:not(:disabled) {
+  background: #ff8a2b;
+  color: #21130a;
+  box-shadow: 0 0 18px rgba(255, 122, 26, 0.2);
+}
+
+.footer button:last-child:not(:disabled):hover {
+  background: #ff9b4a;
 }
 
 @media (max-width: 640px) {
