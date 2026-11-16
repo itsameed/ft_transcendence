@@ -1,3 +1,4 @@
+import { ArrowDownRight, ArrowUpRight, Scale } from 'lucide-react'
 import type { FriendBalance, User } from '../../types'
 import { summarize } from '../../lib/balances'
 import { money } from '../../lib/format'
@@ -19,52 +20,79 @@ interface Props {
  * The net figure on top, then two plain lists. The column headings carry
  * the meaning, so the amounts themselves can stay neutral.
  */
-export function BalanceOverview({ balances, users, groupCount, onSettle, onRemind }: Props) {
+export function BalanceOverview({ balances, users, onSettle, onRemind }: Props) {
   const rows = Array.isArray(balances) ? balances : []
   const { net, owedToYou, youOwe } = summarize(rows)
   const owing = rows.filter((b) => b.amount < 0).sort((a, b) => a.amount - b.amount)
   const owed = rows.filter((b) => b.amount > 0).sort((a, b) => b.amount - a.amount)
 
   return (
-    <Card padded={false}>
-      <div className={styles.summary}>
-        <p className={styles.label}>
-          {net > 0 ? 'Overall, you’re owed' : net < 0 ? 'Overall, you owe' : 'You’re all settled up'}
-        </p>
-        <p className={styles.net} data-tone={net > 0 ? 'owed' : net < 0 ? 'owe' : 'settled'}>{money(net)}</p>
-        <p className={styles.meta}>
-          Debts are simplified across your {groupCount} groups, so everyone makes as few payments as possible.
-        </p>
+    <div className={styles.overview}>
+      <div className={styles.cards}>
+        <div className={`${styles.balanceCard} ${styles.owedCard}`}>
+          <span className={styles.cardIcon} aria-hidden>
+            <ArrowUpRight size={25} strokeWidth={1.8} />
+          </span>
+          <span>
+            <span className={styles.cardLabel}>You’re owed</span>
+            <strong className={styles.owedAmount}>{money(owedToYou)}</strong>
+          </span>
+        </div>
+
+        <div className={`${styles.balanceCard} ${styles.oweCard}`}>
+          <span className={styles.cardIcon} aria-hidden>
+            <ArrowDownRight size={25} strokeWidth={1.8} />
+          </span>
+          <span>
+            <span className={styles.cardLabel}>You owe</span>
+            <strong className={styles.oweAmount}>{money(youOwe)}</strong>
+          </span>
+        </div>
+
+        <div className={`${styles.balanceCard} ${styles.totalCard}`}>
+          <span className={styles.cardIcon} aria-hidden>
+            <Scale size={25} strokeWidth={1.8} />
+          </span>
+          <span>
+            <span className={styles.cardLabel}>Total balance</span>
+            <strong className={styles.totalAmount} data-tone={net >= 0 ? 'owed' : 'owe'}>
+              {money(net, { signed: true })}
+            </strong>
+          </span>
+        </div>
       </div>
 
-      <div className={styles.columns}>
-        <Column
-          title="You owe"
-          tone="owe"
-          total={youOwe}
-          rows={owing}
-          users={users}
-          empty="You don’t owe anyone right now."
-          action="Settle up"
-          actionLabel={(u) => `Settle up with ${u.name}`}
-          onAction={onSettle}
-        />
-        <Column
-          title="Owed to you"
-          tone="owed"
-          total={owedToYou}
-          rows={owed}
-          users={users}
-          empty="Nobody owes you right now."
-          action="Remind"
-          actionLabel={(u) => `Remind ${u.name}`}
-          onAction={onRemind}
-        />
-      </div>
-    </Card>
+      {(owing.length > 0 || owed.length > 0) && (
+        <Card padded={false} className={styles.details}>
+          <div className={styles.columns}>
+            <Column
+              title="You owe"
+              tone="owe"
+              total={youOwe}
+              rows={owing}
+              users={users}
+              empty="You don’t owe anyone right now."
+              action="Settle up"
+              actionLabel={(u) => `Settle up with ${u.name}`}
+              onAction={onSettle}
+            />
+            <Column
+              title="Owed to you"
+              tone="owed"
+              total={owedToYou}
+              rows={owed}
+              users={users}
+              empty="Nobody owes you right now."
+              action="Remind"
+              actionLabel={(u) => `Remind ${u.name}`}
+              onAction={onRemind}
+            />
+          </div>
+        </Card>
+      )}
+    </div>
   )
-}
-
+  }
 interface ColumnProps {
   title: string
   tone: 'owe' | 'owed'
