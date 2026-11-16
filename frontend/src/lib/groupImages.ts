@@ -129,18 +129,10 @@ const imagesByKind: Partial<Record<GroupKind, readonly string[]>> = {
   ],
 }
 
-function stableIndex(value: string, length: number): number {
-  let total = 0
-
-  for (const character of value) {
-    total += character.charCodeAt(0)
-  }
-
-  return total % length
-}
 
 export function imageForGroup(
-  group: Pick<Group, 'id' | 'kind'>,
+  group: Pick<Group, 'kind'>,
+  position = 0,
 ): string | undefined {
   const images = imagesByKind[group.kind]
 
@@ -148,5 +140,5 @@ export function imageForGroup(
     return undefined
   }
 
-  return images[stableIndex(group.id, images.length)]
+  return images[position % images.length]
 }

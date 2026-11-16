@@ -14,10 +14,10 @@ function describe(group: Group): string {
 export function GroupsGrid({ groups, onCreate }: { groups: Group[]; now?: Date; onCreate?: () => void }) {
    return (
       <div className={styles.grid}>
-         {groups.map((g) => {
+         {groups.map((g, index) => {
             const tone = g.yourBalance > 0 ? 'owed' : g.yourBalance < 0 ? 'owe' : 'settled'
             const Icon = iconForKind(g.kind)
-            const image = imageForGroup(g)
+            const image = imageForGroup(g, index)
             return (
                <Link key={g.id} to={`/groups/${g.id}`} className={styles.tile}>
                   {image ? (

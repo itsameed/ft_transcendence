@@ -5,8 +5,8 @@
   min-height: 100dvh;
   background-color: #1b120e;
   background-image:
-    linear-gradient(rgba(20, 12, 8, 0.7), rgba(20, 12, 8, 0.92)),
-    url('/images/dashboard/mountain-trip.webp');
+    linear-gradient(rgba(20, 12, 8, 0.66), rgba(20, 12, 8, 0.92)),
+    url('/images/groups/restaurant/restaurant-1.webp');
   background-position: center;
   background-size: cover;
   background-attachment: fixed;
