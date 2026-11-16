@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Moon, Sun } from 'lucide-react'
-import { useTheme } from '../lib/useTheme'
 import { AvatarPicker } from '../components/ui/AvatarPicker'
 import { Button } from '../components/ui/Button'
 import { GoogleButton, OrDivider } from '../components/auth/GoogleButton'
@@ -11,7 +9,6 @@ import styles from './Signup.module.css'
 
 export function Signup() {
    const navigate = useNavigate()
-   const { dark, toggle } = useTheme()
    const [username, setUsername] = useState('')
    const [fullname, setFullname] = useState('')
    const [email, setEmail] = useState('')
@@ -85,14 +82,7 @@ export function Signup() {
       <div className={styles.authWrapper}>
          <header className={styles.topNav}>
             <Logo />
-            <button
-               type="button"
-               className={styles.themeToggle}
-               onClick={toggle}
-               aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-               {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
-            </button>
+            
          </header>
 
          <main className={styles.content}>

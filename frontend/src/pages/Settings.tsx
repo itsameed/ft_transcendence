@@ -1,13 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogOut, Moon, Sun } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { logout } from '../lib/auth'
-import { useTheme } from '../lib/useTheme'
 import type { User } from '../types'
 import pageStyles from './Dashboard.module.css'
 import styles from './Settings.module.css'
@@ -22,7 +21,6 @@ export function SettingsPage() {
   const [pwMessage, setPwMessage] = useState('')
   const [pwError, setPwError] = useState('')
   const [loggingOut, setLoggingOut] = useState(false)
-  const { dark, toggle } = useTheme()
 
   async function signOut() {
     setLoggingOut(true)
@@ -88,28 +86,6 @@ export function SettingsPage() {
             <p>Make Splitify feel right for you.</p>
           </header>
 
-          <section className={styles.section} aria-labelledby="appearance-heading">
-            <div className={styles.sectionHeading}>
-              <h2 id="appearance-heading">Appearance</h2>
-              <p>Choose the color theme used across Splitify.</p>
-            </div>
-            <Card className={styles.preference}>
-              <div className={styles.preferenceCopy}>
-                <strong>Theme</strong>
-                <span>Your choice is saved on this device.</span>
-              </div>
-              <div className={styles.segment} role="group" aria-label="Color theme">
-                <button type="button" aria-pressed={!dark} className={!dark ? styles.selected : ''} onClick={() => dark && toggle()}>
-                  <Sun size={16} aria-hidden />
-                  Light
-                </button>
-                <button type="button" aria-pressed={dark} className={dark ? styles.selected : ''} onClick={() => !dark && toggle()}>
-                  <Moon size={16} aria-hidden />
-                  Dark
-                </button>
-              </div>
-            </Card>
-          </section>
 
           <section className={styles.section} aria-labelledby="account-heading">
             <div className={styles.sectionHeading}>

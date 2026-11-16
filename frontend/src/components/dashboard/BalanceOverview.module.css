@@ -25,18 +25,30 @@
 }
 
 .owedCard {
-  border-color: rgba(126, 211, 146, 0.38);
+  border-color: rgba(126, 211, 146, 0.55);
   background: rgba(20, 44, 29, 0.72);
+  box-shadow:
+    0 0 18px rgba(91, 218, 128, 0.2),
+    0 0 42px rgba(91, 218, 128, 0.1),
+    inset 0 0 24px rgba(91, 218, 128, 0.06);
 }
 
 .oweCard {
-  border-color: rgba(255, 112, 89, 0.38);
+  border-color: rgba(255, 112, 89, 0.55);
   background: rgba(61, 26, 22, 0.72);
+  box-shadow:
+    0 0 18px rgba(255, 100, 76, 0.2),
+    0 0 42px rgba(255, 100, 76, 0.1),
+    inset 0 0 24px rgba(255, 100, 76, 0.06);
 }
 
 .totalCard {
-  border-color: rgba(255, 147, 56, 0.42);
+  border-color: rgba(255, 147, 56, 0.6);
   background: rgba(54, 36, 20, 0.74);
+  box-shadow:
+    0 0 20px rgba(255, 138, 43, 0.24),
+    0 0 46px rgba(255, 138, 43, 0.12),
+    inset 0 0 24px rgba(255, 138, 43, 0.07);
 }
 
 .cardIcon {

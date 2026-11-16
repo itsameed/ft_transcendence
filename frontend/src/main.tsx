@@ -16,6 +16,8 @@ import { GroupDetailPage } from './pages/GroupDetail'
 import { NotificationsPage } from './pages/Notifications'
 import { AdminPanelPage } from './pages/AdminPanel'
 
+document.documentElement.dataset.theme = 'dark'
+
 export function App() {
   return (
     <Router>

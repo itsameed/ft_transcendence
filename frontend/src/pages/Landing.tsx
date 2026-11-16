@@ -1,12 +1,10 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Moon, ShieldCheck, Split, Sun, Users } from 'lucide-react'
-import { useTheme } from '../lib/useTheme'
+import { ArrowRight, ShieldCheck, Split, Users } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Logo } from '../components/layout/Sidebar'
 import styles from './Landing.module.css'
 
 export function Landing() {
-  const { dark, toggle } = useTheme()
 
   return (
     <div className={styles.landing}>
@@ -14,14 +12,6 @@ export function Landing() {
       <header className={styles.nav}>
         <Logo />
         <div className={styles.navActions}>
-          <button
-            type="button"
-            className={styles.themeToggle}
-            onClick={toggle}
-            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
-          </button>
 
           <div className={styles.authLinks}>
             <Link to="/login" className={styles.linkButton}>

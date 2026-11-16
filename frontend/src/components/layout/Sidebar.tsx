@@ -1,7 +1,12 @@
-import { Handshake, House, MessageSquare, Moon, Settings, Sun, UsersRound } from 'lucide-react'
+import {
+  Handshake,
+  House,
+  MessageSquare,
+  Settings,
+  UsersRound,
+} from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import type { User } from '../../types'
-import { useTheme } from '../../lib/useTheme'
 import { Avatar } from '../ui/Avatar'
 import { LogoutButton } from './LogoutButton'
 import { NotificationBell } from './NotificationBell'
@@ -18,7 +23,12 @@ function AdminLink({ me }: { me: User }) {
   if (me.role !== 'admin') return null
 
   return (
-    <NavLink to="/admin" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
+    <NavLink
+      to="/admin"
+      className={({ isActive }) =>
+        `${styles.link} ${isActive ? styles.active : ''}`
+      }
+    >
       <Settings size={18} strokeWidth={1.75} />
       Admin panel
     </NavLink>
@@ -29,7 +39,7 @@ export function Logo() {
   return (
     <span className={styles.logo}>
       <span className={styles.mark} aria-hidden>
-       <Handshake size={30} strokeWidth={2} />
+        <Handshake size={30} strokeWidth={2} />
       </span>
       Splitify
     </span>
@@ -37,34 +47,43 @@ export function Logo() {
 }
 
 export function Sidebar({ me }: { me: User }) {
-  const { dark, toggle } = useTheme()
   return (
     <aside className={styles.sidebar}>
       <Logo />
 
       <nav className={styles.nav} aria-label="Main">
         {NAV.map(({ label, icon: Icon, to }) => (
-          <NavLink key={label} to={to} className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
+          <NavLink
+            key={label}
+            to={to}
+            className={({ isActive }) =>
+              `${styles.link} ${isActive ? styles.active : ''}`
+            }
+          >
             <Icon size={18} strokeWidth={1.75} />
             {label}
           </NavLink>
         ))}
+
         <AdminLink me={me} />
         <NotificationBell userId={me.id} />
       </nav>
 
       <div className={styles.footer}>
-        <button type="button" className={styles.themeToggle} onClick={toggle} aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'} aria-pressed={dark}>
-          {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
-          {dark ? 'Light mode' : 'Dark mode'}
-        </button>
-        <NavLink to="/profile" className={({ isActive }) => `${styles.me} ${isActive ? styles.active : ''}`}>
+        <NavLink
+          to="/profile"
+          className={({ isActive }) =>
+            `${styles.me} ${isActive ? styles.active : ''}`
+          }
+        >
           <Avatar user={me} size={32} />
+
           <span className={styles.meText}>
             <strong>{me.name}</strong>
             <span>{me.email}</span>
           </span>
         </NavLink>
+
         <LogoutButton />
       </div>
     </aside>

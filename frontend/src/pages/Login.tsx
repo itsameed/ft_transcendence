@@ -1,14 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Moon, Sun } from 'lucide-react'
-import { useTheme } from '../lib/useTheme'
 import { Button } from '../components/ui/Button'
 import { GoogleButton, OrDivider } from '../components/auth/GoogleButton'
 import { Logo } from '../components/layout/Sidebar'
 import styles from './Login.module.css'
 
 export function Login() {
-  const { dark, toggle } = useTheme()
   const [params] = useSearchParams()
   const [handler, setHandler] = useState('')
   const [password, setPassword] = useState('')
@@ -68,14 +65,7 @@ if (!response.ok) {
     <div className={styles.authWrapper}>
       <header className={styles.topNav}>
         <Logo />
-        <button
-          type="button"
-          className={styles.themeToggle}
-          onClick={toggle}
-          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
-        </button>
+        
       </header>
 
       <main className={styles.content}>
