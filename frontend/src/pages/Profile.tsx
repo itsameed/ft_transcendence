@@ -155,7 +155,7 @@ export function ProfilePage() {
               <h2 id="profile-avatar">Profile photo</h2>
               <p>Upload a photo of your own, or pick one of the defaults.</p>
             </div>
-            <Card>
+            <Card className={styles.panel}>
               <div className={styles.avatarForm}>
                 <AvatarPicker
                   value={avatarId}
@@ -192,7 +192,7 @@ export function ProfilePage() {
               <h2 id="profile-details">Personal details</h2>
               <p>Update the name and email address associated with your account.</p>
             </div>
-            <Card>
+            <Card className={styles.panel}>
               <form className={styles.form} onSubmit={saveProfile}>
                 <label>
                   <span>Username</span>
