@@ -36,13 +36,20 @@ export function GroupsGrid({ groups, onCreate }: { groups: Group[]; now?: Date; 
                         <Icon size={26} strokeWidth={1.5} />
                      </span>
                   )}
-                  <span className={styles.titles}>                
-                     <strong>{g.name}</strong>
-                     <span>{describe(g)}</span>
-                  </span>
-                  <span className={styles.balance}>
-                     <span className={styles.badge} data-tone={tone}>
-                        {tone === 'owed' ? `You’re owed ${money(g.yourBalance)}` : tone === 'owe' ? `You owe ${money(g.yourBalance)}` : '✓ Settled'}
+                  <span className={styles.cardBody}>
+                     <span className={styles.titles}>
+                        <strong>{g.name}</strong>
+                        <span>{describe(g)}</span>
+                     </span>
+
+                     <span className={styles.balance}>
+                        <span className={styles.badge} data-tone={tone}>
+                           {tone === 'owed'
+                              ? `+${money(g.yourBalance)}`
+                              : tone === 'owe'
+                                 ? `−${money(g.yourBalance)}`
+                                 : '✓ Settled'}
+                        </span>
                      </span>
                   </span>
                </Link>
