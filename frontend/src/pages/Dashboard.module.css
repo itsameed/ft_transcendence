@@ -2,6 +2,13 @@
   display: flex;
   min-height: 100vh;
   min-height: 100dvh;
+  background-color: #1b120e;
+  background-image:
+    linear-gradient(rgba(20, 12, 8, 0.78), rgba(20, 12, 8, 0.88)),
+    url('/images/dashboard/shared-apartment.webp');
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
 }
 
 /* Sections size themselves against this container, not the viewport. */
