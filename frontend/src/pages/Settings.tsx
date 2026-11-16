@@ -133,7 +133,7 @@ export function SettingsPage() {
               <h2 id="security-heading">Password</h2>
               <p>Change the password you use to sign in to Splitify.</p>
             </div>
-            <Card>
+            <Card className={styles.panel}>
               <form className={styles.pwForm} onSubmit={changePassword}>
                 <label>
                   <span>Current password</span>
