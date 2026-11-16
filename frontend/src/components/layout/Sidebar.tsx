@@ -1,4 +1,4 @@
-import { Handshake, LayoutGrid, MessageSquare, Moon, Settings, Sun, UsersRound } from 'lucide-react'
+import { Handshake, House, MessageSquare, Moon, Settings, Sun, UsersRound } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import type { User } from '../../types'
 import { useTheme } from '../../lib/useTheme'
@@ -8,7 +8,7 @@ import { NotificationBell } from './NotificationBell'
 import styles from './Sidebar.module.css'
 
 export const NAV = [
-  { label: 'Dashboard', icon: LayoutGrid, to: '/dashboard' },
+  { label: 'Dashboard', icon: House, to: '/dashboard' },
   { label: 'Groups & Friends', icon: UsersRound, to: '/groups' },
   { label: 'Chat', icon: MessageSquare, to: '/chat' },
   { label: 'Settings', icon: Settings, to: '/settings' },
