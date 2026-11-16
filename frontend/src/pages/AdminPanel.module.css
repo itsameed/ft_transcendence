@@ -2,6 +2,10 @@
   display: flex;
   min-height: 100vh;
   min-height: 100dvh;
+  background:
+    linear-gradient(rgba(20, 12, 8, 0.78), rgba(20, 12, 8, 0.9)),
+    url('/images/dashboard/shared-apartment.webp') center / cover fixed;
+  color: #fff4e8;
 }
 
 .main {
@@ -26,15 +30,20 @@
 
 .eyebrow {
   margin: 0;
+  color: #ff9b4a;
   font-size: 0.75rem;
+  font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #8b9bb4;
 }
 
 .headerRow h1 {
   margin: 0.35rem 0 0;
+  color: #fff4e8;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
 }
 
 .statsGrid {
@@ -47,19 +56,22 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 18px 20px;
-  border: 1px solid rgba(148, 163, 184, 0.24);
+  padding: 20px;
+  border: 1px solid rgba(255, 244, 232, 0.18);
   border-radius: 18px;
-  background: rgba(15, 23, 42, 0.03);
+  background: rgba(24, 19, 16, 0.8);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(14px);
 }
 
 .statCard span {
-  color: #66758d;
+  color: rgba(255, 244, 232, 0.62);
   font-size: 0.82rem;
   letter-spacing: 0.02em;
 }
 
 .statCard strong {
+  color: #fff4e8;
   font-size: clamp(1.5rem, 3vw, 2.25rem);
 }
 
@@ -81,16 +93,17 @@
 .table th,
 .table td {
   padding: 14px 12px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 1px solid rgba(255, 244, 232, 0.12);
+  color: #fff4e8;
   text-align: left;
   vertical-align: middle;
 }
 
 .table th {
+  color: rgba(255, 244, 232, 0.55);
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #68788f;
 }
 
 .userCell {
@@ -105,8 +118,8 @@
 }
 
 .userCell span {
+  color: rgba(255, 244, 232, 0.56);
   font-size: 0.76rem;
-  color: #68788f;
 }
 
 .badge {
@@ -120,17 +133,17 @@
 }
 
 .badgeActive {
-  background: rgba(20, 184, 166, 0.12);
-  color: #0f766e;
+  background: rgba(111, 214, 154, 0.14);
+  color: #8ee0ad;
 }
 
 .badgeSuspended {
-  background: rgba(239, 68, 68, 0.12);
-  color: #b91c1c;
+  background: rgba(255, 113, 91, 0.14);
+  color: #ff8d79;
 }
 
 .muted {
-  color: #75829a;
+  color: rgba(255, 244, 232, 0.48);
   font-size: 0.8rem;
 }
 
@@ -145,19 +158,26 @@
   justify-content: space-between;
   gap: 12px;
   padding: 16px 18px;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid rgba(255, 244, 232, 0.16);
   border-radius: 16px;
-  background: rgba(15, 23, 42, 0.02);
+  background: rgba(255, 255, 255, 0.05);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.groupCard:hover {
+  border-color: rgba(255, 138, 43, 0.45);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .groupCard h3 {
   margin: 0 0 6px;
+  color: #fff4e8;
   font-size: 1rem;
 }
 
 .groupCard p {
   margin: 0;
-  color: #64748b;
+  color: rgba(255, 244, 232, 0.58);
   font-size: 0.8rem;
 }
 
@@ -166,14 +186,14 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
-  color: #64748b;
+  color: rgba(255, 244, 232, 0.52);
   font-size: 0.76rem;
 }
 
 .empty {
   margin: 0;
   padding: 18px;
-  color: #64748b;
+  color: rgba(255, 244, 232, 0.56);
 }
 
 @media (max-width: 860px) {
