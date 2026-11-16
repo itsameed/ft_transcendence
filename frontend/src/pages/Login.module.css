@@ -20,29 +20,6 @@
   padding: 24px 32px;
 }
 
-.themeToggle {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text-2);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.themeToggle:hover {
-  background: var(--surface-2);
-  color: var(--text);
-  border-color: var(--text-3);
-}
-.themeToggle:active {
-  background: var(--surface-3);
-  transform: scale(0.96);
-}
-
 .content {
   flex: 1;
   display: flex;

@@ -31,30 +31,6 @@
     gap: 12px;
 }
 
-.themeToggle {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid rgba(255, 244, 232, 0.2);
-  border-radius: var(--radius-sm);
-  background: rgba(24, 19, 16, 0.72);
-  color: #fff4e8;
-  cursor: pointer;
-  backdrop-filter: blur(12px);
-  transition: background 0.15s, transform 0.15s;
-}
-
-.themeToggle:hover {
-  border-color: rgba(255, 138, 43, 0.55);
-  background: rgba(255, 138, 43, 0.14);
-}
-
-.themeToggle:active {
-    background: var(--surface-3);
-    transform: scale(0.96);
-}
-
 .authLinks {
     display: flex;
     align-items: center;
