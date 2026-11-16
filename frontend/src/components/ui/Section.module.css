@@ -12,9 +12,11 @@
 }
 
 .header h2 {
-  font-size: 16px;
+  color: #fff4e8;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 26px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.025em;
 }
 
 .link {
@@ -25,14 +27,14 @@
   margin-right: -6px;
   padding: 4px 6px;
   border-radius: 8px;
-  color: var(--text-2);
-  font-size: 13px;
+  color: #ff8a2b;
+  font-size: 14px;
   font-weight: 500;
   text-decoration: none;
   transition: color 0.15s, background 0.15s;
 }
 
 .link:hover {
-  color: var(--text);
-  background: var(--surface-3);
+  color: #ffad66;
+  background: rgba(255, 138, 43, 0.12);
 }
