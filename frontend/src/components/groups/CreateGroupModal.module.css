@@ -5,19 +5,22 @@
   display: grid;
   place-items: center;
   padding: 24px;
-  background: var(--scrim);
+  background: rgba(8, 5, 3, 0.76);
+  backdrop-filter: blur(8px);
   animation: fade 0.2s ease-out;
 }
 
 .sheet {
   display: flex;
   flex-direction: column;
-  width: min(480px, 100%);
+  width: min(500px, 100%);
   max-height: min(760px, calc(100vh - 48px));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+  border: 1px solid rgba(255, 244, 232, 0.22);
+  border-radius: 24px;
+  background: rgba(25, 20, 17, 0.96);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
+  color: #fff4e8;
   animation: pop 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.1);
 }
 
@@ -37,8 +40,10 @@
 }
 
 .header h2 {
-  font-size: 17px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 28px;
   font-weight: 600;
+  letter-spacing: -0.025em;
 }
 
 .close {
@@ -87,11 +92,17 @@
   width: 100%;
   min-height: var(--field-height);
   padding: 9px 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
+  border: 1px solid rgba(255, 244, 232, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff4e8;
 }
 
+.field input:focus {
+  border-color: rgba(255, 138, 43, 0.72);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 138, 43, 0.14);
+}
 
 .friends {
   margin: 0;
@@ -128,7 +139,7 @@
 }
 
 .friendRow:hover {
-  background: var(--surface-2);
+  background: rgba(255, 138, 43, 0.1);
 }
 
 .friendRow input {
@@ -162,10 +173,10 @@
   gap: 7px;
   min-height: 36px;
   padding: 8px 13px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255, 244, 232, 0.18);
   border-radius: 999px;
-  background: var(--surface);
-  color: var(--text-2);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 244, 232, 0.72);
   font-size: 13px;
   font-weight: 500;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
@@ -177,11 +188,12 @@
   border-color: var(--border-strong);
 }
 
-.kindOn, .kindOn:hover {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--on-primary);
-  font-weight: 600;
+.kindOn,
+.kindOn:hover {
+  border-color: #ff8a2b;
+  background: #ff8a2b;
+  color: #21130a;
+  font-weight: 700;
 }
 
 .empty {
