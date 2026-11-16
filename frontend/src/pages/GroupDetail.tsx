@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Crown, MessageSquare, UserPlus } from 'lucide-react'
+import { ArrowLeft, Crown, LogOut, MessageSquare, UserPlus } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { AddMembersModal } from '../components/groups/AddMembersModal'
@@ -45,8 +45,12 @@ export function GroupDetailPage() {
   const [friends, setFriends] = useState<User[]>([])
   const [adding, setAdding] = useState(false)
   const [settling, setSettling] = useState(false)
+  const [leaving, setLeaving] = useState(false)
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
   const [balances, setBalances] = useState<GroupBalances | null>(null)
   const [notice, setNotice] = useState('')
+  const [memberActionMessage, setMemberActionMessage] = useState('')
+  const [memberActionError, setMemberActionError] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
@@ -139,9 +143,55 @@ export function GroupDetailPage() {
   }
   if (!me || !group) return <div className={styles.state}>Loading group…</div>
 
-  const Icon = iconForKind(group.kind)
-  const created = new Date(group.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-  const isOwner = group.members.some((m) => m.user.id === me.id && m.role === 'owner')
+  const currentUser = me
+  const currentGroup = group
+  const Icon = iconForKind(currentGroup.kind)
+  const created = new Date(currentGroup.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  const isOwner = currentGroup.members.some((m) => m.user.id === currentUser.id && m.role === 'owner')
+
+  async function removeMember(user: User) {
+    if (user.id === currentUser.id || !isOwner) return
+    if (!window.confirm(`Remove ${user.name} from ${currentGroup.name}?`)) return
+
+    setRemovingMemberId(user.id)
+    setMemberActionMessage('')
+    setMemberActionError('')
+    try {
+      const res = await fetch(`/api/groups/${currentGroup.id}/members/${user.id}`, { method: 'DELETE' })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.message ?? 'Could not remove this member.')
+
+      setGroup((current) => current ? {
+        ...current,
+        members: current.members.filter((member) => member.user.id !== user.id),
+      } : current)
+      setMemberActionMessage(`${user.name} was removed from the group.`)
+      loadBalances()
+    } catch (err) {
+      setMemberActionError(err instanceof Error ? err.message : 'Could not remove this member.')
+    } finally {
+      setRemovingMemberId(null)
+    }
+  }
+
+  async function leaveGroup() {
+    if (isOwner) return
+    if (!window.confirm(`Leave ${currentGroup.name}? You will lose access to this group.`)) return
+
+    setLeaving(true)
+    setMemberActionMessage('')
+    setMemberActionError('')
+    try {
+      const res = await fetch(`/api/groups/${currentGroup.id}/leave`, { method: 'DELETE' })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.message ?? 'Could not leave this group.')
+      navigate('/groups')
+    } catch (err) {
+      setMemberActionError(err instanceof Error ? err.message : 'Could not leave this group.')
+    } finally {
+      setLeaving(false)
+    }
+  }
 
   return (
     <div className={pageStyles.app}>
@@ -268,17 +318,35 @@ export function GroupDetailPage() {
                   Add people
                 </Button>
               )}
+              {!isOwner && (
+                <button className={styles.removeBtn} type="button" onClick={leaveGroup} disabled={leaving}>
+                  <LogOut size={15} aria-hidden /> {leaving ? 'Leaving…' : 'Leave group'}
+                </button>
+              )}
             </div>
             {notice && <p className={styles.note} role="status">{notice}</p>}
+            {memberActionMessage && <p className={styles.note} role="status">{memberActionMessage}</p>}
+            {memberActionError && <p className={styles.note} role="alert">{memberActionError}</p>}
             <ul className={styles.groupList}>
               {group.members.map((m) => (
-                <li key={m.user.id}>
-                  <Link to={`/users/${m.user.id}`} className={styles.groupRow}>
+                <li key={m.user.id} className={styles.groupRow}>
+                  <Link to={`/users/${m.user.id}`} className={styles.groupMemberLink}>
                     <Avatar user={m.user} size={34} />
                     <span className={styles.groupName}>{m.user.name}{m.user.id === me.id ? ' (you)' : ''}</span>
                     {m.role === 'owner' && <span className={styles.badge}><Crown size={13} aria-hidden /> Owner</span>}
                     <span className={styles.groupMeta}>{m.user.email}</span>
                   </Link>
+                  {isOwner && m.role !== 'owner' && (
+                    <button
+                      type="button"
+                      className={styles.removeBtn}
+                      disabled={removingMemberId !== null}
+                      onClick={() => removeMember(m.user)}
+                      aria-label={`Remove ${m.user.name} from group`}
+                    >
+                      {removingMemberId === m.user.id ? 'Removing…' : 'Remove'}
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
