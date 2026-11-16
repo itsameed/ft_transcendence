@@ -145,9 +145,16 @@ export function GroupPage() {
       <Sidebar me={me} />
       <main className={dashStyles.main}>
         <div className={dashStyles.content}>
-          <header>
-            <h1 className={styles.heading}>Groups &amp; Friends</h1>
-            <p className={styles.sub}>Find people and groups, manage friends and requests.</p>
+           <header className={styles.pageHeader}>
+            <p className={styles.pageEyebrow}>Groups &amp; connections</p>
+
+            <h1 className={styles.heading}>
+              Groups <span>&amp;</span> Friends
+            </h1>
+
+            <p className={styles.sub}>
+              Everything you share, and everyone you share it with.
+            </p>
           </header>
 
           <div className={styles.toolbar}>
@@ -204,15 +211,36 @@ export function GroupPage() {
 
           {showGroups && (
             <section aria-label="Your groups">
-              <h2 className={styles.sectionTitle}>Your groups ({visibleGroups.length})</h2>
+              <div className={styles.sectionHeading}>
+  <div>
+    <h2 className={styles.sectionTitle}>Your groups</h2>
+    <p className={styles.sectionDescription}>
+      Trips, homes and events you share with others.
+    </p>
+  </div>
+
+  <span className={styles.countBadge}>
+    {visibleGroups.length} {visibleGroups.length === 1 ? 'group' : 'groups'}
+  </span>
+</div>
               {visibleGroups.length === 0 ? <p className={styles.empty}>No groups match.</p> : <GroupsGrid groups={visibleGroups.map((g) => ({ ...g, yourBalance: groupBalances[g.id] ?? g.yourBalance }))} now={NOW} onCreate={() => setCreating(true)} />}
-              <p className={styles.hint}>Select a group to see its members and details, or create a new group with your friends.</p>
             </section>
           )}
 
           {showFriends && (
             <section aria-label="Friends">
-              <h2 className={styles.sectionTitle}>Friends ({visibleFriends.length})</h2>
+              <div className={styles.sectionHeading}>
+  <div>
+    <h2 className={styles.sectionTitle}>Your friends</h2>
+    <p className={styles.sectionDescription}>
+      People you split expenses and settle balances with.
+    </p>
+  </div>
+
+  <span className={styles.countBadge}>
+    {visibleFriends.length} {visibleFriends.length === 1 ? 'friend' : 'friends'}
+  </span>
+</div>
               {visibleFriends.length === 0 ? <p className={styles.empty}>No friends match.</p> : (
                 <ul className={styles.friendGrid}>
                   {visibleFriends.map((f) => {
