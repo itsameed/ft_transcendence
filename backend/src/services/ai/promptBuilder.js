@@ -1,5 +1,5 @@
 class promptBuilder {
-  build(query, docs) {
+  build(query, docs, balanceSummary, expensesSummary) {
     const context = docs.map(d => d.text).join('\n');
 
     const prompt =
@@ -8,17 +8,20 @@ class promptBuilder {
       'The user may write in Moroccan Darija, French, English, or Standard Arabic. Understand all of them.\n' +
       'ALWAYS answer in the SAME language the user used in their question.\n\n' +
 
-      'CRITICAL RULES FOR CALCULATIONS:\n' +
-      '1. Read the "Expenses" section carefully. Look for the exact phrase "X paid Y MAD" for each person.\n' +
-      '2. If the expense says "split exactly as follows: Mostafa paid 1 MAD, Barab paid 500 MAD", then Mostafa\'s paid amount is 1 MAD and Barab\'s paid amount is 500 MAD. DO NOT add them up or mix them.\n' +
-      '3. Read the "Settlements" section. A settlement means a person paid another person to reduce debt.\n' +
-      '4. Calculate the net balance for every person:\n' +
-      '   - Add all the money each person PAID (as stated in the "paid" phrases).\n' +
-      '   - Subtract each person\'s SHARE of the expenses.\n' +
-      '   - Subtract any settlement money they PAID.\n' +
-      '   - Add any settlement money they RECEIVED.\n' +
-      '5. If positive, they receive money. If negative, they owe money.\n' +
-      '6. DO NOT hallucinate. If there is no data, say so.\n\n' +
+      '=== CRITICAL: CURRENT BALANCES SUMMARY ===\n' +
+      (balanceSummary || 'No balances summary available.') + '\n' +
+      '==========================================\n\n' +
+
+      '=== CRITICAL: EXPENSES SUMMARY ===\n' +
+      (expensesSummary || 'No expenses summary available.') + '\n' +
+      '=================================\n\n' +
+
+      'CRITICAL RULES:\n' +
+      '1. ALWAYS use the "CURRENT BALANCES SUMMARY" to answer questions about debts or settlements.\n' +
+      '2. ALWAYS use the "EXPENSES SUMMARY" to answer questions like "What did we spend on?" or "How much did we spend?".\n' +
+      '3. DO NOT attempt to calculate totals yourself. Trust the summaries completely.\n' +
+      '4. If asked "how to settle", look at who owes whom in the balance summary and suggest they pay each other directly.\n' +
+      '5. DO NOT hallucinate. If there is no data, say so.\n\n' +
 
       'FORMATTING RULES (VERY IMPORTANT):\n' +
       '- Write ONLY in plain, natural sentences. Do NOT use Markdown formatting.\n' +
@@ -27,7 +30,7 @@ class promptBuilder {
       '- Write in paragraphs, not bullet points.\n' +
       '- ALWAYS use exact usernames from the data.\n\n' +
 
-      'Retrieved snippets:\n' + context + '\n\n' +
+      'Retrieved snippets (For context only):\n' + context + '\n\n' +
       'User question: ' + query + '\n\n' +
       'Answer:';
 

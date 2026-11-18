@@ -4,7 +4,6 @@ const TIMEOUT = 60000;
 
 const MODELS = [
     'openai/gpt-oss-20b',
-    'openai/gpt-oss-120b',
     'qwen/qwen3.8-27b'
 ];
 
@@ -14,9 +13,7 @@ class llmClient {
         if (!apiKey) {
             throw new Error('API key required');
         }
-
         options = options || {};
-
         this.apiKey = apiKey;
         this.host = options.hostname || 'api.groq.com';
         this.path = options.chatPath || '/openai/v1/chat/completions';
@@ -26,7 +23,6 @@ class llmClient {
 
     call(model, prompt, onToken, abortSignal) {
         const self = this;
-
         const body = JSON.stringify({
             model: model,
             messages: [{ role: 'user', content: prompt }],
@@ -77,7 +73,6 @@ class llmClient {
                     for (let i = 0; i < lines.length; i++) {
                         const line = lines[i].trim();
                         if (line.indexOf('data:') !== 0) continue;
-
                         const data = line.slice(5).trim();
                         if (data === '[DONE]') continue;
 
@@ -133,21 +128,17 @@ class llmClient {
         }
 
         let lastErr;
-
         for (let i = 0; i < this.models.length; i++) {
             try {
                 return await this.call(this.models[i], prompt, onToken, abortSignal);
             } catch (err) {
                 lastErr = err;
-
                 if (abortSignal && abortSignal.aborted) {
                     throw new Error('Aborted');
                 }
-
                 console.log('[llm] ' + this.models[i] + ' failed: ' + err.message);
             }
         }
-
         throw new Error('All models failed: ' + lastErr.message);
     }
 }

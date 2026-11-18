@@ -1,4 +1,3 @@
-
 const express = require('express');
 const ratelimit = require('express-rate-limit');
 const auth = require('../../middleware/requireAuth');
@@ -44,7 +43,7 @@ router.post('/chat/group/:groupId/stream', chatlimiter, auth, async function (re
     });
 
     function send(name, data) {
-        if (!cancelled) {
+        if (!cancelled && !res.writableEnded) {
             res.write('event: ' + name + '\n');
             res.write('data: ' + JSON.stringify(data) + '\n\n');
         }
@@ -64,7 +63,6 @@ router.post('/chat/group/:groupId/stream', chatlimiter, auth, async function (re
                 process.env.EMBEDDINGS_MODEL,
                 process.env.EMBEDDINGS_PATH
             );
-
             engines.set(key, rag);
         }
 
@@ -91,10 +89,10 @@ router.post('/chat/group/:groupId/stream', chatlimiter, auth, async function (re
 
     } catch (error) {
         console.log('[ai-chat/group]', error.message);
-
-        send('error', { message: 'An error occurred.' });
-
-        if (!res.writableEnded) res.end();
+        if (!res.writableEnded) {
+            send('error', { message: 'An error occurred.' });
+            res.end();
+        }
     }
 });
 
