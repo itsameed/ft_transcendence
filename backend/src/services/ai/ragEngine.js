@@ -16,9 +16,9 @@ function hash(text)
     return crypto.createHash('sha256').update(text).digest('hex');
 }
 
-function cache_file(group_id, user_id, type)
+function cache_file(group_id, type)
 {
-    const key = hash(group_id + '|' + user_id);
+    const key = hash(String(group_id));
     return path.join(cache_dir, key + '_' + type + '.json');
 }
 
@@ -30,15 +30,10 @@ function read_cache(file)
         {
             return JSON.parse(fs.readFileSync(file, 'utf8'));
         }
-        else
-        {
-            return {};
-        }
     }
-    catch (e)
-    {
-        return {};
-    }
+    catch (e) {}
+
+    return {};
 }
 
 function write_cache(file, data)
@@ -66,6 +61,7 @@ class RagEngine
         this.chunks = [];
         this.retriever = null;
         this.semantic = false;
+        this.user_context = '';
     }
 
     async ensure(group_id, loader)
@@ -77,34 +73,28 @@ class RagEngine
             return false;
         }
 
-        let user_id = null;
+        this.user_context = '';
 
-        for (const doc of result.docs)
-        {
-            if (doc.id && doc.id.startsWith('user:'))
-            {
-                user_id = doc.id.substring(5);
-                break;
-            }
-        }
-
-        if (!user_id)
-        {
-            return false;
-        }
-
-        const old_chunks = read_cache(cache_file(group_id, user_id, 'chunks'));
-        const old_vectors = read_cache(cache_file(group_id, user_id, 'vectors'));
+        const old_chunks = read_cache(cache_file(group_id, 'chunks'));
+        const old_vectors = read_cache(cache_file(group_id, 'vectors'));
 
         const chunks = {};
         const vectors = {};
         const all_chunks = [];
         const all_vectors = [];
 
+        let vector_count = 0;
+
         for (const doc of result.docs)
         {
             if (!doc.id || typeof doc.text !== 'string')
             {
+                continue;
+            }
+
+            if (doc.id.startsWith('user:'))
+            {
+                this.user_context = doc.text;
                 continue;
             }
 
@@ -177,25 +167,29 @@ class RagEngine
                 for (let i = 0; i < doc_vectors.vectors.length; i++)
                 {
                     all_vectors.push(doc_vectors.vectors[i]);
+                    vector_count++;
                 }
             }
         }
 
         this.chunks = all_chunks;
-        this.semantic = all_vectors.length > 0;
+
+        this.semantic =
+            all_chunks.length > 0 &&
+            vector_count === all_chunks.length;
 
         this.retriever = new Retriever({
             chunks: this.semantic ? all_chunks : [],
-            vectors: all_vectors
+            vectors: this.semantic ? all_vectors : []
         });
 
-        write_cache(cache_file(group_id, user_id, 'chunks'), chunks);
-        write_cache(cache_file(group_id, user_id, 'vectors'), vectors);
+        write_cache(cache_file(group_id, 'chunks'), chunks);
+        write_cache(cache_file(group_id, 'vectors'), vectors);
 
         return true;
     }
 
-    async ask(question, on_token, abort_signal)
+    async ask(question, on_token, abort_signal, user_context)
     {
         if (!this.retriever)
         {
@@ -223,6 +217,13 @@ class RagEngine
             {
                 docs.push({ text: this.chunks[i] });
             }
+        }
+
+        const current_user = user_context || this.user_context;
+
+        if (current_user)
+        {
+            docs.unshift({ text: current_user });
         }
 
         const prompt = this.prompt.build(question, docs);
