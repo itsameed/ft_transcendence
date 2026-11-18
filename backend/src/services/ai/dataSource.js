@@ -182,7 +182,8 @@ async function getGroupName(groupId) {
     try {
         const group = await Group.findById(groupId).select('name').lean();
         return group ? group.name : 'group';
-    } catch (err) {
+    } catch (err) 
+    {
         return 'group';
     }
 }
