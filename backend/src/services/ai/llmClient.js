@@ -39,6 +39,17 @@ class llmClient {
                 return reject(new Error('Aborted before start'));
             }
 
+            let committed = false;
+            const pending = [];
+
+            function flush() {
+                committed = true;
+                for (let k = 0; k < pending.length; k++) {
+                    onToken(pending[k]);
+                }
+                pending.length = 0;
+            }
+
             const req = https.request({
                 hostname: self.host,
                 path: self.path,
@@ -75,13 +86,18 @@ class llmClient {
                             const delta = json.choices && json.choices[0] && json.choices[0].delta;
                             if (delta && delta.content) {
                                 full += delta.content;
-                                onToken(delta.content);
+                                if (committed) {
+                                    onToken(delta.content);
+                                } else {
+                                    pending.push(delta.content);
+                                }
                             }
                         } catch (e) {}
                     }
                 });
 
                 res.on('end', function () {
+                    if (!committed) flush();
                     resolve(full);
                 });
 

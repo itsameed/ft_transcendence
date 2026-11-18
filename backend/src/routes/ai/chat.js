@@ -1,10 +1,12 @@
+
 const express = require('express');
 const ratelimit = require('express-rate-limit');
 const auth = require('../../middleware/requireAuth');
 const datasource = require('../../services/ai/dataSource');
-const ragengine = require('../../services/ai/ragEngine');
+const RagEngine = require('../../services/ai/ragEngine');
 
 const router = express.Router();
+const engines = new Map();
 
 const chatlimiter = ratelimit({
     windowMs: 60 * 1000,
@@ -15,19 +17,11 @@ const chatlimiter = ratelimit({
 });
 
 router.post('/chat/group/:groupId/stream', chatlimiter, auth, async function (req, res) {
-    let question = '';
+    const question = req.body?.question?.trim();
     const groupId = req.params.groupId;
-
-    if (req.body && typeof req.body.question === 'string') {
-        question = req.body.question.trim();
-    }
 
     if (!question) {
         return res.status(400).json({ error: 'Question required' });
-    }
-
-    if (!groupId) {
-        return res.status(400).json({ error: 'Group ID required' });
     }
 
     if (question.length > 2000) {
@@ -39,69 +33,68 @@ router.post('/chat/group/:groupId/stream', chatlimiter, auth, async function (re
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
-    const abortController = new AbortController();
+    const controller = new AbortController();
     let cancelled = false;
 
     res.on('close', function () {
         if (!res.writableEnded) {
             cancelled = true;
-            abortController.abort();
+            controller.abort();
         }
     });
 
     function send(name, data) {
-        if (cancelled) {
-            return;
+        if (!cancelled) {
+            res.write('event: ' + name + '\n');
+            res.write('data: ' + JSON.stringify(data) + '\n\n');
         }
-        res.write('event: ' + name + '\n');
-        res.write('data: ' + JSON.stringify(data) + '\n\n');
     }
 
     try {
         const userId = req.session.userId;
+        const key = groupId + ':' + userId;
 
-        const result = await datasource.loadGroupDocuments(userId, groupId);
+        let rag = engines.get(key);
 
-        if (!result) {
-            send('token', { text: 'Unable to load this group or you do not have access.' });
-            send('done', {});
+        if (!rag) {
+            rag = new RagEngine(
+                process.env.GROQ_API_KEY,
+                process.env.EMBEDDINGS_API_KEY,
+                process.env.EMBEDDINGS_BASE_URL,
+                process.env.EMBEDDINGS_MODEL,
+                process.env.EMBEDDINGS_PATH
+            );
+
+            engines.set(key, rag);
+        }
+
+        const success = await rag.ensure(groupId, function () {
+            return datasource.loadGroupDocuments(userId, groupId);
+        });
+
+        if (!success) {
+            send('error', { message: 'Unable to load group.' });
             return res.end();
         }
 
-        const rag = new ragengine(
-            process.env.GROQ_API_KEY,
-            process.env.EMBEDDINGS_API_KEY,
-            process.env.EMBEDDINGS_BASE_URL,
-            process.env.EMBEDDINGS_MODEL,
-            process.env.EMBEDDINGS_PATH
-        );
-
-        await rag.ingest(result.docs);
-
-        const ragResult = await rag.ask(
+        const result = await rag.ask(
             question,
             function (token) {
-                if (cancelled) {
-                    return;
-                }
                 send('token', { text: token });
             },
-            abortController.signal
+            controller.signal
         );
 
-        send('sources', { sources: ragResult.sources });
+        send('sources', { sources: result.sources });
         send('done', {});
         res.end();
+
     } catch (error) {
-        console.log('[ai-chat/group] error:', error.message);
+        console.log('[ai-chat/group]', error.message);
 
-        if (!cancelled) {
-            send('error', { message: 'An error occurred.' });
-        }
+        send('error', { message: 'An error occurred.' });
 
-        if (!res.writableEnded) {
-            res.end();
-        }
+        if (!res.writableEnded) res.end();
     }
 });
 
