@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { io, type Socket } from 'socket.io-client'
 import {
   ArrowLeft, BellOff, CheckCheck, CirclePlus,
-  MessageSquare, Pin, ReceiptText, Reply, SendHorizonal,
+  MessageSquare, Pin, ReceiptText, SendHorizonal,
   Smile, Sparkles, Wallet, X,
 } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
@@ -21,7 +21,7 @@ import styles from './ChatNew.module.css'
 
 interface ApiGroup { _id: string; name: string; kind: string; conversationId?: string; members: { role?: string; userId: { _id: string; username: string; email: string; avatar?: string | null } }[] }
 interface DmConv { conversationId: string; other: User; participants: string[] }
-interface Msg { id: string; senderId: string; senderName: string; content: string; createdAt: string; ai?: boolean; replyTo?: { name: string; text: string } }
+interface Msg { id: string; senderId: string; senderName: string; content: string; createdAt: string; ai?: boolean }
 interface GroupExpense { id: string; title: string; category: string; amount: number; paidBy: User; date: string; myShare: number | null; shares: { userId: string; amount: number }[] | null }
 type Mode = 'group' | 'ai'
 type Filter = 'all' | 'unread' | 'groups' | 'settled'
@@ -67,7 +67,6 @@ export function ChatPage() {
   const [expenses, setExpenses] = useState<GroupExpense[]>([])
   const [globalDebts, setGlobalDebts] = useState<{ user: User; amount: number }[]>([])
   const [recentBalances, setRecentBalances] = useState<Record<string, number>>({})
-  const [replyTo, setReplyTo] = useState<Msg | null>(null)
   const [pinned, setPinned] = useState<LocalMap>(() => loadLocal('splitify-chat-pinned', {}))
   const [muted] = useState<Record<string, boolean>>(() => loadLocal('splitify-chat-muted', {}))
   const [readAt, setReadAt] = useState<Record<string, string>>(() => loadLocal('splitify-chat-read', {}))
@@ -251,15 +250,13 @@ export function ChatPage() {
   async function sendGroup() {
     const content = draft.trim()
     if (!content || !activeConvId) return
-    const replySnapshot = replyTo
-    setDraft(''); setReplyTo(null)
+    setDraft('')
     const res = await fetch(`/api/conversations/${activeConvId}/messages`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content }),
     })
     if (!res.ok) { setDraft(content); notify('Could not send — please try again'); return }
-    const quote = replySnapshot ? { name: replySnapshot.senderName, text: replySnapshot.content.slice(0, 90) } : undefined
     const m = await res.json()
-    setMessages((prev) => prev.some((x) => x.id === m._id) ? prev : [...prev, { id: m._id, senderId: me!.id, senderName: me!.name, content: m.content, createdAt: m.createdAt, replyTo: quote }])
+    setMessages((prev) => prev.some((x) => x.id === m._id) ? prev : [...prev, { id: m._id, senderId: me!.id, senderName: me!.name, content: m.content, createdAt: m.createdAt }])
   }
 
   async function askAI(text?: string) {
@@ -347,7 +344,7 @@ export function ChatPage() {
                 <>
                   <p className={styles.listLabel}>Direct messages</p>
                   {dms.map((d) => (
-                    <button key={d.conversationId} className={`${styles.conv} ${inDm && dmTarget?.id === d.other.id ? styles.convOn : ''}`} onClick={() => { setSelectedId(null); setDmTarget(d.other); setMode('group'); setMobileThread(true); setReplyTo(null) }} aria-current={inDm && dmTarget?.id === d.other.id}>
+                    <button key={d.conversationId} className={`${styles.conv} ${inDm && dmTarget?.id === d.other.id ? styles.convOn : ''}`} onClick={() => { setSelectedId(null); setDmTarget(d.other); setMode('group'); setMobileThread(true) }} aria-current={inDm && dmTarget?.id === d.other.id}>
                       <Avatar user={d.other} size={40} />
                       <span className={styles.convBody}>
                         <span className={styles.convTop}><span className={styles.convName}>{d.other.name}</span></span>
@@ -363,7 +360,7 @@ export function ChatPage() {
                 const isSelected = selectedId === g.id
                 return (
                   <div key={g.id}>
-                    <button className={`${styles.conv} ${isSelected && mode === 'group' ? styles.convOn : ''}`} onClick={() => { setSelectedId(g.id); setDmTarget(null); setMode('group'); setMobileThread(true); setReplyTo(null) }} aria-current={isSelected && mode === 'group'}>
+                    <button className={`${styles.conv} ${isSelected && mode === 'group' ? styles.convOn : ''}`} onClick={() => { setSelectedId(g.id); setDmTarget(null); setMode('group'); setMobileThread(true) }} aria-current={isSelected && mode === 'group'}>
                       <span className={styles.convIcon}><Icon size={19} /></span>
                       <span className={styles.convBody}>
                         <span className={styles.convTop}><span className={styles.convName}>{g.name}</span></span>
@@ -433,15 +430,13 @@ export function ChatPage() {
                             <div className={styles.bubbleWrap}>
                               <div className={styles.bubble}>
                                 {!grouped && !mine && !m.ai && <span className={styles.who}>{m.senderName}</span>}
-                                {m.replyTo && <span className={styles.replyQuote}><b>{m.replyTo.name}</b>{m.replyTo.text}</span>}
                                 {m.content || (m.ai ? '…' : '')}
                                 <span className={styles.meta}>{timeOf(m.createdAt)}{mine && mode === 'group' && <CheckCheck size={13} />}</span>
                               </div>
                             </div>
-                            <span className={styles.msgActions}>
-                              <button className={styles.miniBtn} aria-label="Reply" onClick={() => { setReplyTo(m); inputRef.current?.focus() }}><Reply size={15} /></button>
-                              {!inDm && <button className={styles.miniBtn} aria-label={selected && pinned[selected.id] === m.id ? 'Unpin' : 'Pin'} onClick={() => togglePin(m)}><Pin size={15} /></button>}
-                            </span>
+                            {!inDm && <span className={styles.msgActions}>
+                              <button className={styles.miniBtn} aria-label={selected && pinned[selected.id] === m.id ? 'Unpin' : 'Pin'} onClick={() => togglePin(m)}><Pin size={15} /></button>
+                            </span>}
                           </div>
                         </div>
                       )
@@ -457,10 +452,6 @@ export function ChatPage() {
                   )}
 
                   <div className={styles.composerZone}>
-                    {replyTo && (
-                      <div className={styles.replyPreview}><Reply size={15} style={{ color: 'var(--text-2)', flex: 'none' }} /><span className={styles.grow}>Replying to <b>{replyTo.senderName}</b> · {replyTo.content}</span>
-                        <button className={styles.miniBtn} onClick={() => setReplyTo(null)} aria-label="Cancel reply"><X size={14} /></button></div>
-                    )}
                     {emojiOpen && <div className={styles.emojiPop}>{QUICK_EMOJI.map((e) => <button key={e} onClick={() => { setDraft((d) => d + e); inputRef.current?.focus() }}>{e}</button>)}</div>}
                     <form className={styles.composer} onSubmit={(e) => { e.preventDefault(); mode === 'group' ? sendGroup() : askAI() }}>
                       {!inDm && <button type="button" className={styles.composerBtn} aria-label="Add expense" title="Add expense" onClick={() => setAddingExpense(true)}><ReceiptText size={19} /></button>}
