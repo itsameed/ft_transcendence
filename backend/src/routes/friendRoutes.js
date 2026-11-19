@@ -1,0 +1,30 @@
+const express = require("express");
+const apiAuth = require("../middleware/apiAuth");
+
+const router = express.Router();
+
+const {
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  getFriends,
+  getFriendRequests,
+  removeFriend,
+  remindFriend
+} = require("../controllers/friendController");
+
+router.post("/request", apiAuth, sendFriendRequest);
+
+router.patch("/request/:friendshipId/accept", apiAuth, acceptFriendRequest);
+
+router.patch("/request/:friendshipId/reject", apiAuth, rejectFriendRequest);
+
+router.get("/", apiAuth, getFriends);
+
+router.get("/requests", apiAuth, getFriendRequests);
+
+router.delete("/", apiAuth, removeFriend);
+
+router.post("/:userId/remind", apiAuth, remindFriend);
+
+module.exports = router;

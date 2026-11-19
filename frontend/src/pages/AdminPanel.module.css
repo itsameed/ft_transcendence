@@ -1,0 +1,204 @@
+.app {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 44px 48px 72px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8b9bb4;
+}
+
+.headerRow h1 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.03);
+}
+
+.statCard span {
+  color: #66758d;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+.statCard strong {
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 24px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table th {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #68788f;
+}
+
+.userCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 180px;
+}
+
+.userCell strong {
+  font-size: 0.98rem;
+  overflow-wrap: anywhere;
+}
+
+.userCell span {
+  font-size: 0.76rem;
+  color: #68788f;
+  overflow-wrap: anywhere;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.badgeActive {
+  background: rgba(20, 184, 166, 0.12);
+  color: #0f766e;
+}
+
+.badgeSuspended {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
+.muted {
+  color: #75829a;
+  font-size: 0.8rem;
+}
+
+.groupList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.groupCard {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.02);
+}
+
+.groupCard h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.groupCard p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.groupCard > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.groupMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.empty {
+  margin: 0;
+  padding: 18px;
+  color: #64748b;
+}
+
+@media (max-width: 860px) {
+  .main {
+    padding: 20px 16px 120px;
+  }
+
+  .columns {
+    grid-template-columns: 1fr;
+  }
+
+  .groupCard {
+    flex-direction: column;
+  }
+
+  .groupMeta {
+    align-items: flex-start;
+  }
+}
