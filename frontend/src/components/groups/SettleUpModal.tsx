@@ -42,7 +42,7 @@ export function SettleUpModal({ open, groupId, groupName, debts, onClose, onSett
 
   const target = debts.find((d) => d.user.id === targetId)
   const parsed = Number(amount)
-  const valid = Boolean(target) && Number.isFinite(parsed) && parsed > 0
+  const valid = target !== undefined && Number.isFinite(parsed) && parsed > 0 && parsed <= target.amount
 
   function pick(id: string) {
     setTargetId(id)
@@ -54,7 +54,14 @@ export function SettleUpModal({ open, groupId, groupName, debts, onClose, onSett
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
-    if (!valid) { setError('Enter an amount greater than zero.'); return }
+    if (!target || !Number.isFinite(parsed) || parsed <= 0) {
+      setError('Enter an amount greater than zero.')
+      return
+    }
+    if (parsed > target.amount) {
+      setError(`The amount cannot exceed ${money(target.amount)}.`)
+      return
+    }
     setSaving(true)
     try {
       const res = await fetch('/api/settlements', {
@@ -113,15 +120,20 @@ export function SettleUpModal({ open, groupId, groupName, debts, onClose, onSett
             <input
               type="number"
               min="0.01"
+              max={target?.amount}
               step="0.01"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => {
+                const nextAmount = e.target.value
+                setAmount(target && Number(nextAmount) > target.amount ? target.amount.toFixed(2) : nextAmount)
+              }}
               placeholder="0.00"
               disabled={debts.length === 0}
             />
           </label>
 
           <p className={styles.hint}>
+            {target ? `You can pay up to ${money(target.amount)}. ` : ''}
             This records a payment. The expenses stay in the group’s history — only the balance changes.
           </p>
 

@@ -2,8 +2,10 @@
 const mongoose = require('mongoose');
 const Settlement = require('../models/Schemas/Settlement.js');
 const Group = require('../models/Schemas/Group.js');
+const Expense = require('../models/Schemas/Expenses.js');
 const printLogsDate = require('./printLogs.js');
 const { createNotification } = require('./notificationService.js');
+const { computePairwiseDebts } = require('../services/balances');
 
 /**
  * Records a payment from the caller to another member of the same group.
@@ -38,6 +40,18 @@ async function addSettlement(req, res, next) {
 
         if (!memberIds.includes(fromUserId) || !memberIds.includes(String(toUserId))) {
             return res.status(403).json({ message: 'Both people must be members of this group.' });
+        }
+
+        const [expenses, settlements] = await Promise.all([
+            Expense.find({ group: groupId }),
+            Settlement.find({ group: groupId, status: 'accepted' }),
+        ]);
+        const { youOwe } = computePairwiseDebts(expenses, settlements, fromUserId);
+        const outstandingAmount = youOwe.find((debt) => debt.userId === String(toUserId))?.amount ?? 0;
+        if (Math.round(settlementAmount * 100) > Math.round(outstandingAmount * 100)) {
+            return res.status(400).json({
+                message: `Settlement amount cannot exceed the outstanding amount of ${outstandingAmount.toFixed(2)}.`,
+            });
         }
 
         const settlement = await Settlement.create({
