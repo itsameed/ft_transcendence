@@ -91,7 +91,7 @@ async function createExpense(req, res, next) {
                 type: "EXPENSE_ADDED",
                 title: "New expense",
                 message: `A new expense "${description}" of ${amount} was added to group "${group.name}"`,
-                relatedId: expense._id
+                relatedId: groupId
             });
 
             if (io) {
