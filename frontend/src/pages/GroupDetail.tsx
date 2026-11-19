@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Crown, FolderX, LogOut, MessageSquare, ShieldAlert, Trash2, UserPlus } from 'lucide-react'
+import { ArrowLeft, Crown, FolderX, LogOut, MessageSquare, Plus, ShieldAlert, Trash2, UserPlus } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
+import { AddExpenseModal } from '../components/dashboard/AddExpenseModal'
 import { AddMembersModal } from '../components/groups/AddMembersModal'
 import { SettleUpModal } from '../components/groups/SettleUpModal'
 import { Avatar } from '../components/ui/Avatar'
@@ -11,7 +12,7 @@ import { Card } from '../components/ui/Card'
 import { iconForKind } from '../lib/GroupKinds'
 import { categoryIcon } from '../lib/categories'
 import { money, relativeDay } from '../lib/format'
-import type { Category, User } from '../types'
+import type { Category, Group, User } from '../types'
 import pageStyles from './Dashboard.module.css'
 import styles from './Profile.module.css'
 
@@ -42,7 +43,9 @@ export function GroupDetailPage() {
   const [group, setGroup] = useState<GroupDetail | null>(null)
   const [expenses, setExpenses] = useState<GroupExpense[]>([])
   const [expensesNote, setExpensesNote] = useState('')
+  const [expenseRefreshKey, setExpenseRefreshKey] = useState(0)
   const [friends, setFriends] = useState<User[]>([])
+  const [addingExpense, setAddingExpense] = useState(false)
   const [adding, setAdding] = useState(false)
   const [settling, setSettling] = useState(false)
   const [leaving, setLeaving] = useState(false)
@@ -55,6 +58,24 @@ export function GroupDetailPage() {
   const [error, setError] = useState('')
   const [errorStatus, setErrorStatus] = useState<404 | 403 | null>(null)
   const navigate = useNavigate()
+  const [today] = useState(() => new Date())
+  const expenseGroup = useMemo<Group | null>(() => group ? ({
+    id: group.id,
+    name: group.name,
+    emoji: '',
+    kind: 'other',
+    memberIds: group.members.map((member) => member.user.id),
+    totalSpent: 0,
+    yourBalance: 0,
+    description: group.description,
+    createdAt: group.createdAt,
+  }) : null, [group])
+  const expenseGroups = useMemo(() => expenseGroup ? [expenseGroup] : [], [expenseGroup])
+  const expenseUsers = useMemo<Record<string, User>>(() => {
+    const users = Object.fromEntries((group?.members ?? []).map(({ user }) => [user.id, user]))
+    if (me) users[me.id] = me
+    return users
+  }, [group?.members, me])
 
   useEffect(() => {
     let cancelled = false
@@ -82,7 +103,7 @@ export function GroupDetailPage() {
     }
     loadExpenses()
     return () => { cancelled = true }
-  }, [groupId, navigate])
+  }, [groupId, navigate, expenseRefreshKey])
 
   async function loadBalances() {
     try {
@@ -244,11 +265,16 @@ export function GroupDetailPage() {
           <Link to="/groups" className={styles.backLink}><ArrowLeft size={16} aria-hidden /> Groups &amp; Friends</Link>
 
           <header className={`${styles.heading} ${styles.groupHeading}`}>
-            <div>
-              <p className={styles.eyebrow}>Group</p>
-              <h1 title={group.name}>{group.name}</h1>
-              <p className={styles.groupDescription}>{group.description || 'No description yet.'}</p>
+            <div className={styles.groupHeadingRow}>
+              <div>
+                <p className={styles.eyebrow}>Group</p>
+                <h1 title={group.name}>{group.name}</h1>
+              </div>
+              <Button variant="primary" icon={<Plus size={16} aria-hidden />} onClick={() => setAddingExpense(true)}>
+                Add expense
+              </Button>
             </div>
+            <p className={styles.groupDescription}>{group.description || 'No description yet.'}</p>
           </header>
 
           <Card className={`${styles.identity} ${styles.groupIdentity}`}>
@@ -326,7 +352,7 @@ export function GroupDetailPage() {
               <p>{expenses.length > 0 ? `Total spent: ${money(expenses.reduce((sum, e) => sum + e.amount, 0))}` : 'Every expense shared in this group.'}</p>
             </div>
             {expenses.length === 0 ? (
-              <p className={styles.intro}>{expensesNote || 'No expenses yet — add one from the dashboard.'}</p>
+              <p className={styles.intro}>{expensesNote || 'No expenses yet — add one to start tracking costs in this group.'}</p>
             ) : (
               <ul className={styles.groupList}>
                 {expenses.map((e) => {
@@ -425,6 +451,21 @@ export function GroupDetailPage() {
           loadBalances()
         }}
       />
+      {expenseGroup && (
+        <AddExpenseModal
+          open={addingExpense}
+          onClose={() => setAddingExpense(false)}
+          onSave={async () => {
+            setAddingExpense(false)
+            setExpenseRefreshKey((key) => key + 1)
+            await loadBalances()
+          }}
+          groups={expenseGroups}
+          users={expenseUsers}
+          me={me.id}
+          today={today}
+        />
+      )}
       <AddMembersModal
         open={adding}
         groupId={group.id}

@@ -17,6 +17,17 @@
   min-width: 0;
 }
 
+.groupHeadingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.groupHeadingRow > div {
+  min-width: 0;
+}
+
 .groupHeading h1,
 .groupIdentity .identityText h2 {
   overflow: hidden;
@@ -549,6 +560,12 @@
 
   .heading h1 {
     font-size: 23px;
+  }
+
+  .groupHeadingRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .groupIdentity {
