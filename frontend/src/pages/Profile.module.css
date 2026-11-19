@@ -420,6 +420,7 @@
 
 .expenseMain strong {
   font-weight: 500;
+  overflow-wrap: anywhere;
 }
 
 .expenseMain small {
