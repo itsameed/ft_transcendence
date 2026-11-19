@@ -532,7 +532,7 @@ const deleteGroup = async (req, res, next) => {
     const isOwner = group.members.some(
       (member) =>
         member.userId.toString() === deletedBy &&
-        (member.role === "owner" || group.createdBy.toString() === deletedBy)
+        member.role === "owner"
     );
 
     if (!isOwner) {

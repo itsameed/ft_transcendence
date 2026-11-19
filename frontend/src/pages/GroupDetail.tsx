@@ -148,10 +148,7 @@ export function GroupDetailPage() {
   const currentGroup = group
   const Icon = iconForKind(currentGroup.kind)
   const created = new Date(currentGroup.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-  const isOwner = currentGroup.members.some((m) =>
-    m.user.id === currentUser.id &&
-    (m.role === 'owner' || currentGroup.createdBy.id === currentUser.id)
-  )
+  const isOwner = currentGroup.members.some((m) => m.user.id === currentUser.id && m.role === 'owner')
 
   async function removeMember(user: User) {
     if (user.id === currentUser.id || !isOwner) return
