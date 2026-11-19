@@ -15,11 +15,13 @@ import { UserProfilePage } from './pages/UserProfile'
 import { GroupDetailPage } from './pages/GroupDetail'
 import { NotificationsPage } from './pages/Notifications'
 import { AdminPanelPage } from './pages/AdminPanel'
+import { NotFoundPage } from './pages/NotFound'
 
 export function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<Landing/>}/>
         <Route path="/login" element={<Login/>}/>
         <Route path="/signup" element={<Signup/>}/>
         <Route path="/dashboard" element={<Dashboard/>}/>
@@ -31,7 +33,7 @@ export function App() {
         <Route path="/groups/:groupId" element={<GroupDetailPage/>}/>
         <Route path="/notifications" element={<NotificationsPage/>}/>
         <Route path="/admin" element={<AdminPanelPage/>}/>
-        <Route path="*" element={<Landing/>}/>
+        <Route path="*" element={<NotFoundPage/>}/>
       </Routes>
     </Router>
   )
