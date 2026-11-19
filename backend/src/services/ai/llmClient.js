@@ -2,10 +2,11 @@ const https = require('https');
 
 const TIMEOUT = 60000;
 
-const MODELS = [
+const FALLBACK_MODELS = [
     'openai/gpt-oss-20b',
-    'openai/gpt-oss-120b',
-    'qwen/qwen3.8-27b'
+    'qwen/qwen3.8-27b',
+    'llama-3.1-8b-instant',
+    'llama3-8b-8192'
 ];
 
 class llmClient {
@@ -14,19 +15,68 @@ class llmClient {
         if (!apiKey) {
             throw new Error('API key required');
         }
-
         options = options || {};
-
         this.apiKey = apiKey;
         this.host = options.hostname || 'api.groq.com';
         this.path = options.chatPath || '/openai/v1/chat/completions';
         this.name = options.providerName || 'Groq';
-        this.models = options.models || MODELS;
+        this.models = options.models || FALLBACK_MODELS;
+        this._cachedModels = null;
+        this._lastFetchTime = 0;
+    }
+
+    async fetchAvailableModels() {
+        if (this._cachedModels && (Date.now() - this._lastFetchTime < 600000)) {
+            return this._cachedModels;
+        }
+
+        return new Promise((resolve) => {
+            const options = {
+                hostname: this.host,
+                path: '/openai/v1/models',
+                method: 'GET',
+                timeout: 10000,
+                headers: {
+                    'Authorization': 'Bearer ' + this.apiKey
+                }
+            };
+
+            const req = https.request(options, (res) => {
+                let data = '';
+                res.on('data', (chunk) => data += chunk);
+                res.on('end', () => {
+                    if (res.statusCode === 200) {
+                        try {
+                            const json = JSON.parse(data);
+                            const models = json.data
+                                .map(m => m.id)
+                                .filter(id => 
+                                    !id.includes('whisper') && 
+                                    !id.includes('tts') && 
+                                    !id.includes('embed') &&
+                                    !id.includes('guard')
+                                );
+                            
+                            this._cachedModels = models;
+                            this._lastFetchTime = Date.now();
+                            resolve(models);
+                        } catch (e) {
+                            resolve(FALLBACK_MODELS);
+                        }
+                    } else {
+                        resolve(FALLBACK_MODELS);
+                    }
+                });
+            });
+
+            req.on('error', () => resolve(FALLBACK_MODELS));
+            req.on('timeout', () => { req.destroy(); resolve(FALLBACK_MODELS); });
+            req.end();
+        });
     }
 
     call(model, prompt, onToken, abortSignal) {
         const self = this;
-
         const body = JSON.stringify({
             model: model,
             messages: [{ role: 'user', content: prompt }],
@@ -37,6 +87,17 @@ class llmClient {
         return new Promise(function (resolve, reject) {
             if (abortSignal && abortSignal.aborted) {
                 return reject(new Error('Aborted before start'));
+            }
+
+            let committed = false;
+            const pending = [];
+
+            function flush() {
+                committed = true;
+                for (let k = 0; k < pending.length; k++) {
+                    onToken(pending[k]);
+                }
+                pending.length = 0;
             }
 
             const req = https.request({
@@ -52,7 +113,9 @@ class llmClient {
             }, function (res) {
                 if (res.statusCode >= 400) {
                     res.resume();
-                    return reject(new Error('[' + self.name + '] HTTP ' + res.statusCode));
+                    const err = new Error('[' + self.name + '] HTTP ' + res.statusCode);
+                    err.statusCode = res.statusCode;
+                    return reject(err);
                 }
 
                 let buf = '';
@@ -66,7 +129,6 @@ class llmClient {
                     for (let i = 0; i < lines.length; i++) {
                         const line = lines[i].trim();
                         if (line.indexOf('data:') !== 0) continue;
-
                         const data = line.slice(5).trim();
                         if (data === '[DONE]') continue;
 
@@ -75,13 +137,18 @@ class llmClient {
                             const delta = json.choices && json.choices[0] && json.choices[0].delta;
                             if (delta && delta.content) {
                                 full += delta.content;
-                                onToken(delta.content);
+                                if (committed) {
+                                    onToken(delta.content);
+                                } else {
+                                    pending.push(delta.content);
+                                }
                             }
                         } catch (e) {}
                     }
                 });
 
                 res.on('end', function () {
+                    if (!committed) flush();
                     resolve(full);
                 });
 
@@ -116,23 +183,28 @@ class llmClient {
             onToken = function () {};
         }
 
-        let lastErr;
+        const availableModels = await this.fetchAvailableModels();
+        const modelsToTry = [...new Set([...this.models, ...availableModels])];
 
-        for (let i = 0; i < this.models.length; i++) {
+        let lastErr;
+        for (let i = 0; i < modelsToTry.length; i++) {
+            const model = modelsToTry[i];
             try {
-                return await this.call(this.models[i], prompt, onToken, abortSignal);
+                return await this.call(model, prompt, onToken, abortSignal);
             } catch (err) {
                 lastErr = err;
-
                 if (abortSignal && abortSignal.aborted) {
                     throw new Error('Aborted');
                 }
-
-                console.log('[llm] ' + this.models[i] + ' failed: ' + err.message);
+                
+                if (err.statusCode === 429 || err.statusCode === 404) {
+                    await new Promise(r => setTimeout(r, 500)); 
+                    continue; 
+                }
             }
         }
-
-        throw new Error('All models failed: ' + lastErr.message);
+        
+        throw new Error('All models failed. Last error: ' + (lastErr ? lastErr.message : 'Unknown'));
     }
 }
 

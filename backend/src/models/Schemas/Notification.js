@@ -19,10 +19,13 @@ const notificationSchema = new mongoose.Schema(
                 "FRIEND_REQUEST",
                 "EXPENSE_ADDED",
                 "PAYMENT_RECEIVED",
-                "TRIP_INVITATION",
+                "GROUP_REMOVED",
                 "CHAT_MESSAGE",
                 "RECURRING_EXPENSE",
-                "PAYMENT_REMINDER"
+                "PAYMENT_REMINDER",
+                "GROUP_MEMBER_LEFT",
+                "TRIP_INVITATION",
+                "GROUP_UPDATED"
             ],
             required: true
         },

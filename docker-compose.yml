@@ -61,6 +61,7 @@ services:
       - "3000"
     volumes:
       - backend_uploads:/app/uploads/avatars
+      - ./backend/src/services/ai/cache:/app/src/services/ai/cache
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r => {if (!r.ok) process.exit(1)}).catch(() => process.exit(1))"]
       interval: 10s
