@@ -20,6 +20,7 @@ import dashStyles from './Dashboard.module.css'
 import styles from './ChatNew.module.css'
 
 interface ApiGroup { _id: string; name: string; kind: string; conversationId?: string; members: { role?: string; userId: { _id: string; username: string; email: string; avatar?: string | null } }[] }
+interface ApiConversation { _id: string; participants: (string | { _id: string; username?: string; avatar?: string | null } | null)[] }
 interface DmConv { conversationId: string; other: User; participants: string[] }
 interface Msg { id: string; senderId: string; senderName: string; content: string; createdAt: string; ai?: boolean }
 interface GroupExpense { id: string; title: string; category: string; amount: number; paidBy: User; date: string; myShare: number | null; shares: { userId: string; amount: number }[] | null }
@@ -136,13 +137,27 @@ export function ChatPage() {
           const mine = String(profile.user.id)
           const groupConvIds = new Set(mapped.map((g) => g.conversationId).filter(Boolean))
           const dmList: DmConv[] = []
-          for (const c of list) {
-            const parts: string[] = (c.participants ?? []).map(String)
+          for (const c of list as ApiConversation[]) {
+            const participants = c.participants ?? []
+            const parts = participants
+              .map((participant) => typeof participant === 'string' ? participant : String(participant?._id ?? ''))
+              .filter(Boolean)
             if (parts.length !== 2 || groupConvIds.has(String(c._id))) continue
+            for (const participant of participants) {
+              if (!participant || typeof participant === 'string') continue
+              const id = String(participant._id)
+              userMap[id] = {
+                id,
+                name: participant.username ?? 'Unknown member',
+                email: '',
+                avatar: participant.avatar ?? null,
+              }
+            }
             const otherId = parts.find((p) => p !== mine)
             if (!otherId) continue
             dmList.push({ conversationId: String(c._id), participants: parts, other: userMap[otherId] ?? { id: otherId, name: 'Unknown member', email: '' } })
           }
+          setUsers(userMap)
           setDms(dmList)
         }).catch(() => { /* DM section stays empty */ })
       } catch { setError('Failed to load conversations') } finally { setLoading(false) }
