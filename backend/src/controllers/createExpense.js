@@ -1,5 +1,8 @@
 const Expense = require('../models/Schemas/Expenses.js');
-const { MAX_EXPENSE_AMOUNT } = require('../config/expenseLimits');
+const {
+    MAX_EXPENSE_AMOUNT,
+    MAX_EXPENSE_DESCRIPTION_LENGTH,
+} = require('../config/expenseLimits');
 const printLogsDate = require('./printLogs.js');
 const Group = require('../models/Schemas/Group.js');
 const { createNotification } = require("./notificationService");
@@ -19,6 +22,15 @@ async function createExpense(req, res, next) {
             message: 'Invalid expense details.'
         });
     }
+    if (description !== undefined && (
+        typeof description !== 'string' ||
+        description.trim().length > MAX_EXPENSE_DESCRIPTION_LENGTH
+    )) {
+        return res.status(400).json({
+            message: 'Expense description must be text with no more than 140 characters.'
+        });
+    }
+
     const expenseAmount = Number(amount);
     if (!Number.isFinite(expenseAmount) || expenseAmount <= 0 || expenseAmount > MAX_EXPENSE_AMOUNT) {
         return res.status(400).json({ message: 'Expense amount must be greater than 0 and no more than 100,000 MAD.' });

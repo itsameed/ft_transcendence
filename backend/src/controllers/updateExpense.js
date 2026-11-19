@@ -1,5 +1,8 @@
 const ExpenseSchema = require('../models/Schemas/Expenses');
-const { MAX_EXPENSE_AMOUNT } = require('../config/expenseLimits');
+const {
+    MAX_EXPENSE_AMOUNT,
+    MAX_EXPENSE_DESCRIPTION_LENGTH,
+} = require('../config/expenseLimits');
 
 async function updateExpense(req, res, next) {
     try {
@@ -30,6 +33,12 @@ async function updateExpense(req, res, next) {
             updates.amount = amount;
         }
         if (updateData.description !== undefined) {
+            if (
+                typeof updateData.description !== 'string' ||
+                updateData.description.trim().length > MAX_EXPENSE_DESCRIPTION_LENGTH
+            ) {
+                return res.status(400).json({ error: 'Expense description must be text with no more than 140 characters.' });
+            }
             updates.description = updateData.description;
         }
         if (updateData.date !== undefined) {

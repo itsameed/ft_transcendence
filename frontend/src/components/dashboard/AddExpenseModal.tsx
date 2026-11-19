@@ -21,6 +21,7 @@ interface Props {
 
 const CATEGORIES = Object.keys(categoryLabel) as Category[]
 const MAX_EXPENSE_AMOUNT = 100000
+const MAX_EXPENSE_DESCRIPTION_LENGTH = 140
 
 const SPLIT_MODES: [SplitMode, string][] = [
   ['equal', 'Equally'],
@@ -220,6 +221,7 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
             placeholder="What was it for?"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            maxLength={MAX_EXPENSE_DESCRIPTION_LENGTH}
             aria-label="Description"
           />
 
