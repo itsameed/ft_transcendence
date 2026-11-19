@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Crown, LogOut, MessageSquare, Trash2, UserPlus } from 'lucide-react'
+import { ArrowLeft, Crown, FolderX, LogOut, MessageSquare, ShieldAlert, Trash2, UserPlus } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { AddMembersModal } from '../components/groups/AddMembersModal'
@@ -53,6 +53,7 @@ export function GroupDetailPage() {
   const [memberActionMessage, setMemberActionMessage] = useState('')
   const [memberActionError, setMemberActionError] = useState('')
   const [error, setError] = useState('')
+  const [errorStatus, setErrorStatus] = useState<404 | 403 | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -101,16 +102,26 @@ export function GroupDetailPage() {
 
   useEffect(() => {
     async function load() {
+      setError('')
+      setErrorStatus(null)
       try {
         const [profileRes, groupRes] = await Promise.all([
           fetch('/api/my-profile'), fetch(`/api/groups/${groupId}`),
         ])
         if (profileRes.status === 401 || groupRes.status === 401) { navigate('/login'); return }
-        if (groupRes.status === 404) { setError('This group could not be found.'); return }
-        if (groupRes.status === 403) { setError('You are not a member of this group.'); return }
-        if (!groupRes.ok) throw new Error('Could not load this group.')
         const profile = profileRes.ok ? await profileRes.json() : null
         if (profile?.user) setMe(profile.user)
+        if (groupRes.status === 404) {
+          setErrorStatus(404)
+          setError('This group may have been deleted or the link may no longer be valid.')
+          return
+        }
+        if (groupRes.status === 403) {
+          setErrorStatus(403)
+          setError('You no longer have access to this group.')
+          return
+        }
+        if (!groupRes.ok) throw new Error('Could not load this group.')
         fetch('/api/friends')
           .then((r) => (r.ok ? r.json() : null))
           .then((d) => { if (d?.friends) setFriends(d.friends.map((f: any) => ({ id: f._id, name: f.username, email: f.email, avatar: f.avatar ?? null }))) })
@@ -135,10 +146,21 @@ export function GroupDetailPage() {
   }, [groupId, navigate])
 
   if (error) {
+    const ErrorIcon = errorStatus === 403 ? ShieldAlert : FolderX
+    const title = errorStatus === 403 ? 'Access unavailable' : 'Group not found'
     return (
-      <div className={styles.state} role="alert">
-        <p>{error}</p>
-        <Link to="/groups">Back to Groups &amp; Friends</Link>
+      <div className={pageStyles.app}>
+        {me && <Sidebar me={me} />}
+        <main className={pageStyles.main}>
+          <div className={styles.errorState} role="alert">
+            <div className={styles.errorIcon} aria-hidden="true"><ErrorIcon size={34} strokeWidth={1.5} /></div>
+            <p className={styles.errorKicker}>{errorStatus === 403 ? 'Private group' : 'Unavailable group'}</p>
+            <h1>{title}</h1>
+            <p className={styles.errorMessage}>{error}</p>
+            <Link to="/groups" className={styles.errorAction}><ArrowLeft size={16} aria-hidden /> Back to groups &amp; friends</Link>
+          </div>
+        </main>
+        {me && <MobileNav />}
       </div>
     )
   }
