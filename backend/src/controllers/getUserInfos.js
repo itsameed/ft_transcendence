@@ -24,7 +24,7 @@ async function getUserInfos(req, res, next) {
    return res.json({
       user: {
          id: currentUser._id,
-         name: currentUser.displayName || currentUser.username,
+         name: currentUser.username,
          email: currentUser.email,
          role: isAdmin ? 'admin' : (currentUser.role || 'user'),
          status: currentUser.status || 'active',

@@ -12,7 +12,8 @@ passport.use(new GoogleStrategy({
 },
 async (accessToken, refreshToken, profile, done) => {
     try {
-        let user = await User.findOne({ email: profile.emails[0].value });
+        const email = profile.emails[0].value;
+        let user = await User.findOne({ email });
 
         if (user) {
             // Link the Google identity to the existing password account.
@@ -23,9 +24,16 @@ async (accessToken, refreshToken, profile, done) => {
             return done(null, user);
         }
         
+        let baseUsername = email.split('@')[0].replace(/[^A-Za-z0-9_.]/g, '_');
+        let username = baseUsername;
+        let suffix = 1;
+        while (await User.exists({ username })) {
+            username = `${baseUsername}_${suffix++}`;
+        }
+
         user = new User({
-            username: profile.displayName,
-            email: profile.emails[0].value,
+            username,
+            email,
             password: null, // No password for Google users
             googleId: profile.id,
             isVerified: profile.emails[0].verified, // Google already verified it!

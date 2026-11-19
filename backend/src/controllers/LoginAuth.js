@@ -38,7 +38,6 @@ async function loginAuth(req, res, next) {
             message: 'Login successful.',
             userId: user._id,
             username: user.username,
-            displayName: user.displayName,
             email: user.email,
             bio: user.bio,
             gender: user.gender,

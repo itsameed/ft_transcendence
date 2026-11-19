@@ -29,7 +29,6 @@ const ADMIN_CREDENTIALS = {
   username: 'admin',
   password: 'admin',
   email: 'admin@splitify.test',
-  displayName: 'Admin User',
   bio: 'Platform administrator'
 };
 
@@ -37,15 +36,15 @@ const AVATARS = ['aurora', 'clay', 'stone', 'slate', 'moss', 'plum', 'sand', 'in
 const avatarFor = (i) => `/avatars/${AVATARS[i % AVATARS.length]}.svg`;
 
 const PEOPLE = [
-  { username: 'demo', displayName: 'Demo User', email: PRIMARY_EMAIL, bio: 'The account you log in with' },
-  { username: 'yassine', displayName: 'Yassine El Amrani', email: 'yassine@splitify.test', bio: 'Always up for a road trip' },
-  { username: 'salma', displayName: 'Salma Bennani', email: 'salma@splitify.test', bio: 'Chief expense tracker' },
-  { username: 'omar', displayName: 'Omar Haddad', email: 'omar@splitify.test', bio: 'Pays first, asks later' },
-  { username: 'hiba', displayName: 'Hiba Mansouri', email: 'hiba@splitify.test', bio: 'Surf, sun, split' },
-  { username: 'anas', displayName: 'Anas El Fassi', email: 'anas@splitify.test', bio: 'Roommate and co-payer' },
-  { username: 'imane', displayName: 'Imane Chraibi', email: 'imane@splitify.test', bio: 'New here — send me a request' },
-  { username: 'mehdi', displayName: 'Mehdi Alaoui', email: 'mehdi@splitify.test', bio: 'Football every Friday' },
-  { username: 'nadia', displayName: 'Nadia Berrada', email: 'nadia@splitify.test', bio: 'Keeps the receipts' },
+  { username: 'demo', email: PRIMARY_EMAIL, bio: 'The account you log in with' },
+  { username: 'yassine', email: 'yassine@splitify.test', bio: 'Always up for a road trip' },
+  { username: 'salma', email: 'salma@splitify.test', bio: 'Chief expense tracker' },
+  { username: 'omar', email: 'omar@splitify.test', bio: 'Pays first, asks later' },
+  { username: 'hiba', email: 'hiba@splitify.test', bio: 'Surf, sun, split' },
+  { username: 'anas', email: 'anas@splitify.test', bio: 'Roommate and co-payer' },
+  { username: 'imane', email: 'imane@splitify.test', bio: 'New here — send me a request' },
+  { username: 'mehdi', email: 'mehdi@splitify.test', bio: 'Football every Friday' },
+  { username: 'nadia', email: 'nadia@splitify.test', bio: 'Keeps the receipts' },
 ];
 
 const daysAgo = (n, hour = 12) => {
@@ -78,7 +77,6 @@ async function seed() {
     {
       $setOnInsert: {
         username: ADMIN_CREDENTIALS.username,
-        displayName: ADMIN_CREDENTIALS.displayName,
         email: ADMIN_CREDENTIALS.email,
         bio: ADMIN_CREDENTIALS.bio,
         password: await bcrypt.hash(ADMIN_CREDENTIALS.password, 10),
@@ -268,7 +266,7 @@ async function main() {
   console.log(`  expenses:   ${expenses.length}`);
   console.log(`\nLog in with any account, password: ${PASSWORD}`);
   for (const user of users) {
-    console.log(`  ${user.email.padEnd(28)} ${user.displayName}`);
+    console.log(`  ${user.email.padEnd(28)} ${user.username}`);
   }
   console.log('\nTry: /dashboard, /groups, /chat, /notifications');
 }
