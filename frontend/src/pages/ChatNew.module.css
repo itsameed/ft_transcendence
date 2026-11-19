@@ -2,7 +2,6 @@
    messenger shell inside the platform sidebar layout. */
 .chatMain { padding: 0; }
 .shell { display: grid; grid-template-columns: var(--list-w, 288px) minmax(0, 1fr); height: 100vh; height: 100dvh; min-height: 0; background: var(--surface); overflow: hidden; }
-.shell.detailsOpen { grid-template-columns: 288px minmax(0, 1fr) 288px; }
 :root { --thread-measure: min(880px, 100%); }
 
 .list { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--border); background: var(--panel-gradient); overflow: hidden; }
@@ -192,7 +191,6 @@
 /* The shell already sits inside the platform sidebar, so the details
    column stops being a grid column earlier than in the standalone lab. */
 @media (max-width: 1500px) {
-  .shell.detailsOpen { grid-template-columns: 288px minmax(0, 1fr); }
   .details { position: fixed; z-index: 60; top: 0; right: 0; bottom: 0; width: min(320px, 92vw); box-shadow: var(--shadow-pop); }
 }
 @media (max-width: 1020px) { .memberFaces { display: none; } }
@@ -207,7 +205,7 @@
 }
 @media (max-width: 860px) {
   .chatMain { padding: 0 0 84px; }
-  .shell, .shell.detailsOpen { grid-template-columns: minmax(0, 1fr); height: calc(100dvh - 84px); min-height: 0; }
+  .shell { grid-template-columns: minmax(0, 1fr); height: calc(100dvh - 84px); min-height: 0; }
   .shell:not(.mobileThread) .thread, .shell:not(.mobileThread) .details { display: none; }
   .shell.mobileThread .list { display: none; }
   .details { position: fixed; width: min(320px, 92vw); }

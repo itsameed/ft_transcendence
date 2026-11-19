@@ -2,19 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { io, type Socket } from 'socket.io-client'
 import {
-  ArrowLeft, Bell, BellOff, CheckCheck, CirclePlus, Download, FileText, HandCoins,
-  Info, MessageSquare, Mic, Pin, ReceiptText, Reply, Search, SendHorizonal,
-  Smile, Sparkles, Trash2, Wallet, X,
+  ArrowLeft, BellOff, CheckCheck, CirclePlus,
+  MessageSquare, Mic, Pin, ReceiptText, Reply, SendHorizonal,
+  Smile, Sparkles, Wallet, X,
 } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Avatar } from '../components/ui/Avatar'
-import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
 import { AddExpenseModal } from '../components/dashboard/AddExpenseModal'
 import { CreateGroupModal } from '../components/groups/CreateGroupModal'
 import { iconForKind } from '../lib/GroupKinds'
-import { categoryIcon } from '../lib/categories'
 import { firstName, money, relativeDay } from '../lib/format'
 import { sendReminder } from '../lib/remind'
 import type { Group, User } from '../types'
@@ -47,7 +45,6 @@ function parseSSE(chunk: string, onEvent: (name: string, data: any) => void) {
 export function ChatPage() {
   const [me, setMe] = useState<User | null>(null)
   const [groups, setGroups] = useState<Group[]>([])
-  const [groupOwners, setGroupOwners] = useState<Record<string, string>>({})
   const [users, setUsers] = useState<Record<string, User>>({})
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [mode, setMode] = useState<Mode>('group')
@@ -57,9 +54,7 @@ export function ChatPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [streaming, setStreaming] = useState(false)
-  const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
-  const [details, setDetails] = useState(true)
   const [mobileThread, setMobileThread] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [emojiOpen, setEmojiOpen] = useState(false)
@@ -70,16 +65,13 @@ export function ChatPage() {
   const [dms, setDms] = useState<DmConv[]>([])
   const [dmTarget, setDmTarget] = useState<User | null>(null)
   const [dmBusy, setDmBusy] = useState(false)
-  const [leavingGroup, setLeavingGroup] = useState(false)
-  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
   const [expenses, setExpenses] = useState<GroupExpense[]>([])
-  const [expensesNote, setExpensesNote] = useState('')
   const [globalDebts, setGlobalDebts] = useState<{ user: User; amount: number }[]>([])
   const [recentBalances, setRecentBalances] = useState<Record<string, number>>({})
   const [replyTo, setReplyTo] = useState<Msg | null>(null)
   const [reactions, setReactions] = useState<ReactionMap>(() => loadLocal('splitify-chat-reactions', {}))
   const [pinned, setPinned] = useState<LocalMap>(() => loadLocal('splitify-chat-pinned', {}))
-  const [muted, setMuted] = useState<Record<string, boolean>>(() => loadLocal('splitify-chat-muted', {}))
+  const [muted] = useState<Record<string, boolean>>(() => loadLocal('splitify-chat-muted', {}))
   const [readAt, setReadAt] = useState<Record<string, string>>(() => loadLocal('splitify-chat-read', {}))
   const [typingName, setTypingName] = useState<string | null>(null)
   const socketRef = useRef<Socket | null>(null)
@@ -90,7 +82,6 @@ export function ChatPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const selected = groups.find((g) => g.id === selectedId) ?? null
-  const isGroupOwner = Boolean(selected && me && groupOwners[selected.id] === me.id)
   const thread = mode === 'group' ? messages : aiMessages
   const activeConvId = dmTarget && selected === null ? dms.find((d) => d.other.id === dmTarget.id)?.conversationId : selected?.conversationId
   const inDm = Boolean(dmTarget) && !selected
@@ -103,7 +94,6 @@ export function ChatPage() {
 
   useEffect(() => { saveLocal('splitify-chat-reactions', reactions) }, [reactions])
   useEffect(() => { saveLocal('splitify-chat-pinned', pinned) }, [pinned])
-  useEffect(() => { saveLocal('splitify-chat-muted', muted) }, [muted])
   useEffect(() => { saveLocal('splitify-chat-read', readAt) }, [readAt])
 
   useEffect(() => {
@@ -134,15 +124,12 @@ export function ChatPage() {
         }
         const data = groupsRes.ok ? await groupsRes.json() : { groups: [] }
         const userMap: Record<string, User> = {}
-        const ownerMap: Record<string, string> = {}
         if (profile?.user) userMap[profile.user.id] = profile.user
         const mapped: Group[] = (data.groups ?? []).map((g: ApiGroup) => {
           for (const m of g.members ?? []) if (m.userId) userMap[m.userId._id] = { id: m.userId._id, name: m.userId.username, email: m.userId.email, avatar: m.userId.avatar ?? null }
-          const owner = g.members?.find((member) => member.role === 'owner')?.userId._id
-          if (owner) ownerMap[g._id] = owner
           return { id: g._id, name: g.name, emoji: '', kind: (g.kind || 'other') as Group['kind'], memberIds: (g.members ?? []).map((m) => m.userId._id), totalSpent: 0, yourBalance: 0, createdAt: '', conversationId: g.conversationId }
         })
-        setUsers(userMap); setGroups(mapped); setGroupOwners(ownerMap)
+        setUsers(userMap); setGroups(mapped)
         const wanted = params.get('group')
         setSelectedId(mapped.find((g) => g.id === wanted)?.id ?? mapped[0]?.id ?? null)
         fetch('/api/friends').then((r) => (r.ok ? r.json() : null)).then((d) => {
@@ -174,7 +161,7 @@ export function ChatPage() {
     fetch(`/api/groups/${selected.id}/expenses`)
       .then(async (r) => {
         if (cancelled) return
-        if (!r.ok) { setExpenses([]); setExpensesNote('Expenses are not available for this group yet.'); return }
+        if (!r.ok) { setExpenses([]); return }
         const data = await r.json()
         const rows = (Array.isArray(data) ? data : data.expenses ?? []) as any[]
         const mapped: GroupExpense[] = rows.map((e) => {
@@ -188,9 +175,9 @@ export function ChatPage() {
             myShare: e.myShare != null ? Number(e.myShare) : shares?.find((s: { userId: string }) => s.userId === me.id)?.amount ?? null, shares,
           }
         }).sort((a, b) => +new Date(b.date) - +new Date(a.date))
-        if (!cancelled) { setExpenses(mapped); setExpensesNote('') }
+        if (!cancelled) setExpenses(mapped)
       })
-      .catch(() => { if (!cancelled) { setExpenses([]); setExpensesNote('Expenses are not available for this group yet.') } })
+      .catch(() => { if (!cancelled) setExpenses([]) })
     return () => { cancelled = true }
   }, [selected?.id, me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -259,8 +246,6 @@ export function ChatPage() {
 
   const pinnedMsg = selected ? messages.find((m) => m.id === pinned[selected.id]) : undefined
   const visibleGroups = groups.filter((g) => {
-    const q = query.trim().toLowerCase()
-    if (q && !g.name.toLowerCase().includes(q)) return false
     if (filter === 'unread') return false // no server unread source; honest empty state below
     if (filter === 'settled') return (recentBalances[g.id] ?? 0) === 0
     return true
@@ -341,64 +326,6 @@ export function ChatPage() {
     notify(pinned[selected.id] === m.id ? 'Message unpinned' : 'Message pinned to this conversation')
   }
 
-  async function removeGroupMember(user: User) {
-    if (!selected || !isGroupOwner || user.id === me?.id) return
-    if (!window.confirm(`Remove ${user.name} from ${selected.name}?`)) return
-
-    setRemovingMemberId(user.id)
-    try {
-      const response = await fetch(`/api/groups/${selected.id}/members/${user.id}`, { method: 'DELETE' })
-      const data = await response.json().catch(() => null)
-      if (!response.ok) throw new Error(data?.message ?? 'Could not remove this member.')
-
-      setGroups((current) => current.map((group) =>
-        group.id === selected.id
-          ? { ...group, memberIds: group.memberIds.filter((id) => id !== user.id) }
-          : group
-      ))
-      notify(`${user.name} was removed from the group`)
-    } catch (error) {
-      notify(error instanceof Error ? error.message : 'Could not remove this member.')
-    } finally {
-      setRemovingMemberId(null)
-    }
-  }
-
-  async function leaveSelectedGroup() {
-    if (!selected || isGroupOwner) return
-    const groupId = selected.id
-    const groupName = selected.name
-    if (!window.confirm(`Leave ${groupName}? You will lose access to its chat.`)) return
-
-    setLeavingGroup(true)
-    try {
-      const response = await fetch(`/api/groups/${groupId}/leave`, { method: 'DELETE' })
-      const data = await response.json().catch(() => null)
-      if (!response.ok) throw new Error(data?.message ?? 'Could not leave this group.')
-
-      const remainingGroups = groups.filter((group) => group.id !== groupId)
-      setGroups(remainingGroups)
-      setGroupOwners((owners) => {
-        const nextOwners = { ...owners }
-        delete nextOwners[groupId]
-        return nextOwners
-      })
-      setSelectedId(remainingGroups[0]?.id ?? null)
-      setDmTarget(null)
-      setMode('group')
-      setDetails(remainingGroups.length > 0)
-      setMobileThread(remainingGroups.length > 0)
-      setMessages([])
-      setExpenses([])
-      setReplyTo(null)
-      notify(`You left ${groupName}`)
-    } catch (error) {
-      notify(error instanceof Error ? error.message : 'Could not leave this group.')
-    } finally {
-      setLeavingGroup(false)
-    }
-  }
-
   if (loading || !me) return <div className="page-state" role={error ? 'alert' : 'status'}>{error ?? 'Loading…'}</div>
 
   const GroupIcon = selected ? iconForKind(selected.kind) : MessageSquare
@@ -408,12 +335,11 @@ export function ChatPage() {
     <div className={dashStyles.app}>
       <Sidebar me={me} />
       <main className={`${dashStyles.main} ${styles.chatMain}`}>
-        <div className={`${styles.shell} ${details && selected && !inDm ? styles.detailsOpen : ''} ${mobileThread ? styles.mobileThread : ''}`}>
+        <div className={`${styles.shell} ${mobileThread ? styles.mobileThread : ''}`}>
           <aside className={styles.list} aria-label="Conversations">
             <div className={styles.listHead}>
               <div className={styles.listTitle}><h1>Messages</h1>
                 <button className={`${styles.iconBtn} ${styles.primary}`} aria-label="New conversation" onClick={() => setPickerOpen(true)}><CirclePlus size={19} /></button></div>
-              <label className={styles.search}><Search size={16} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search conversations…" aria-label="Search conversations" /></label>
             </div>
             <div className={styles.filters} role="tablist" aria-label="Filter conversations">
               {([['all', 'All'], ['unread', 'Unread'], ['groups', 'Groups'], ['settled', 'Settled']] as [Filter, string][]).map(([id, label]) => (
@@ -429,10 +355,10 @@ export function ChatPage() {
               {(filter === 'all' || filter === 'groups' || filter === 'settled') && visibleGroups.length === 0 && groups.length > 0 && (
                 <div className={styles.emptyList}><strong>{filter === 'settled' ? 'No settled groups match' : 'No conversations found'}</strong>{filter === 'settled' ? 'Groups with an open balance are hidden here.' : 'Try another search.'}</div>
               )}
-              {dms.filter((d) => !query.trim() || d.other.name.toLowerCase().includes(query.trim().toLowerCase())).length > 0 && filter === 'all' && (
+              {dms.length > 0 && filter === 'all' && (
                 <>
                   <p className={styles.listLabel}>Direct messages</p>
-                  {dms.filter((d) => !query.trim() || d.other.name.toLowerCase().includes(query.trim().toLowerCase())).map((d) => (
+                  {dms.map((d) => (
                     <button key={d.conversationId} className={`${styles.conv} ${inDm && dmTarget?.id === d.other.id ? styles.convOn : ''}`} onClick={() => { setSelectedId(null); setDmTarget(d.other); setMode('group'); setMobileThread(true); setReplyTo(null) }} aria-current={inDm && dmTarget?.id === d.other.id}>
                       <Avatar user={d.other} size={40} />
                       <span className={styles.convBody}>
@@ -468,18 +394,14 @@ export function ChatPage() {
               <>
                 <header className={styles.threadHead}>
                   <button className={`${styles.iconBtn} ${styles.backBtn}`} onClick={() => setMobileThread(false)} aria-label="Back to conversations"><ArrowLeft size={18} /></button>
-                  <button className={styles.threadId} onClick={() => selected && setDetails(!details)} aria-label="Toggle group details">
+                  <div className={styles.threadId}>
                     {inDm && dmTarget
                       ? <><Avatar user={dmTarget} size={38} /><span style={{ minWidth: 0 }}><span className={styles.threadName}>{dmTarget.name}</span><span className={styles.threadSub}>Direct message</span></span></>
                       : <><span className={styles.convIcon}>{mode === 'ai' ? <Sparkles size={18} /> : <GroupIcon size={19} />}</span>
                         <span style={{ minWidth: 0 }}><span className={styles.threadName}>{mode === 'ai' ? `Ask AI · ${selected!.name}` : selected!.name}</span>
                           <span className={styles.threadSub}>{mode === 'ai' ? 'Knows this group’s expenses and balances' : `${selected!.memberIds.length} ${selected!.memberIds.length === 1 ? 'member' : 'members'}`}</span></span></>}
-                  </button>
-                  {!inDm && <span className={styles.memberFaces}>{memberUsers.slice(0, 3).map((u) => <Avatar key={u.id} user={u} size={28} />)}</span>}
-                  <div className={styles.headActions}>
-                    <button className={`${styles.iconBtn} ${styles.hideMobile}`} aria-label="Search in conversation" onClick={() => notify('Search in conversation is not available yet')}><Search size={17} /></button>
-                    {!inDm && <button className={`${styles.iconBtn} ${details ? styles.iconBtnOn : ''}`} aria-label={details ? 'Hide group details' : 'Show group details'} title={details ? 'Hide details' : 'Group info'} onClick={() => setDetails(!details)} aria-pressed={details}><Info size={17} /></button>}
                   </div>
+                  {!inDm && <span className={styles.memberFaces}>{memberUsers.slice(0, 3).map((u) => <Avatar key={u.id} user={u} size={28} />)}</span>}
                 </header>
 
                 <div className={styles.scrollCol}>
@@ -496,8 +418,8 @@ export function ChatPage() {
                       <span className={styles.grow}><strong>{myBalance > 0 ? `You’re owed ${money(myBalance)}` : myBalance < 0 ? `You owe ${money(myBalance)}` : 'You’re all settled up'}</strong>
                         <p>{balanceKnown ? `${money(totalSpent)} spent together · ${expenseCount} expenses` : 'Across your recent groups'}</p></span>
                       {myBalance > 0 && topDebtor && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={async () => { const r = await sendReminder(topDebtor.user.id, firstName(topDebtor.user.name)); notify(r.message) }}>Remind</button>}
-                      {myBalance < 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => setDetails(true)}>Settle up</button>}
-                      <button className={styles.stripBtn} onClick={() => setDetails(true)}>Balances</button>
+                      {myBalance < 0 && selected && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => navigate(`/groups/${selected.id}`)}>Settle up</button>}
+                      {selected && <button className={styles.stripBtn} onClick={() => navigate(`/groups/${selected.id}`)}>Balances</button>}
                     </div>
                   )}
                   {mode === 'group' && pinnedMsg && (
@@ -579,104 +501,6 @@ export function ChatPage() {
             )}
           </section>
 
-          {details && selected && !inDm && (
-            <aside className={styles.details} aria-label="Conversation details">
-              <div className={styles.detailsHead}>
-                <button className={`${styles.iconBtn} ${styles.detailsClose}`} onClick={() => setDetails(false)} aria-label="Close details"><X size={17} /></button>
-                <span className={styles.convIcon}><GroupIcon size={24} /></span>
-                <h2>{selected.name}</h2>
-                <p>{expenseCount} expenses</p>
-              </div>
-              <div className={styles.detailsActions}>
-                <button className={styles.actionTile} onClick={() => notify('Calls are not available in chat yet')}>Call</button>
-                <button className={styles.actionTile} onClick={() => notify('Calls are not available in chat yet')}>Video</button>
-                <button className={`${styles.actionTile} ${muted[selected.id] ? styles.actionTileOn : ''}`} onClick={() => { setMuted((p) => ({ ...p, [selected.id]: !p[selected.id] })); notify(muted[selected.id] ? 'Notifications on for this group' : 'Conversation muted (this device only)') }}>{muted[selected.id] ? <BellOff size={19} /> : <Bell size={19} />}{muted[selected.id] ? 'Muted' : 'Mute'}</button>
-                <button className={styles.actionTile} onClick={() => notify('Search in conversation is not available yet')}><Search size={19} />Search</button>
-              </div>
-
-              <section className={styles.detailsSec}><h3>Balances with members</h3>
-                {detailDebts.length > 0 || myBalance !== 0 || balanceKnown || Object.keys(recentBalances).length > 0 ? <>
-                  {(() => {
-                    const settled = myBalance === 0 && detailDebts.length === 0
-                    const topDebtor = detailDebts.filter((d) => d.amount > 0).sort((a, b) => b.amount - a.amount)[0]
-                    const summary = settled ? 'All settled up in this group'
-                      : myBalance > 0 && topDebtor ? `${firstName(topDebtor.user.name)} owes you ${money(topDebtor.amount)}${detailDebts.length > 1 ? ` · net ${money(myBalance)} you’re owed` : ''}`
-                      : myBalance > 0 ? `You’re owed ${money(myBalance)}`
-                      : `You owe ${money(-myBalance)}`
-                    return (
-                      <div className={`${styles.balanceCard} ${settled ? styles.balanceSettled : myBalance > 0 ? styles.balanceOwed : styles.balanceOwe}`} role="status">
-                        <span className={styles.balanceSummary}>{summary}</span>
-                        <span className={styles.balanceMeta}>{balanceKnown ? `${money(totalSpent)} spent in this group` : 'Net balance for this group'}</span>
-                        {myBalance > 0 && topDebtor && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={async () => { const r = await sendReminder(topDebtor.user.id, firstName(topDebtor.user.name)); notify(r.message) }}>Remind</button>}
-                        {myBalance < 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => navigate(`/groups/${selected.id}`)}>Settle up</button>}
-                      </div>
-                    )
-                  })()}
-                  {detailDebts.length === 0 && <p className={styles.detailsEmpty}>No open balances with members of this group.</p>}
-                  {detailDebts.map((d) => (
-                    <div className={styles.debtRow} key={d.user.id}><Avatar user={d.user} size={30} />
-                      <span className={styles.grow}><strong>{d.user.name}</strong><small>{d.amount > 0 ? 'owes you' : 'you owe'}</small></span>
-                      <span className={`${styles.debtAmt} ${d.amount > 0 ? styles.owedText : styles.oweText}`}>{money(d.amount)}</span>
-                      {d.amount > 0
-                        ? <Button size="sm" onClick={async () => { const r = await sendReminder(d.user.id, firstName(d.user.name)); notify(r.message) }}>Remind</Button>
-                        : <Button size="sm" variant="primary" onClick={() => navigate(`/groups/${selected?.id}`)}>Settle</Button>}
-                    </div>
-                  ))}
-                </> : <p className={styles.detailsEmpty}>No open balances with members of this group.</p>}
-              </section>
-
-              <section className={styles.detailsSec}><h3>Members · {memberUsers.length}</h3>
-                {memberUsers.map((u) => (
-                  <div className={styles.memberRow} key={u.id}>
-                    <button className={styles.memberLink} onClick={() => navigate(`/users/${u.id}`)}>
-                      <Avatar user={u} size={30} /><span className={styles.grow}><strong>{u.name}{(u.id === me.id || u.id === groupOwners[selected.id]) && <> <span className={styles.roleBadge}>{u.id === me.id ? 'You' : 'Owner'}</span></>}</strong><small>{u.email}</small></span>
-                    </button>
-                    {isGroupOwner && u.id !== me.id && u.id !== groupOwners[selected.id] && (
-                      <button
-                        className={styles.memberRemove}
-                        type="button"
-                        disabled={removingMemberId !== null}
-                        onClick={() => removeGroupMember(u)}
-                        aria-label={`Remove ${u.name} from group`}
-                      >
-                        {removingMemberId === u.id ? 'Removing…' : 'Remove'}
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </section>
-
-              <section className={styles.detailsSec}><h3>Recent expenses</h3>
-                {expenses.length === 0 ? (
-                  <div className={styles.expensesEmpty}>
-                    <span className={styles.mcIcon}><ReceiptText size={18} /></span>
-                    <strong>No expenses yet</strong>
-                    <p>{expensesNote ? 'Expense history is not available for this group yet — you can still add the next one.' : 'Track the first shared cost for this group — it takes ten seconds.'}</p>
-                    <Button variant="primary" size="sm" onClick={() => setAddingExpense(true)}>+ Add expense</Button>
-                  </div>
-                ) : <>
-                  {expenses.slice(0, 5).map((e) => {
-                    const Icon = categoryIcon[(e.category as keyof typeof categoryIcon)] ?? ReceiptText
-                    return (
-                      <div className={styles.expenseRow} key={e.id}><span className={styles.mcIcon}><Icon size={16} /></span>
-                        <span className={styles.expenseMain}><strong>{e.title}</strong><small>{firstName(e.paidBy.name)} · {relativeDay(e.date, new Date())}</small></span>
-                        <span className={styles.expenseAmt}>{money(e.amount)}</span></div>
-                    )
-                  })}
-                  <Button size="sm" onClick={() => navigate(`/groups/${selected.id}`)}><FileText size={14} /> View group</Button>
-                </>}
-              </section>
-
-              <section className={styles.detailsSec} style={{ borderBottom: 0 }}>
-                <button className={styles.linkRow} onClick={() => setAddingExpense(true)}><ReceiptText size={16} /> Add expense</button>
-                <button className={styles.linkRow} onClick={() => navigate(`/groups/${selected.id}`)}><HandCoins size={16} /> Open group page</button>
-                <button className={styles.linkRow} onClick={() => notify('Chat history download is not available yet')}><Download size={16} /> Download chat history</button>
-                {isGroupOwner
-                  ? <p className={styles.detailsEmpty}>Group owners cannot leave this group.</p>
-                  : <button className={`${styles.linkRow} ${styles.linkDanger}`} onClick={leaveSelectedGroup} disabled={leavingGroup}><Trash2 size={16} />{leavingGroup ? 'Leaving…' : 'Leave group'}</button>}
-              </section>
-            </aside>
-          )}
         </div>
       </main>
       <MobileNav onAdd={() => setAddingExpense(true)} />
@@ -708,7 +532,6 @@ export function ChatPage() {
         onCreated={(group) => {
           setCreatingGroup(false)
           setGroups((p) => [group, ...p])
-          setGroupOwners((owners) => ({ ...owners, [group.id]: me.id }))
           setSelectedId(group.id); setDmTarget(null); setMode('group'); setMobileThread(true)
           notify(`Created “${group.name}”`)
         }} />
