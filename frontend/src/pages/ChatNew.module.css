@@ -56,7 +56,7 @@
 .memberFaces > *:first-child { margin-left: 0; }
 .headActions { display: flex; gap: 6px; flex: none; }
 .scrollCol { overflow-y: auto; display: flex; flex-direction: column; flex: 1; min-height: 0; }
-.modeSwitch { display: inline-flex; gap: 4px; width: var(--thread-measure); margin: 16px auto 0; padding: 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); }
+.modeSwitch { display: inline-flex; gap: 4px; width: max-content; max-width: calc(100% - 24px); margin: 16px auto 0; padding: 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); }
 .modeSwitch button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 6px 14px; border: 0; border-radius: 999px; background: none; color: var(--text-2); font-size: 13px; font-weight: 500; transition: background .15s ease, color .15s ease; }
 .modeSwitch button:hover:not(.modeOn) { color: var(--text); background: var(--hover-wash); }
 .modeOn { background: var(--primary) !important; color: var(--on-primary) !important; font-weight: 600; }
@@ -199,21 +199,18 @@
   .msgRowWrap > .msgRow { max-width: 88%; }
   .balanceStrip { flex-wrap: wrap; }
   .balanceStrip p { white-space: normal; }
-  .modeSwitch, .balanceStrip, .pinnedBar, .composerZone, .suggestions, .typingRow { width: auto; margin-left: 12px; margin-right: 12px; }
+  .balanceStrip, .pinnedBar, .composerZone, .suggestions, .typingRow { width: auto; margin-left: 12px; margin-right: 12px; }
   .headActions .hideMobile { display: none; }
   .composerHint span:last-child { display: none; }
 }
-@media (max-width: 1000px) {
-  .shell { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 860px) {
+  .chatMain { padding: 0 0 84px; }
+  .shell, .shell.detailsOpen { grid-template-columns: minmax(0, 1fr); height: calc(100dvh - 84px); min-height: 0; }
   .shell:not(.mobileThread) .thread, .shell:not(.mobileThread) .details { display: none; }
   .shell.mobileThread .list { display: none; }
   .details { position: fixed; width: min(320px, 92vw); }
   .backBtn { display: grid !important; }
   .threadHead { padding: 8px 10px; }
-}
-@media (max-width: 860px) {
-  .chatMain { padding: 0 0 84px; }
-  .shell { height: calc(100dvh - 84px); min-height: 0; }
 }
 
 .balanceCard { display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; margin-bottom: 10px; border-radius: var(--radius); border: 1px solid var(--border); }
