@@ -16,7 +16,9 @@ const User = mongoose.model('User', new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true
+        required: function () {
+            return !this.googleId;
+        }
     },
     bio: String,
     gender: String,

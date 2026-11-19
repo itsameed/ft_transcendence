@@ -16,7 +16,7 @@ async function loginAuth(req, res, next) {
                 { username: identifier }
             ]
         });
-        if (!user) {
+        if (!user || !user.password) {
             return res.status(401).json({ message: 'Invalid credentials. Please try again.' });
         }
 
