@@ -12,6 +12,27 @@
   line-height: 1.2;
 }
 
+.groupHeading,
+.groupHeading > div {
+  min-width: 0;
+}
+
+.groupHeading h1,
+.groupIdentity .identityText h2 {
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.groupDescription {
+  max-width: 70ch;
+  margin-top: 6px;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
 .eyebrow {
   margin-bottom: 6px;
   color: var(--text-3);
@@ -33,9 +54,23 @@
   gap: 18px;
 }
 
+.groupIdentity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.groupIdentity .identityText {
+  min-width: 0;
+}
+
 .identityText h2 {
   font-size: 20px;
   font-weight: 600;
+}
+
+.groupIdentity .identityText h2 {
+  font-size: 20px;
 }
 
 .identityText p {
@@ -185,6 +220,34 @@
   background: var(--hover-wash);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.groupChatAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid var(--primary);
+  border-radius: 9px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.groupChatAction:hover {
+  border-color: var(--primary-hover);
+  background: var(--primary-hover);
+}
+
+.groupChatAction:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
 }
 
 .removeBtn {
@@ -362,6 +425,16 @@
 
   .heading h1 {
     font-size: 23px;
+  }
+
+  .groupIdentity {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .groupChatAction {
+    grid-column: 2;
+    justify-self: start;
   }
 
   .stats {

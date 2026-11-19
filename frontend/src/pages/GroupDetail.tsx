@@ -200,23 +200,23 @@ export function GroupDetailPage() {
         <div className={styles.content}>
           <Link to="/groups" className={styles.backLink}><ArrowLeft size={16} aria-hidden /> Groups &amp; Friends</Link>
 
-          <header className={styles.heading}>
+          <header className={`${styles.heading} ${styles.groupHeading}`}>
             <div>
               <p className={styles.eyebrow}>Group</p>
-              <h1>{group.name}</h1>
-              <p className={styles.intro}>{group.description || 'No description yet.'}</p>
+              <h1 title={group.name}>{group.name}</h1>
+              <p className={styles.groupDescription}>{group.description || 'No description yet.'}</p>
             </div>
           </header>
 
-          <Card className={styles.identity}>
+          <Card className={`${styles.identity} ${styles.groupIdentity}`}>
             <span className={styles.groupBadge}><Icon size={28} strokeWidth={1.5} aria-hidden /></span>
             <div className={styles.identityText}>
-              <h2>{group.name}</h2>
+              <h2 title={group.name}>{group.name}</h2>
               <p>Created by <Link to={`/users/${group.createdBy.id}`}>{group.createdBy.name}</Link></p>
               <span>Created {created} · {group.members.length} {group.members.length === 1 ? 'member' : 'members'}</span>
             </div>
             {group.conversationId && (
-              <Link to={`/chat?group=${group.id}`} className={styles.inlineAction}><MessageSquare size={15} aria-hidden /> Open chat</Link>
+              <Link to={`/chat?group=${group.id}`} className={styles.groupChatAction}><MessageSquare size={15} aria-hidden /> Open chat</Link>
             )}
           </Card>
 
