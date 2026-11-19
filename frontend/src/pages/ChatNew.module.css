@@ -772,20 +772,7 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1500px) {
-<<<<<<< HEAD
   .details { position: fixed; z-index: 60; top: 0; right: 0; bottom: 0; width: min(320px, 92vw); box-shadow: var(--shadow-pop); }
-=======
-  .shell.detailsOpen { grid-template-columns: 296px minmax(0, 1fr); }
-  .details {
-    position: fixed;
-    z-index: 60;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: min(320px, 92vw);
-    box-shadow: -20px 0 60px -20px rgba(15, 23, 42, 0.3);
-  }
->>>>>>> 83819817d08ef0eff7e653a940fd35d8adea00df
 }
 
 @media (max-width: 1020px) {
@@ -808,18 +795,8 @@
 
 @media (max-width: 860px) {
   .chatMain { padding: 0 0 84px; }
-<<<<<<< HEAD
   .shell { grid-template-columns: minmax(0, 1fr); height: calc(100dvh - 84px); min-height: 0; }
   .shell:not(.mobileThread) .thread, .shell:not(.mobileThread) .details { display: none; }
-=======
-  .shell, .shell.detailsOpen {
-    grid-template-columns: minmax(0, 1fr);
-    height: calc(100dvh - 84px);
-    min-height: 0;
-  }
-  .shell:not(.mobileThread) .thread,
-  .shell:not(.mobileThread) .details { display: none; }
->>>>>>> 83819817d08ef0eff7e653a940fd35d8adea00df
   .shell.mobileThread .list { display: none; }
   .details { position: fixed; width: min(320px, 92vw); }
   .backBtn { display: grid !important; }
