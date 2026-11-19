@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { io, type Socket } from 'socket.io-client'
 import {
   ArrowLeft, BellOff, CheckCheck, CirclePlus,
-  MessageSquare, Pin, ReceiptText, SendHorizonal,
+  MessageSquare, Pin, SendHorizonal,
   Smile, Sparkles, Wallet, X,
 } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
@@ -454,7 +454,6 @@ export function ChatPage() {
                   <div className={styles.composerZone}>
                     {emojiOpen && <div className={styles.emojiPop}>{QUICK_EMOJI.map((e) => <button key={e} onClick={() => { setDraft((d) => d + e); inputRef.current?.focus() }}>{e}</button>)}</div>}
                     <form className={styles.composer} onSubmit={(e) => { e.preventDefault(); mode === 'group' ? sendGroup() : askAI() }}>
-                      {!inDm && <button type="button" className={styles.composerBtn} aria-label="Add expense" title="Add expense" onClick={() => setAddingExpense(true)}><ReceiptText size={19} /></button>}
                       <textarea ref={inputRef} value={draft} rows={1} aria-label="Message"
                         placeholder={mode === 'ai' ? `Ask about ${selected?.name} expenses…` : inDm ? `Message ${dmTarget?.name}…` : `Message ${selected?.name}…`}
                         disabled={mode === 'group' && !activeConvId}
