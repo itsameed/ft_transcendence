@@ -21,7 +21,7 @@ export function GroupsGrid({ groups, onCreate }: { groups: Group[]; now?: Date; 
                      <Icon size={26} strokeWidth={1.5} />
                   </span>
                   <span className={styles.titles}>
-                     <strong>{g.name}</strong>
+                     <strong title={g.name}>{g.name}</strong>
                      <span>{describe(g)}</span>
                   </span>
                   <span className={styles.balance}>
