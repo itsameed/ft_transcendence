@@ -3,7 +3,7 @@
 .chatMain { padding: 0; }
 .shell { display: grid; grid-template-columns: var(--list-w, 288px) minmax(0, 1fr); height: 100vh; height: 100dvh; min-height: 0; background: var(--surface); overflow: hidden; }
 .shell.detailsOpen { grid-template-columns: 288px minmax(0, 1fr) 288px; }
-:root { --thread-measure: min(880px, 100%); }
+:root { --thread-measure: min(880px, calc(100% - 24px)); }
 
 .list { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--border); background: var(--panel-gradient); overflow: hidden; }
 .listHead { padding: 16px 16px 8px; }
@@ -195,7 +195,7 @@
 }
 @media (max-width: 1020px) { .memberFaces { display: none; } }
 @container (max-width: 620px) {
-  .msgs > * { width: 100%; }
+  .msgs > * { width: calc(100% - 24px); }
   .msgRowWrap > .msgRow { max-width: 88%; }
   .balanceStrip { flex-wrap: wrap; }
   .balanceStrip p { white-space: normal; }
