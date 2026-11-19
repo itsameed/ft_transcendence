@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Crown, LogOut, MessageSquare, UserPlus } from 'lucide-react'
+import { ArrowLeft, Crown, LogOut, MessageSquare, Trash2, UserPlus } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { AddMembersModal } from '../components/groups/AddMembersModal'
@@ -46,6 +46,7 @@ export function GroupDetailPage() {
   const [adding, setAdding] = useState(false)
   const [settling, setSettling] = useState(false)
   const [leaving, setLeaving] = useState(false)
+  const [deletingGroup, setDeletingGroup] = useState(false)
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
   const [balances, setBalances] = useState<GroupBalances | null>(null)
   const [notice, setNotice] = useState('')
@@ -190,6 +191,26 @@ export function GroupDetailPage() {
       setMemberActionError(err instanceof Error ? err.message : 'Could not leave this group.')
     } finally {
       setLeaving(false)
+    }
+  }
+
+  async function deleteGroup() {
+    if (!isOwner || deletingGroup) return
+    if (!window.confirm(`Delete "${currentGroup.name}"? This will remove the group, its chat, messages, and invitations. This action cannot be undone.`)) return
+
+    setDeletingGroup(true)
+    setMemberActionMessage('')
+    setMemberActionError('')
+    try {
+      const res = await fetch(`/api/groups/${currentGroup.id}`, { method: 'DELETE' })
+      const data = await res.json().catch(() => null)
+      if (res.status === 401) { navigate('/login'); return }
+      if (!res.ok) throw new Error(data?.message ?? 'Could not delete this group.')
+      navigate('/groups', { replace: true })
+    } catch (err) {
+      setMemberActionError(err instanceof Error ? err.message : 'Could not delete this group.')
+    } finally {
+      setDeletingGroup(false)
     }
   }
 
@@ -351,6 +372,22 @@ export function GroupDetailPage() {
               ))}
             </ul>
           </section>
+          {isOwner && (
+            <section className={`${styles.section} ${styles.dangerZone}`} aria-labelledby="delete-group">
+              <div className={styles.sectionHeading}>
+                <h2 id="delete-group">Delete group</h2>
+                <p>Permanently remove this group, its chat, messages, and invitations.</p>
+              </div>
+              <button
+                type="button"
+                className={styles.deleteGroupButton}
+                onClick={deleteGroup}
+                disabled={deletingGroup}
+              >
+                <Trash2 size={15} aria-hidden /> {deletingGroup ? 'Deleting…' : 'Delete group'}
+              </button>
+            </section>
+          )}
         </div>
       </main>
       <MobileNav />
