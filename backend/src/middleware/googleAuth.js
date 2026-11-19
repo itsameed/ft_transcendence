@@ -2,6 +2,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/Schemas/User');
 const { pickDefaultAvatar } = require('../config/avatars');
+const { MAX_USERNAME_LENGTH } = require('../config/userLimits');
 
 // console.log("here is the client id : ", process.env.GOOGLE_CLIENT_ID);
 
@@ -24,11 +25,14 @@ async (accessToken, refreshToken, profile, done) => {
             return done(null, user);
         }
         
-        let baseUsername = email.split('@')[0].replace(/[^A-Za-z0-9_.]/g, '_');
+        const baseUsername = email.split('@')[0]
+            .replace(/[^A-Za-z0-9_.]/g, '_')
+            .slice(0, MAX_USERNAME_LENGTH);
         let username = baseUsername;
         let suffix = 1;
         while (await User.exists({ username })) {
-            username = `${baseUsername}_${suffix++}`;
+            const suffixText = `_${suffix++}`;
+            username = `${baseUsername.slice(0, MAX_USERNAME_LENGTH - suffixText.length)}${suffixText}`;
         }
 
         user = new User({

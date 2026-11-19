@@ -67,6 +67,7 @@
 .identityText h2 {
   font-size: 20px;
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .groupIdentity .identityText h2 {
@@ -75,6 +76,12 @@
 
 .identityText p {
   color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+.identityText {
+  min-width: 0;
+  flex: 1;
 }
 
 .identityText span {
@@ -160,6 +167,8 @@
 
 .message,
 .error {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--owed);
   font-size: 13px;
 }
@@ -191,6 +200,7 @@
 
 .identityActions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   margin-left: auto;
@@ -328,6 +338,7 @@
 .note {
   color: var(--text-2);
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 .sectionHeadingRow {
@@ -403,12 +414,17 @@
   flex: 1;
   min-width: 0;
   font-weight: 500;
+  overflow-wrap: anywhere;
 }
 
 .groupMeta {
+  flex: 0 1 40%;
+  min-width: 0;
+  overflow: hidden;
   color: var(--text-3);
   font-size: 12px;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .expenseMain {

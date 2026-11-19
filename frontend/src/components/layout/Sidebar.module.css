@@ -232,7 +232,10 @@
 }
 
 .meText strong {
+  overflow: hidden;
   font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .meText span {
@@ -240,6 +243,7 @@
   color: var(--text-3);
   font-size: 12px;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 860px) {

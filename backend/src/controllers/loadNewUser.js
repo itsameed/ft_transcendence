@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const printLogsDate = require('./printLogs.js');
 const { saveAvatar } = require('../config/sharp');
 const { resolveDefaultAvatar, pickDefaultAvatar } = require('../config/avatars');
+const { MAX_USERNAME_LENGTH } = require('../config/userLimits');
 
 async function loadNewUser(req, res, next) {
     let { username, email, password, bio, gender, avatar } = req.body;
@@ -11,6 +12,10 @@ async function loadNewUser(req, res, next) {
     if (!username || !email || !password) {
         return res.status(400).json({message: 'username, email, and password are required.'});
     }
+    if (username.length > MAX_USERNAME_LENGTH) {
+        return res.status(400).json({ message: 'Username cannot exceed 40 characters.' });
+    }
+
     const existedUser = await UserSchema.findOne({email});
     if (existedUser) {
         return res.status(400).json({message: "Email already registered"});

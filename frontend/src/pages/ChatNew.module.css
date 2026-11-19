@@ -604,7 +604,7 @@
 .suggestions::-webkit-scrollbar { display: none; }
 .suggestion { flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); box-shadow: var(--shadow-card); color: var(--text-2); font-size: 13px; font-weight: 500; }
 .suggestion:hover { background: var(--surface-2); color: var(--text); }
-.typingRow { display: flex; align-items: center; gap: 8px; width: var(--thread-measure); margin: 0 auto; padding: 2px 0 6px; color: var(--text-2); font-size: 13px; }
+.typingRow { display: flex; align-items: center; gap: 8px; width: var(--thread-measure); margin: 0 auto; padding: 2px 0 6px; color: var(--text-2); font-size: 13px; overflow-wrap: anywhere; }
 .typingDots { display: inline-flex; gap: 3px; }
 .typingDots i { width: 5px; height: 5px; border-radius: 50%; background: var(--text-2); animation: msgIn 1.2s infinite alternate; }
 .composerZone { width: var(--thread-measure); margin: 6px auto 0; padding: 16px 0 18px; border-top: 1px solid var(--border); }
@@ -618,6 +618,8 @@
 .sendBtn:active:not(:disabled) { transform: scale(.95); }
 .sendBtn:disabled { opacity: .4; cursor: not-allowed; }
 .composerHint { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; padding: 0 10px; color: var(--text-3); font-size: 11px; }
+.composerHint > span { min-width: 0; overflow-wrap: anywhere; }
+.composerHint > span:last-child { text-align: right; }
 .composerHint kbd { padding: 1px 5px; border: 1px solid var(--border-strong); border-radius: 5px; background: var(--surface-2); font: 600 11px var(--font); }
 .emojiPop { display: flex; gap: 2px; width: max-content; margin-bottom: 9px; padding: 7px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-pop); }
 .emojiPop button { padding: 4px; border: 0; border-radius: 8px; background: none; font-size: 20px; }

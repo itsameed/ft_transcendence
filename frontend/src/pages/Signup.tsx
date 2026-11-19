@@ -113,6 +113,7 @@ export function Signup() {
                            value={username}
                            onChange={(e) => setUsername(e.target.value)}
                            placeholder="alex"
+                           maxLength={40}
                            required
                         />
                   </div>

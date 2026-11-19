@@ -173,11 +173,13 @@
   font-size: 0.96rem;
   font-weight: 600;
   color: var(--text, #0f172a);
+  overflow-wrap: anywhere;
 }
 
 .userCell span {
   font-size: 0.76rem;
   color: var(--text-3, #64748b);
+  overflow-wrap: anywhere;
 }
 
 /* Badges */
@@ -242,12 +244,19 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text, #0f172a);
+  overflow-wrap: anywhere;
 }
 
 .groupCard p {
   margin: 0;
   color: var(--text-3, #64748b);
   font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.groupCard > div:first-child {
+  flex: 1;
+  min-width: 0;
 }
 
 .groupMeta {

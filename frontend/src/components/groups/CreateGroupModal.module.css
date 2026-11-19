@@ -37,6 +37,8 @@
 }
 
 .header h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 17px;
   font-weight: 600;
 }
@@ -138,11 +140,16 @@
 }
 
 .friendName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-weight: 500;
   white-space: nowrap;
 }
 
 .friendEmail {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   color: var(--text-3);
   font-size: 12px;
@@ -203,6 +210,8 @@
 }
 
 .error {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--owe);
   font-size: 13px;
 }
@@ -212,4 +221,5 @@
   color: var(--text-3);
   font-size: 12px;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
