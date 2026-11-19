@@ -21,7 +21,7 @@ function shareOf(expense, userId) {
         return entry ? Number(entry.amount) : 0;
     }
     const participants = (expense.participants ?? []).map(String);
-    if (participants.length === 0) return 0;
+    if (!participants.includes(target)) return 0;
     return Number(expense.amount) / participants.length;
 }
 
