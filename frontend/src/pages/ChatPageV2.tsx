@@ -25,7 +25,6 @@ interface Msg { id: string; senderId: string; senderName: string; content: strin
 interface GroupExpense { id: string; title: string; category: string; amount: number; paidBy: User; date: string; myShare: number | null; shares: { userId: string; amount: number }[] | null }
 type Mode = 'group' | 'ai'
 type Filter = 'all' | 'unread' | 'groups' | 'settled'
-type ReactionMap = Record<string, Record<string, string[]>>
 type LocalMap = Record<string, string>
 
 const AI_SUGGESTIONS = ['Who owes whom?', 'How do we settle up fastest?', 'What did we spend on?', 'Draft a payment reminder']
@@ -69,7 +68,6 @@ export function ChatPage() {
   const [globalDebts, setGlobalDebts] = useState<{ user: User; amount: number }[]>([])
   const [recentBalances, setRecentBalances] = useState<Record<string, number>>({})
   const [replyTo, setReplyTo] = useState<Msg | null>(null)
-  const [reactions, setReactions] = useState<ReactionMap>(() => loadLocal('splitify-chat-reactions', {}))
   const [pinned, setPinned] = useState<LocalMap>(() => loadLocal('splitify-chat-pinned', {}))
   const [muted] = useState<Record<string, boolean>>(() => loadLocal('splitify-chat-muted', {}))
   const [readAt, setReadAt] = useState<Record<string, string>>(() => loadLocal('splitify-chat-read', {}))
@@ -92,7 +90,6 @@ export function ChatPage() {
     toastTimer.current = window.setTimeout(() => setToast(null), 2600)
   }, [])
 
-  useEffect(() => { saveLocal('splitify-chat-reactions', reactions) }, [reactions])
   useEffect(() => { saveLocal('splitify-chat-pinned', pinned) }, [pinned])
   useEffect(() => { saveLocal('splitify-chat-read', readAt) }, [readAt])
 
@@ -311,15 +308,6 @@ export function ChatPage() {
     } finally { setDmBusy(false) }
   }
 
-  function react(m: Msg) {
-    setReactions((prev) => {
-      const cur = { ...(prev[m.id] ?? {}) }
-      const mine = cur['🎉']?.includes(me!.name)
-      cur['🎉'] = mine ? (cur['🎉'] ?? []).filter((n) => n !== me!.name) : [...(cur['🎉'] ?? []), me!.name]
-      if (!cur['🎉'].length) delete cur['🎉']
-      return { ...prev, [m.id]: cur }
-    })
-  }
   function togglePin(m: Msg) {
     if (!selected) return
     setPinned((p) => ({ ...p, [selected.id]: p[selected.id] === m.id ? '' : m.id }))
@@ -435,7 +423,6 @@ export function ChatPage() {
                       const mine = m.senderId === me.id
                       const grouped = !!prev && prev.senderId === m.senderId && !showDay
                       const sender = users[m.senderId] ?? { id: m.senderId, name: m.senderName, email: '' }
-                      const msgReactions = reactions[m.id] ?? {}
                       return (
                         <div key={m.id} className={styles.msgRowWrap}>
                           {showDay && <div className={styles.dayDivider}><span>{day}</span></div>}
@@ -450,14 +437,8 @@ export function ChatPage() {
                                 {m.content || (m.ai ? '…' : '')}
                                 <span className={styles.meta}>{timeOf(m.createdAt)}{mine && mode === 'group' && <CheckCheck size={13} />}</span>
                               </div>
-                              {Object.keys(msgReactions).length > 0 && (
-                                <div className={styles.reactions}>{Object.entries(msgReactions).map(([emoji, by]) => (
-                                  <button key={emoji} className={`${styles.reaction} ${by.includes(me.name) ? styles.reactionMine : ''}`} title={by.join(', ')} onClick={() => react(m)}>{emoji} {by.length}</button>
-                                ))}</div>
-                              )}
                             </div>
                             <span className={styles.msgActions}>
-                              <button className={styles.miniBtn} aria-label="React" onClick={() => react(m)}><Smile size={15} /></button>
                               <button className={styles.miniBtn} aria-label="Reply" onClick={() => { setReplyTo(m); inputRef.current?.focus() }}><Reply size={15} /></button>
                               {!inDm && <button className={styles.miniBtn} aria-label={selected && pinned[selected.id] === m.id ? 'Unpin' : 'Pin'} onClick={() => togglePin(m)}><Pin size={15} /></button>}
                             </span>
