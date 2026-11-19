@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { io, type Socket } from 'socket.io-client'
 import {
   ArrowLeft, BellOff, CheckCheck, CirclePlus,
-  MessageSquare, Mic, Pin, ReceiptText, Reply, SendHorizonal,
+  MessageSquare, Pin, ReceiptText, Reply, SendHorizonal,
   Smile, Sparkles, Wallet, X,
 } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
@@ -489,9 +489,7 @@ export function ChatPage() {
                         onChange={(e) => setDraft(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); mode === 'group' ? sendGroup() : askAI() } }} />
                       <button type="button" className={styles.composerBtn} aria-label="Emoji" onClick={() => setEmojiOpen(!emojiOpen)}><Smile size={19} /></button>
-                      {draft.trim()
-                        ? <button type="submit" className={styles.sendBtn} disabled={streaming} aria-label={mode === 'ai' ? 'Ask' : 'Send'}><SendHorizonal size={18} /></button>
-                        : <button type="button" className={styles.composerBtn} aria-label="Voice message (not available)" onClick={() => notify('Voice messages are not available yet')}><Mic size={19} /></button>}
+                      <button type="submit" className={styles.sendBtn} disabled={streaming || !draft.trim()} aria-label={mode === 'ai' ? 'Ask' : 'Send'}><SendHorizonal size={18} /></button>
                     </form>
                     {mode === 'group' && !activeConvId && <p className={styles.composerHint}><span>This conversation is not available yet.</span></p>}
                     <div className={styles.composerHint}><span><kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line</span><span>{mode === 'ai' ? 'AI can make mistakes — verify amounts' : inDm ? dmTarget?.name : selected?.name}</span></div>
