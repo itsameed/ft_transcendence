@@ -51,7 +51,7 @@ export function Landing() {
               Shared money, made clear
             </p>
             <h1 className={styles.headline}>
-              Good times shouldn’t come with <span>messy math.</span>
+              l7ssab <span>saboon.</span>
             </h1>
             <p className={styles.description}>
               Keep the group tab in one place. See who paid, what you owe, and when
