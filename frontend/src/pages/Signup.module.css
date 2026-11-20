@@ -188,6 +188,90 @@
   overflow-wrap: anywhere;
 }
 
+/* ── Step transition ────────────────────────────────── */
+
+.stepContainer {
+  position: relative;
+  overflow: hidden;
+}
+
+.step {
+  animation: stepIn 0.3s var(--ease) both;
+}
+
+@keyframes stepIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+.stepBack {
+  animation: stepInBack 0.3s var(--ease) both;
+}
+
+@keyframes stepInBack {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+
+/* ── Step indicator ────────────────────────────────── */
+
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+.stepDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.stepDotActive {
+  background: var(--primary);
+  transform: scale(1.25);
+}
+
+/* ── Back button ───────────────────────────────────── */
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.backBtn:hover {
+  color: var(--text);
+}
+
+.backBtn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Submit & continue buttons ─────────────────────── */
+
 .submitBtn {
   margin-top: 6px;
   width: 100%;
