@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, LoaderCircle, Moon, Split, Sun } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, LoaderCircle, Moon, Split, Sun } from 'lucide-react'
 import { useTheme } from '../lib/useTheme'
 import { AvatarPicker } from '../components/ui/AvatarPicker'
 import { Button } from '../components/ui/Button'
@@ -9,18 +9,31 @@ import { Logo } from '../components/layout/Sidebar'
 import { DEFAULT_AVATARS } from '../lib/avatars'
 import styles from './Signup.module.css'
 
+type Step = 1 | 2
+
 export function Signup() {
    const navigate = useNavigate()
    const { dark, toggle } = useTheme()
+
+   // ── Step state ───────────────────────────────────
+   const [step, setStep] = useState<Step>(1)
+   const [direction, setDirection] = useState<'forward' | 'back'>('forward')
+
+   // ── Form fields ──────────────────────────────────
    const [username, setUsername] = useState('')
    const [email, setEmail] = useState('')
    const [password, setPassword] = useState('')
    const [passwordVisible, setPasswordVisible] = useState(false)
    const [error, setError] = useState<string | null>(null)
    const [loading, setLoading] = useState(false)
+
+   // ── Avatar ───────────────────────────────────────
    const [avatarId, setAvatarId] = useState<string>(DEFAULT_AVATARS[0].id)
    const [avatarFile, setAvatarFile] = useState<File | null>(null)
    const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+
+   // Refs for native validation
+   const credentialsFormRef = useRef<HTMLFormElement>(null)
 
    // Revoke the object URL when the photo is replaced or the page unmounts.
    useEffect(() => {
@@ -38,7 +51,24 @@ export function Signup() {
       setAvatarFile(null)
    }
 
+   // ── Step navigation ──────────────────────────────
+   const goToStep2 = useCallback(() => {
+      setError(null)
 
+      // Let the browser fire its built-in constraint validation UI
+      if (!credentialsFormRef.current?.reportValidity()) return
+
+      setDirection('forward')
+      setStep(2)
+   }, [])
+
+   const goBackToStep1 = useCallback(() => {
+      setError(null)
+      setDirection('back')
+      setStep(1)
+   }, [])
+
+   // ── Submit ───────────────────────────────────────
    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault()
       setError(null)
@@ -72,6 +102,9 @@ export function Signup() {
       }
    }
 
+   // ── Shared animation class ───────────────────────
+   const stepClass = direction === 'back' ? styles.stepBack : styles.step
+
    return (
       <div className={styles.authWrapper}>
          <header className={styles.topNav}>
@@ -88,6 +121,7 @@ export function Signup() {
 
          <main className={styles.content}>
             <div className={styles.card}>
+               {/* ── Header (always visible) ─────────────── */}
                <div className={styles.header}>
                   <span className={styles.brandMark} aria-hidden="true">
                      <Split size={18} strokeWidth={2.2} />
@@ -96,108 +130,150 @@ export function Signup() {
                   <p className={styles.subtitle}>Get started tracking and settling group balances</p>
                </div>
 
-               <GoogleButton label="Sign up with Google" compact />
-               <OrDivider label="or continue with email" />
+               {/* ── Step 1: Credentials ─────────────────── */}
+               {step === 1 && (
+                  <div className={stepClass} key="step-1">
+                     <GoogleButton label="Sign up with Google" compact />
+                     <OrDivider label="or continue with email" />
 
-               <form className={styles.form} onSubmit={handleSubmit}>
-                  {error && <div className={styles.errorAlert} role="alert">{error}</div>}
+                     <form
+                        ref={credentialsFormRef}
+                        className={styles.form}
+                        onSubmit={(e) => { e.preventDefault(); goToStep2() }}
+                     >
+                        {error && <div className={styles.errorAlert} role="alert">{error}</div>}
 
-                  <div className={styles.field}>
-                     <label htmlFor="username">Username</label>
-                     <input
-                        type="text"
-                        id="username"
-                        name="username"
-                        autoComplete="username"
-                        className={styles.input}
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        placeholder="alex"
-                        maxLength={40}
-                        required
-                     />
-                  </div>
+                        <div className={styles.field}>
+                           <label htmlFor="username">Username</label>
+                           <input
+                              type="text"
+                              id="username"
+                              name="username"
+                              autoComplete="username"
+                              className={styles.input}
+                              value={username}
+                              onChange={(e) => setUsername(e.target.value)}
+                              placeholder="alex"
+                              maxLength={40}
+                              required
+                           />
+                        </div>
 
-                  <div className={styles.field}>
-                     <label htmlFor="email">Email</label>
-                     <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        autoComplete="email"
-                        className={styles.input}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="alex@example.com"
-                        required
-                     />
-                  </div>
+                        <div className={styles.field}>
+                           <label htmlFor="email">Email</label>
+                           <input
+                              type="email"
+                              id="email"
+                              name="email"
+                              autoComplete="email"
+                              className={styles.input}
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="alex@example.com"
+                              required
+                           />
+                        </div>
 
-                  <div className={styles.field}>
-                     <label htmlFor="password">Password</label>
-                     <div className={styles.passwordInputWrap}>
-                        <input
-                           type={passwordVisible ? 'text' : 'password'}
-                           id="password"
-                           name="password"
-                           autoComplete="new-password"
-                           className={`${styles.input} ${styles.passwordInput}`}
-                           value={password}
-                           onChange={(e) => setPassword(e.target.value)}
-                           placeholder="At least 8 characters"
-                           minLength={8}
-                           required
-                           aria-describedby="passwordHint"
-                        />
-                        <button
-                           type="button"
-                           className={styles.passwordToggle}
-                           onClick={() => setPasswordVisible((visible) => !visible)}
-                           aria-label={passwordVisible ? 'Hide password' : 'Show password'}
-                           aria-pressed={passwordVisible}
+                        <div className={styles.field}>
+                           <label htmlFor="password">Password</label>
+                           <div className={styles.passwordInputWrap}>
+                              <input
+                                 type={passwordVisible ? 'text' : 'password'}
+                                 id="password"
+                                 name="password"
+                                 autoComplete="new-password"
+                                 className={`${styles.input} ${styles.passwordInput}`}
+                                 value={password}
+                                 onChange={(e) => setPassword(e.target.value)}
+                                 placeholder="At least 8 characters"
+                                 minLength={8}
+                                 required
+                                 aria-describedby="passwordHint"
+                              />
+                              <button
+                                 type="button"
+                                 className={styles.passwordToggle}
+                                 onClick={() => setPasswordVisible((visible) => !visible)}
+                                 aria-label={passwordVisible ? 'Hide password' : 'Show password'}
+                                 aria-pressed={passwordVisible}
+                              >
+                                 {passwordVisible ? <EyeOff size={17} /> : <Eye size={17} />}
+                              </button>
+                           </div>
+                           <p id="passwordHint" className={styles.passwordHint}>
+                              At least 8 characters
+                           </p>
+                        </div>
+
+                        <Button
+                           type="submit"
+                           variant="primary"
+                           className={styles.submitBtn}
                         >
-                           {passwordVisible ? <EyeOff size={17} /> : <Eye size={17} />}
-                        </button>
-                     </div>
-                     <p id="passwordHint" className={styles.passwordHint}>
-                        At least 8 characters
+                           Continue
+                        </Button>
+
+                        <p className={styles.legalNotice}>
+                           By creating an account, you agree to the{' '}
+                           <Link to="/terms" className={styles.policyLink}>Terms of Service</Link>
+                           {' '}and{' '}
+                           <Link to="/privacy" className={styles.policyLink}>Privacy Policy</Link>
+                        </p>
+                     </form>
+
+                     <p className={styles.footer}>
+                        Already have an account?{' '}
+                        <Link to="/login" className={styles.link}>
+                           Sign in
+                        </Link>
                      </p>
                   </div>
+               )}
 
-                  <AvatarPicker
-                     value={avatarId}
-                     onChange={(id) => { setAvatarId(id); clearPhoto() }}
-                     preview={avatarPreview}
-                     onFile={pickPhoto}
-                     onClearPhoto={clearPhoto}
-                     disabled={loading}
-                  />
+               {/* ── Step 2: Avatar & Finish ─────────────── */}
+               {step === 2 && (
+                  <div className={stepClass} key="step-2">
+                     {/* Step indicator */}
+                     <div className={styles.stepIndicator}>
+                        <span className={styles.stepDot} />
+                        <span className={`${styles.stepDot} ${styles.stepDotActive}`} />
+                        <span>Step 2 of 2</span>
+                     </div>
 
-                  <Button
-                     type="submit"
-                     variant="primary"
-                     disabled={loading}
-                     aria-busy={loading}
-                     className={styles.submitBtn}
-                  >
-                     {loading && <LoaderCircle className={styles.spinner} size={17} aria-hidden="true" />}
-                     {loading ? 'Creating account...' : 'Create Account'}
-                  </Button>
+                     <button
+                        type="button"
+                        className={styles.backBtn}
+                        onClick={goBackToStep1}
+                     >
+                        <ArrowLeft size={15} aria-hidden />
+                        Back
+                     </button>
 
-                  <p className={styles.legalNotice}>
-                     By creating an account, you agree to the{' '}
-                     <Link to="/terms" className={styles.policyLink}>Terms of Service</Link>
-                     {' '}and{' '}
-                     <Link to="/privacy" className={styles.policyLink}>Privacy Policy</Link>
-                  </p>
-               </form>
+                     <form className={styles.form} onSubmit={handleSubmit}>
+                        {error && <div className={styles.errorAlert} role="alert">{error}</div>}
 
-               <p className={styles.footer}>
-                  Already have an account?{' '}
-                  <Link to="/login" className={styles.link}>
-                     Sign in
-                  </Link>
-               </p>
+                        <AvatarPicker
+                           value={avatarId}
+                           onChange={(id) => { setAvatarId(id); clearPhoto() }}
+                           preview={avatarPreview}
+                           onFile={pickPhoto}
+                           onClearPhoto={clearPhoto}
+                           disabled={loading}
+                        />
+
+                        <Button
+                           type="submit"
+                           variant="primary"
+                           disabled={loading}
+                           aria-busy={loading}
+                           className={styles.submitBtn}
+                        >
+                           {loading && <LoaderCircle className={styles.spinner} size={17} aria-hidden="true" />}
+                           {loading ? 'Creating account...' : 'Create Account'}
+                        </Button>
+                     </form>
+                  </div>
+               )}
             </div>
          </main>
       </div>
