@@ -13,7 +13,6 @@ export function Signup() {
    const navigate = useNavigate()
    const { dark, toggle } = useTheme()
    const [username, setUsername] = useState('')
-   const [fullname, setFullname] = useState('')
    const [email, setEmail] = useState('')
    const [password, setPassword] = useState('')
    const [confirmPassword, setConfirmPassword] = useState('')
@@ -54,7 +53,6 @@ export function Signup() {
       try {
          // Multipart so the optional photo rides along with the same request.
          const body = new FormData()
-         body.append('fullName', fullname)
          body.append('username', username)
          body.append('email', email)
          body.append('password', password)
@@ -105,22 +103,7 @@ export function Signup() {
                <form className={styles.form} onSubmit={handleSubmit}>
                   {error && <div className={styles.errorAlert}>{error}</div>}
 
-                  <div className={styles.grid}>
-                     <div className={styles.field}>
-                        <label htmlFor="fullname">Full name</label>
-                        <input
-                           type="text"
-                           id="fullname"
-                           name="fullname"
-                           className={styles.input}
-                           value={fullname}
-                           onChange={(e) => setFullname(e.target.value)}
-                           placeholder="Alex Rivera"
-                           required
-                        />
-                     </div>
-
-                     <div className={styles.field}>
+                  <div className={styles.field}>
                         <label htmlFor="username">Username</label>
                         <input
                            type="text"
@@ -130,9 +113,9 @@ export function Signup() {
                            value={username}
                            onChange={(e) => setUsername(e.target.value)}
                            placeholder="alex"
+                           maxLength={40}
                            required
                         />
-                     </div>
                   </div>
 
                   <div className={styles.field}>

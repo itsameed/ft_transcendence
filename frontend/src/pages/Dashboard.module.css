@@ -1,22 +1,7 @@
-/* ============================================================
-   Dashboard / App shell — premium visual layer
-   ============================================================ */
 .app {
   display: flex;
   min-height: 100vh;
   min-height: 100dvh;
-  background:
-    radial-gradient(1200px 600px at 0% -10%, rgba(99, 102, 241, 0.10), transparent 60%),
-    radial-gradient(1000px 500px at 100% 0%, rgba(20, 184, 166, 0.08), transparent 55%),
-    var(--bg, #f7f8fb);
-  background-attachment: fixed;
-}
-
-:global([data-theme='dark']) .app {
-  background:
-    radial-gradient(1200px 600px at 0% -10%, rgba(129, 140, 248, 0.14), transparent 60%),
-    radial-gradient(1000px 500px at 100% 0%, rgba(45, 212, 191, 0.10), transparent 55%),
-    #0b1020;
 }
 
 /* Sections size themselves against this container, not the viewport. */
@@ -25,13 +10,6 @@
   min-width: 0;
   padding: 44px 48px 72px;
   container-type: inline-size;
-  position: relative;
-  animation: mainIn 0.5s cubic-bezier(0.2, 0.9, 0.3, 1);
-}
-
-@keyframes mainIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 .content {
@@ -42,18 +20,11 @@
   margin: 0 auto;
 }
 
-/* Utility surface used across pages */
-.surface {
-  background: var(--surface, #ffffff);
-  border: 1px solid var(--border, rgba(148, 163, 184, 0.22));
-  border-radius: 20px;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 8px 24px -12px rgba(15, 23, 42, 0.12);
-  backdrop-filter: blur(10px);
-}
-
 @media (max-width: 860px) {
-  .main { padding: 20px 16px 120px; }
-  .content { gap: 32px; }
+  .main {
+    padding: 20px 16px 120px;
+  }
+  .content {
+    gap: 32px;
+  }
 }

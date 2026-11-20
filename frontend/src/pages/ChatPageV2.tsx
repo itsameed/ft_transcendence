@@ -2,32 +2,30 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { io, type Socket } from 'socket.io-client'
 import {
-  ArrowLeft, Bell, BellOff, CheckCheck, CirclePlus, Download, FileText, HandCoins,
-  Info, MessageSquare, Mic, Phone, Pin, ReceiptText, Reply, Search, SendHorizonal,
-  Smile, Sparkles, Trash2, Video, Wallet, X,
+  ArrowLeft, BellOff, CheckCheck, CirclePlus,
+  MessageSquare, Pin, SendHorizonal,
+  Smile, Sparkles, Wallet, X,
 } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Avatar } from '../components/ui/Avatar'
-import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
 import { AddExpenseModal } from '../components/dashboard/AddExpenseModal'
 import { CreateGroupModal } from '../components/groups/CreateGroupModal'
 import { iconForKind } from '../lib/GroupKinds'
-import { categoryIcon } from '../lib/categories'
 import { firstName, money, relativeDay } from '../lib/format'
 import { sendReminder } from '../lib/remind'
 import type { Group, User } from '../types'
 import dashStyles from './Dashboard.module.css'
 import styles from './ChatNew.module.css'
 
-interface ApiGroup { _id: string; name: string; kind: string; conversationId?: string; members: { userId: { _id: string; username: string; email: string; avatar?: string | null } }[] }
+interface ApiGroup { _id: string; name: string; kind: string; conversationId?: string; members: { role?: string; userId: { _id: string; username: string; email: string; avatar?: string | null } }[] }
+interface ApiConversation { _id: string; participants: (string | { _id: string; username?: string; avatar?: string | null } | null)[] }
 interface DmConv { conversationId: string; other: User; participants: string[] }
-interface Msg { id: string; senderId: string; senderName: string; content: string; createdAt: string; ai?: boolean; replyTo?: { name: string; text: string } }
+interface Msg { id: string; senderId: string; senderName: string; content: string; createdAt: string; ai?: boolean }
 interface GroupExpense { id: string; title: string; category: string; amount: number; paidBy: User; date: string; myShare: number | null; shares: { userId: string; amount: number }[] | null }
 type Mode = 'group' | 'ai'
 type Filter = 'all' | 'unread' | 'groups' | 'settled'
-type ReactionMap = Record<string, Record<string, string[]>>
 type LocalMap = Record<string, string>
 
 const AI_SUGGESTIONS = ['Who owes whom?', 'How do we settle up fastest?', 'What did we spend on?', 'Draft a payment reminder']
@@ -56,9 +54,7 @@ export function ChatPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [streaming, setStreaming] = useState(false)
-  const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
-  const [details, setDetails] = useState(true)
   const [mobileThread, setMobileThread] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [emojiOpen, setEmojiOpen] = useState(false)
@@ -70,13 +66,10 @@ export function ChatPage() {
   const [dmTarget, setDmTarget] = useState<User | null>(null)
   const [dmBusy, setDmBusy] = useState(false)
   const [expenses, setExpenses] = useState<GroupExpense[]>([])
-  const [expensesNote, setExpensesNote] = useState('')
   const [globalDebts, setGlobalDebts] = useState<{ user: User; amount: number }[]>([])
   const [recentBalances, setRecentBalances] = useState<Record<string, number>>({})
-  const [replyTo, setReplyTo] = useState<Msg | null>(null)
-  const [reactions, setReactions] = useState<ReactionMap>(() => loadLocal('splitify-chat-reactions', {}))
   const [pinned, setPinned] = useState<LocalMap>(() => loadLocal('splitify-chat-pinned', {}))
-  const [muted, setMuted] = useState<Record<string, boolean>>(() => loadLocal('splitify-chat-muted', {}))
+  const [muted] = useState<Record<string, boolean>>(() => loadLocal('splitify-chat-muted', {}))
   const [readAt, setReadAt] = useState<Record<string, string>>(() => loadLocal('splitify-chat-read', {}))
   const [typingName, setTypingName] = useState<string | null>(null)
   const socketRef = useRef<Socket | null>(null)
@@ -97,9 +90,7 @@ export function ChatPage() {
     toastTimer.current = window.setTimeout(() => setToast(null), 2600)
   }, [])
 
-  useEffect(() => { saveLocal('splitify-chat-reactions', reactions) }, [reactions])
   useEffect(() => { saveLocal('splitify-chat-pinned', pinned) }, [pinned])
-  useEffect(() => { saveLocal('splitify-chat-muted', muted) }, [muted])
   useEffect(() => { saveLocal('splitify-chat-read', readAt) }, [readAt])
 
   useEffect(() => {
@@ -146,13 +137,27 @@ export function ChatPage() {
           const mine = String(profile.user.id)
           const groupConvIds = new Set(mapped.map((g) => g.conversationId).filter(Boolean))
           const dmList: DmConv[] = []
-          for (const c of list) {
-            const parts: string[] = (c.participants ?? []).map(String)
+          for (const c of list as ApiConversation[]) {
+            const participants = c.participants ?? []
+            const parts = participants
+              .map((participant) => typeof participant === 'string' ? participant : String(participant?._id ?? ''))
+              .filter(Boolean)
             if (parts.length !== 2 || groupConvIds.has(String(c._id))) continue
+            for (const participant of participants) {
+              if (!participant || typeof participant === 'string') continue
+              const id = String(participant._id)
+              userMap[id] = {
+                id,
+                name: participant.username ?? 'Unknown member',
+                email: '',
+                avatar: participant.avatar ?? null,
+              }
+            }
             const otherId = parts.find((p) => p !== mine)
             if (!otherId) continue
             dmList.push({ conversationId: String(c._id), participants: parts, other: userMap[otherId] ?? { id: otherId, name: 'Unknown member', email: '' } })
           }
+          setUsers(userMap)
           setDms(dmList)
         }).catch(() => { /* DM section stays empty */ })
       } catch { setError('Failed to load conversations') } finally { setLoading(false) }
@@ -167,7 +172,7 @@ export function ChatPage() {
     fetch(`/api/groups/${selected.id}/expenses`)
       .then(async (r) => {
         if (cancelled) return
-        if (!r.ok) { setExpenses([]); setExpensesNote('Expenses are not available for this group yet.'); return }
+        if (!r.ok) { setExpenses([]); return }
         const data = await r.json()
         const rows = (Array.isArray(data) ? data : data.expenses ?? []) as any[]
         const mapped: GroupExpense[] = rows.map((e) => {
@@ -181,9 +186,9 @@ export function ChatPage() {
             myShare: e.myShare != null ? Number(e.myShare) : shares?.find((s: { userId: string }) => s.userId === me.id)?.amount ?? null, shares,
           }
         }).sort((a, b) => +new Date(b.date) - +new Date(a.date))
-        if (!cancelled) { setExpenses(mapped); setExpensesNote('') }
+        if (!cancelled) setExpenses(mapped)
       })
-      .catch(() => { if (!cancelled) { setExpenses([]); setExpensesNote('Expenses are not available for this group yet.') } })
+      .catch(() => { if (!cancelled) setExpenses([]) })
     return () => { cancelled = true }
   }, [selected?.id, me?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -252,8 +257,6 @@ export function ChatPage() {
 
   const pinnedMsg = selected ? messages.find((m) => m.id === pinned[selected.id]) : undefined
   const visibleGroups = groups.filter((g) => {
-    const q = query.trim().toLowerCase()
-    if (q && !g.name.toLowerCase().includes(q)) return false
     if (filter === 'unread') return false // no server unread source; honest empty state below
     if (filter === 'settled') return (recentBalances[g.id] ?? 0) === 0
     return true
@@ -262,15 +265,13 @@ export function ChatPage() {
   async function sendGroup() {
     const content = draft.trim()
     if (!content || !activeConvId) return
-    const replySnapshot = replyTo
-    setDraft(''); setReplyTo(null)
+    setDraft('')
     const res = await fetch(`/api/conversations/${activeConvId}/messages`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content }),
     })
     if (!res.ok) { setDraft(content); notify('Could not send — please try again'); return }
-    const quote = replySnapshot ? { name: replySnapshot.senderName, text: replySnapshot.content.slice(0, 90) } : undefined
     const m = await res.json()
-    setMessages((prev) => prev.some((x) => x.id === m._id) ? prev : [...prev, { id: m._id, senderId: me!.id, senderName: me!.name, content: m.content, createdAt: m.createdAt, replyTo: quote }])
+    setMessages((prev) => prev.some((x) => x.id === m._id) ? prev : [...prev, { id: m._id, senderId: me!.id, senderName: me!.name, content: m.content, createdAt: m.createdAt }])
   }
 
   async function askAI(text?: string) {
@@ -319,15 +320,6 @@ export function ChatPage() {
     } finally { setDmBusy(false) }
   }
 
-  function react(m: Msg) {
-    setReactions((prev) => {
-      const cur = { ...(prev[m.id] ?? {}) }
-      const mine = cur['🎉']?.includes(me!.name)
-      cur['🎉'] = mine ? (cur['🎉'] ?? []).filter((n) => n !== me!.name) : [...(cur['🎉'] ?? []), me!.name]
-      if (!cur['🎉'].length) delete cur['🎉']
-      return { ...prev, [m.id]: cur }
-    })
-  }
   function togglePin(m: Msg) {
     if (!selected) return
     setPinned((p) => ({ ...p, [selected.id]: p[selected.id] === m.id ? '' : m.id }))
@@ -343,12 +335,11 @@ export function ChatPage() {
     <div className={dashStyles.app}>
       <Sidebar me={me} />
       <main className={`${dashStyles.main} ${styles.chatMain}`}>
-        <div className={`${styles.shell} ${details && selected && !inDm ? styles.detailsOpen : ''} ${mobileThread ? styles.mobileThread : ''}`}>
+        <div className={`${styles.shell} ${mobileThread ? styles.mobileThread : ''}`}>
           <aside className={styles.list} aria-label="Conversations">
             <div className={styles.listHead}>
               <div className={styles.listTitle}><h1>Messages</h1>
                 <button className={`${styles.iconBtn} ${styles.primary}`} aria-label="New conversation" onClick={() => setPickerOpen(true)}><CirclePlus size={19} /></button></div>
-              <label className={styles.search}><Search size={16} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search conversations…" aria-label="Search conversations" /></label>
             </div>
             <div className={styles.filters} role="tablist" aria-label="Filter conversations">
               {([['all', 'All'], ['unread', 'Unread'], ['groups', 'Groups'], ['settled', 'Settled']] as [Filter, string][]).map(([id, label]) => (
@@ -364,11 +355,11 @@ export function ChatPage() {
               {(filter === 'all' || filter === 'groups' || filter === 'settled') && visibleGroups.length === 0 && groups.length > 0 && (
                 <div className={styles.emptyList}><strong>{filter === 'settled' ? 'No settled groups match' : 'No conversations found'}</strong>{filter === 'settled' ? 'Groups with an open balance are hidden here.' : 'Try another search.'}</div>
               )}
-              {dms.filter((d) => !query.trim() || d.other.name.toLowerCase().includes(query.trim().toLowerCase())).length > 0 && filter === 'all' && (
+              {dms.length > 0 && filter === 'all' && (
                 <>
                   <p className={styles.listLabel}>Direct messages</p>
-                  {dms.filter((d) => !query.trim() || d.other.name.toLowerCase().includes(query.trim().toLowerCase())).map((d) => (
-                    <button key={d.conversationId} className={`${styles.conv} ${inDm && dmTarget?.id === d.other.id ? styles.convOn : ''}`} onClick={() => { setSelectedId(null); setDmTarget(d.other); setMode('group'); setMobileThread(true); setReplyTo(null) }} aria-current={inDm && dmTarget?.id === d.other.id}>
+                  {dms.map((d) => (
+                    <button key={d.conversationId} className={`${styles.conv} ${inDm && dmTarget?.id === d.other.id ? styles.convOn : ''}`} onClick={() => { setSelectedId(null); setDmTarget(d.other); setMode('group'); setMobileThread(true) }} aria-current={inDm && dmTarget?.id === d.other.id}>
                       <Avatar user={d.other} size={40} />
                       <span className={styles.convBody}>
                         <span className={styles.convTop}><span className={styles.convName}>{d.other.name}</span></span>
@@ -384,7 +375,7 @@ export function ChatPage() {
                 const isSelected = selectedId === g.id
                 return (
                   <div key={g.id}>
-                    <button className={`${styles.conv} ${isSelected && mode === 'group' ? styles.convOn : ''}`} onClick={() => { setSelectedId(g.id); setDmTarget(null); setMode('group'); setMobileThread(true); setReplyTo(null) }} aria-current={isSelected && mode === 'group'}>
+                    <button className={`${styles.conv} ${isSelected && mode === 'group' ? styles.convOn : ''}`} onClick={() => { setSelectedId(g.id); setDmTarget(null); setMode('group'); setMobileThread(true) }} aria-current={isSelected && mode === 'group'}>
                       <span className={styles.convIcon}><Icon size={19} /></span>
                       <span className={styles.convBody}>
                         <span className={styles.convTop}><span className={styles.convName}>{g.name}</span></span>
@@ -403,18 +394,14 @@ export function ChatPage() {
               <>
                 <header className={styles.threadHead}>
                   <button className={`${styles.iconBtn} ${styles.backBtn}`} onClick={() => setMobileThread(false)} aria-label="Back to conversations"><ArrowLeft size={18} /></button>
-                  <button className={styles.threadId} onClick={() => selected && setDetails(!details)} aria-label="Toggle group details">
+                  <div className={styles.threadId}>
                     {inDm && dmTarget
                       ? <><Avatar user={dmTarget} size={38} /><span style={{ minWidth: 0 }}><span className={styles.threadName}>{dmTarget.name}</span><span className={styles.threadSub}>Direct message</span></span></>
                       : <><span className={styles.convIcon}>{mode === 'ai' ? <Sparkles size={18} /> : <GroupIcon size={19} />}</span>
                         <span style={{ minWidth: 0 }}><span className={styles.threadName}>{mode === 'ai' ? `Ask AI · ${selected!.name}` : selected!.name}</span>
                           <span className={styles.threadSub}>{mode === 'ai' ? 'Knows this group’s expenses and balances' : `${selected!.memberIds.length} ${selected!.memberIds.length === 1 ? 'member' : 'members'}`}</span></span></>}
-                  </button>
-                  {!inDm && <span className={styles.memberFaces}>{memberUsers.slice(0, 3).map((u) => <Avatar key={u.id} user={u} size={28} />)}</span>}
-                  <div className={styles.headActions}>
-                    <button className={`${styles.iconBtn} ${styles.hideMobile}`} aria-label="Search in conversation" onClick={() => notify('Search in conversation is not available yet')}><Search size={17} /></button>
-                    {!inDm && <button className={`${styles.iconBtn} ${details ? styles.iconBtnOn : ''}`} aria-label={details ? 'Hide group details' : 'Show group details'} title={details ? 'Hide details' : 'Group info'} onClick={() => setDetails(!details)} aria-pressed={details}><Info size={17} /></button>}
                   </div>
+                  {!inDm && <span className={styles.memberFaces}>{memberUsers.slice(0, 3).map((u) => <Avatar key={u.id} user={u} size={28} />)}</span>}
                 </header>
 
                 <div className={styles.scrollCol}>
@@ -431,8 +418,8 @@ export function ChatPage() {
                       <span className={styles.grow}><strong>{myBalance > 0 ? `You’re owed ${money(myBalance)}` : myBalance < 0 ? `You owe ${money(myBalance)}` : 'You’re all settled up'}</strong>
                         <p>{balanceKnown ? `${money(totalSpent)} spent together · ${expenseCount} expenses` : 'Across your recent groups'}</p></span>
                       {myBalance > 0 && topDebtor && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={async () => { const r = await sendReminder(topDebtor.user.id, firstName(topDebtor.user.name)); notify(r.message) }}>Remind</button>}
-                      {myBalance < 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => setDetails(true)}>Settle up</button>}
-                      <button className={styles.stripBtn} onClick={() => setDetails(true)}>Balances</button>
+                      {myBalance < 0 && selected && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => navigate(`/groups/${selected.id}`)}>Settle up</button>}
+                      {selected && <button className={styles.stripBtn} onClick={() => navigate(`/groups/${selected.id}`)}>Balances</button>}
                     </div>
                   )}
                   {mode === 'group' && pinnedMsg && (
@@ -448,7 +435,6 @@ export function ChatPage() {
                       const mine = m.senderId === me.id
                       const grouped = !!prev && prev.senderId === m.senderId && !showDay
                       const sender = users[m.senderId] ?? { id: m.senderId, name: m.senderName, email: '' }
-                      const msgReactions = reactions[m.id] ?? {}
                       return (
                         <div key={m.id} className={styles.msgRowWrap}>
                           {showDay && <div className={styles.dayDivider}><span>{day}</span></div>}
@@ -459,21 +445,13 @@ export function ChatPage() {
                             <div className={styles.bubbleWrap}>
                               <div className={styles.bubble}>
                                 {!grouped && !mine && !m.ai && <span className={styles.who}>{m.senderName}</span>}
-                                {m.replyTo && <span className={styles.replyQuote}><b>{m.replyTo.name}</b>{m.replyTo.text}</span>}
                                 {m.content || (m.ai ? '…' : '')}
                                 <span className={styles.meta}>{timeOf(m.createdAt)}{mine && mode === 'group' && <CheckCheck size={13} />}</span>
                               </div>
-                              {Object.keys(msgReactions).length > 0 && (
-                                <div className={styles.reactions}>{Object.entries(msgReactions).map(([emoji, by]) => (
-                                  <button key={emoji} className={`${styles.reaction} ${by.includes(me.name) ? styles.reactionMine : ''}`} title={by.join(', ')} onClick={() => react(m)}>{emoji} {by.length}</button>
-                                ))}</div>
-                              )}
                             </div>
-                            <span className={styles.msgActions}>
-                              <button className={styles.miniBtn} aria-label="React" onClick={() => react(m)}><Smile size={15} /></button>
-                              <button className={styles.miniBtn} aria-label="Reply" onClick={() => { setReplyTo(m); inputRef.current?.focus() }}><Reply size={15} /></button>
-                              {!inDm && <button className={styles.miniBtn} aria-label={selected && pinned[selected.id] === m.id ? 'Unpin' : 'Pin'} onClick={() => togglePin(m)}><Pin size={15} /></button>}
-                            </span>
+                            {!inDm && <span className={styles.msgActions}>
+                              <button className={styles.miniBtn} aria-label={selected && pinned[selected.id] === m.id ? 'Unpin' : 'Pin'} onClick={() => togglePin(m)}><Pin size={15} /></button>
+                            </span>}
                           </div>
                         </div>
                       )
@@ -489,22 +467,15 @@ export function ChatPage() {
                   )}
 
                   <div className={styles.composerZone}>
-                    {replyTo && (
-                      <div className={styles.replyPreview}><Reply size={15} style={{ color: 'var(--text-2)', flex: 'none' }} /><span className={styles.grow}>Replying to <b>{replyTo.senderName}</b> · {replyTo.content}</span>
-                        <button className={styles.miniBtn} onClick={() => setReplyTo(null)} aria-label="Cancel reply"><X size={14} /></button></div>
-                    )}
                     {emojiOpen && <div className={styles.emojiPop}>{QUICK_EMOJI.map((e) => <button key={e} onClick={() => { setDraft((d) => d + e); inputRef.current?.focus() }}>{e}</button>)}</div>}
                     <form className={styles.composer} onSubmit={(e) => { e.preventDefault(); mode === 'group' ? sendGroup() : askAI() }}>
-                      {!inDm && <button type="button" className={styles.composerBtn} aria-label="Add expense" title="Add expense" onClick={() => setAddingExpense(true)}><ReceiptText size={19} /></button>}
                       <textarea ref={inputRef} value={draft} rows={1} aria-label="Message"
                         placeholder={mode === 'ai' ? `Ask about ${selected?.name} expenses…` : inDm ? `Message ${dmTarget?.name}…` : `Message ${selected?.name}…`}
                         disabled={mode === 'group' && !activeConvId}
                         onChange={(e) => setDraft(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); mode === 'group' ? sendGroup() : askAI() } }} />
                       <button type="button" className={styles.composerBtn} aria-label="Emoji" onClick={() => setEmojiOpen(!emojiOpen)}><Smile size={19} /></button>
-                      {draft.trim()
-                        ? <button type="submit" className={styles.sendBtn} disabled={streaming} aria-label={mode === 'ai' ? 'Ask' : 'Send'}><SendHorizonal size={18} /></button>
-                        : <button type="button" className={styles.composerBtn} aria-label="Voice message (not available)" onClick={() => notify('Voice messages are not available yet')}><Mic size={19} /></button>}
+                      <button type="submit" className={styles.sendBtn} disabled={streaming || !draft.trim()} aria-label={mode === 'ai' ? 'Ask' : 'Send'}><SendHorizonal size={18} /></button>
                     </form>
                     {mode === 'group' && !activeConvId && <p className={styles.composerHint}><span>This conversation is not available yet.</span></p>}
                     <div className={styles.composerHint}><span><kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line</span><span>{mode === 'ai' ? 'AI can make mistakes — verify amounts' : inDm ? dmTarget?.name : selected?.name}</span></div>
@@ -514,89 +485,6 @@ export function ChatPage() {
             )}
           </section>
 
-          {details && selected && !inDm && (
-            <aside className={styles.details} aria-label="Conversation details">
-              <div className={styles.detailsHead}>
-                <button className={`${styles.iconBtn} ${styles.detailsClose}`} onClick={() => setDetails(false)} aria-label="Close details"><X size={17} /></button>
-                <span className={styles.convIcon}><GroupIcon size={24} /></span>
-                <h2>{selected.name}</h2>
-                <p>{expenseCount} expenses</p>
-              </div>
-              <div className={styles.detailsActions}>
-                <button className={styles.actionTile} onClick={() => notify('Calls are not available in chat yet')}><Phone size={19} />Call</button>
-                <button className={styles.actionTile} onClick={() => notify('Calls are not available in chat yet')}><Video size={19} />Video</button>
-                <button className={`${styles.actionTile} ${muted[selected.id] ? styles.actionTileOn : ''}`} onClick={() => { setMuted((p) => ({ ...p, [selected.id]: !p[selected.id] })); notify(muted[selected.id] ? 'Notifications on for this group' : 'Conversation muted (this device only)') }}>{muted[selected.id] ? <BellOff size={19} /> : <Bell size={19} />}{muted[selected.id] ? 'Muted' : 'Mute'}</button>
-                <button className={styles.actionTile} onClick={() => notify('Search in conversation is not available yet')}><Search size={19} />Search</button>
-              </div>
-
-              <section className={styles.detailsSec}><h3>Balances with members</h3>
-                {detailDebts.length > 0 || myBalance !== 0 || balanceKnown || Object.keys(recentBalances).length > 0 ? <>
-                  {(() => {
-                    const settled = myBalance === 0 && detailDebts.length === 0
-                    const topDebtor = detailDebts.filter((d) => d.amount > 0).sort((a, b) => b.amount - a.amount)[0]
-                    const summary = settled ? 'All settled up in this group'
-                      : myBalance > 0 && topDebtor ? `${firstName(topDebtor.user.name)} owes you ${money(topDebtor.amount)}${detailDebts.length > 1 ? ` · net ${money(myBalance)} you’re owed` : ''}`
-                      : myBalance > 0 ? `You’re owed ${money(myBalance)}`
-                      : `You owe ${money(-myBalance)}`
-                    return (
-                      <div className={`${styles.balanceCard} ${settled ? styles.balanceSettled : myBalance > 0 ? styles.balanceOwed : styles.balanceOwe}`} role="status">
-                        <span className={styles.balanceSummary}>{summary}</span>
-                        <span className={styles.balanceMeta}>{balanceKnown ? `${money(totalSpent)} spent in this group` : 'Net balance for this group'}</span>
-                        {myBalance > 0 && topDebtor && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={async () => { const r = await sendReminder(topDebtor.user.id, firstName(topDebtor.user.name)); notify(r.message) }}>Remind</button>}
-                        {myBalance < 0 && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => navigate(`/groups/${selected.id}`)}>Settle up</button>}
-                      </div>
-                    )
-                  })()}
-                  {detailDebts.length === 0 && <p className={styles.detailsEmpty}>No open balances with members of this group.</p>}
-                  {detailDebts.map((d) => (
-                    <div className={styles.debtRow} key={d.user.id}><Avatar user={d.user} size={30} />
-                      <span className={styles.grow}><strong>{d.user.name}</strong><small>{d.amount > 0 ? 'owes you' : 'you owe'}</small></span>
-                      <span className={`${styles.debtAmt} ${d.amount > 0 ? styles.owedText : styles.oweText}`}>{money(d.amount)}</span>
-                      {d.amount > 0
-                        ? <Button size="sm" onClick={async () => { const r = await sendReminder(d.user.id, firstName(d.user.name)); notify(r.message) }}>Remind</Button>
-                        : <Button size="sm" variant="primary" onClick={() => navigate(`/groups/${selected?.id}`)}>Settle</Button>}
-                    </div>
-                  ))}
-                </> : <p className={styles.detailsEmpty}>No open balances with members of this group.</p>}
-              </section>
-
-              <section className={styles.detailsSec}><h3>Members · {memberUsers.length}</h3>
-                {memberUsers.map((u) => (
-                  <button className={styles.memberRow} key={u.id} onClick={() => navigate(`/users/${u.id}`)}>
-                    <Avatar user={u} size={30} /><span className={styles.grow}><strong>{u.name}{u.id === me.id && <> <span className={styles.roleBadge}>You</span></>}</strong><small>{u.email}</small></span>
-                  </button>
-                ))}
-              </section>
-
-              <section className={styles.detailsSec}><h3>Recent expenses</h3>
-                {expenses.length === 0 ? (
-                  <div className={styles.expensesEmpty}>
-                    <span className={styles.mcIcon}><ReceiptText size={18} /></span>
-                    <strong>No expenses yet</strong>
-                    <p>{expensesNote ? 'Expense history is not available for this group yet — you can still add the next one.' : 'Track the first shared cost for this group — it takes ten seconds.'}</p>
-                    <Button variant="primary" size="sm" onClick={() => setAddingExpense(true)}>+ Add expense</Button>
-                  </div>
-                ) : <>
-                  {expenses.slice(0, 5).map((e) => {
-                    const Icon = categoryIcon[(e.category as keyof typeof categoryIcon)] ?? ReceiptText
-                    return (
-                      <div className={styles.expenseRow} key={e.id}><span className={styles.mcIcon}><Icon size={16} /></span>
-                        <span className={styles.expenseMain}><strong>{e.title}</strong><small>{firstName(e.paidBy.name)} · {relativeDay(e.date, new Date())}</small></span>
-                        <span className={styles.expenseAmt}>{money(e.amount)}</span></div>
-                    )
-                  })}
-                  <Button size="sm" onClick={() => navigate(`/groups/${selected.id}`)}><FileText size={14} /> View group</Button>
-                </>}
-              </section>
-
-              <section className={styles.detailsSec} style={{ borderBottom: 0 }}>
-                <button className={styles.linkRow} onClick={() => setAddingExpense(true)}><ReceiptText size={16} /> Add expense</button>
-                <button className={styles.linkRow} onClick={() => navigate(`/groups/${selected.id}`)}><HandCoins size={16} /> Open group page</button>
-                <button className={styles.linkRow} onClick={() => notify('Chat history download is not available yet')}><Download size={16} /> Download chat history</button>
-                <button className={`${styles.linkRow} ${styles.linkDanger}`} onClick={() => notify('Leaving a group is done from the group page')}><Trash2 size={16} /> Leave group</button>
-              </section>
-            </aside>
-          )}
         </div>
       </main>
       <MobileNav onAdd={() => setAddingExpense(true)} />

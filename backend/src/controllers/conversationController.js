@@ -40,7 +40,9 @@ const getConversations = async (req, res, next) => {
 
     const conversations = await Conversation.find({
       participants: currentUserId
-    }).sort({ updatedAt: -1 });
+    })
+      .populate("participants", "_id username avatar")
+      .sort({ updatedAt: -1 });
 
     return res.status(200).json(conversations);
   } catch (error) {

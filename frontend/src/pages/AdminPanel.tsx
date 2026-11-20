@@ -9,7 +9,6 @@ import styles from './AdminPanel.module.css'
 type AdminUser = {
   _id: string
   username: string
-  displayName?: string
   email: string
   role: 'user' | 'admin'
   status: 'active' | 'suspended'
@@ -205,7 +204,7 @@ export function AdminPanelPage() {
                         <tr key={user._id}>
                           <td>
                             <div className={styles.userCell}>
-                              <strong>{user.displayName ?? user.username}</strong>
+                              <strong>{user.username}</strong>
                               <span>{user.email}</span>
                             </div>
                           </td>

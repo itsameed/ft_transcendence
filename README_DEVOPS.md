@@ -63,6 +63,14 @@ docker compose up -d --force-recreate backend
 
 Google authentication and email variables are optional during local testing. Their values can remain empty or disabled when those features are not being tested.
 
+For Google sign-in in Docker, add this exact URL to the OAuth client’s authorized redirect URIs:
+
+```text
+https://localhost:8443/auth/google/callback
+```
+
+Docker Compose routes the callback through Nginx and redirects successful sign-ins to `https://localhost:8443/dashboard`. These Docker-specific URLs override the values from `.env`, so native development can keep using its own frontend and callback URLs.
+
 Never commit the private `.env` file. Real API keys and passwords must never be added to `.env.example`.
 
 ## Start the project

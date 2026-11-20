@@ -16,16 +16,12 @@
   box-shadow: var(--shadow-card);
   color: inherit;
   text-decoration: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .tile:hover {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-pop);
-  transform: translateY(-1px);
-}
-.tile:active {
-  transform: translateY(0);
 }
 
 .emoji {
@@ -42,9 +38,15 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  width: 100%;
+  min-width: 0;
 }
 
 .titles strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 15px;
   font-weight: 600;
   line-height: 1.35;

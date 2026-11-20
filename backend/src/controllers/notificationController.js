@@ -1,4 +1,5 @@
 const Notification = require("../models/Schemas/Notification");
+const Expense = require("../models/Schemas/Expenses");
 
 const getNotifications = async (req, res, next) => {
   try {
@@ -8,7 +9,27 @@ const getNotifications = async (req, res, next) => {
       .populate("senderId", "username")
       .sort({ createdAt: -1 });
 
-    return res.status(200).json(notifications);
+    const expenseIds = notifications
+      .filter((notification) => notification.type === "EXPENSE_ADDED" && notification.relatedId)
+      .map((notification) => notification.relatedId);
+    const expenses = await Expense.find(
+      { _id: { $in: expenseIds } },
+      { _id: 1, group: 1 }
+    ).lean();
+    const expenseGroups = new Map(
+      expenses.map((expense) => [String(expense._id), String(expense.group)])
+    );
+
+    const mappedNotifications = notifications.map((notification) => {
+      const mapped = notification.toObject();
+      if (notification.type === "EXPENSE_ADDED" && notification.relatedId) {
+        const groupId = expenseGroups.get(String(notification.relatedId));
+        if (groupId) mapped.relatedId = groupId;
+      }
+      return mapped;
+    });
+
+    return res.status(200).json(mappedNotifications);
   } catch (error) {
     next(error);
   }

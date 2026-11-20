@@ -1,0 +1,146 @@
+.page {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.header {
+  display: flex;
+  width: min(100% - 48px, 1120px);
+  min-height: 84px;
+  margin: 0 auto;
+  align-items: center;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.brandMark {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.main {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  padding: 32px 24px 96px;
+}
+
+.message {
+  display: flex;
+  max-width: 520px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.receipt {
+  display: flex;
+  width: 104px;
+  height: 116px;
+  margin-bottom: 28px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text-2);
+  box-shadow: var(--shadow-card);
+}
+
+.receiptRule {
+  width: 42px;
+  border-top: 1px dashed var(--border-strong);
+}
+
+.receipt strong {
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.status {
+  margin-bottom: 8px;
+  color: var(--text-3);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.message h1 {
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+}
+
+.description {
+  max-width: 42ch;
+  margin-top: 12px;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+
+.homeLink {
+  display: inline-flex;
+  min-height: 44px;
+  margin-top: 24px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.homeLink:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 560px) {
+  .header {
+    width: calc(100% - 40px);
+    min-height: 68px;
+  }
+
+  .main {
+    padding: 24px 20px 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .homeLink {
+    transition: none;
+  }
+
+  .homeLink:hover {
+    transform: none;
+  }
+}

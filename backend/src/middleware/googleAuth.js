@@ -2,6 +2,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/Schemas/User');
 const { pickDefaultAvatar } = require('../config/avatars');
+const { MAX_USERNAME_LENGTH } = require('../config/userLimits');
 
 // console.log("here is the client id : ", process.env.GOOGLE_CLIENT_ID);
 
@@ -12,7 +13,8 @@ passport.use(new GoogleStrategy({
 },
 async (accessToken, refreshToken, profile, done) => {
     try {
-        let user = await User.findOne({ email: profile.emails[0].value });
+        const email = profile.emails[0].value;
+        let user = await User.findOne({ email });
 
         if (user) {
             // Link the Google identity to the existing password account.
@@ -23,9 +25,19 @@ async (accessToken, refreshToken, profile, done) => {
             return done(null, user);
         }
         
+        const baseUsername = email.split('@')[0]
+            .replace(/[^A-Za-z0-9_.]/g, '_')
+            .slice(0, MAX_USERNAME_LENGTH);
+        let username = baseUsername;
+        let suffix = 1;
+        while (await User.exists({ username })) {
+            const suffixText = `_${suffix++}`;
+            username = `${baseUsername.slice(0, MAX_USERNAME_LENGTH - suffixText.length)}${suffixText}`;
+        }
+
         user = new User({
-            username: profile.displayName,
-            email: profile.emails[0].value,
+            username,
+            email,
             password: null, // No password for Google users
             googleId: profile.id,
             isVerified: profile.emails[0].verified, // Google already verified it!

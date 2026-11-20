@@ -2,21 +2,20 @@ const UserSchema = require('../models/Schemas/User.js');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const printLogsDate = require('./printLogs.js');
-const { uniqueNamesGenerator } = require('unique-names-generator');
-const { adjectives, colors, animals } = require('../models/DisplayNames/displayNames.js');
 const { saveAvatar } = require('../config/sharp');
 const { resolveDefaultAvatar, pickDefaultAvatar } = require('../config/avatars');
+const { MAX_USERNAME_LENGTH } = require('../config/userLimits');
 
 async function loadNewUser(req, res, next) {
-    let { fullName, displayName, email, password, bio, gender, avatar } = req.body;
-    if (!fullName || !email || !password) {
+    let { username, email, password, bio, gender, avatar } = req.body;
+    username = (username || '').trim();
+    if (!username || !email || !password) {
         return res.status(400).json({message: 'username, email, and password are required.'});
     }
-    if (!displayName) {
-        displayName = uniqueNamesGenerator({
-            dictionaries: [adjectives, colors, animals]
-        });
+    if (username.length > MAX_USERNAME_LENGTH) {
+        return res.status(400).json({ message: 'Username cannot exceed 40 characters.' });
     }
+
     const existedUser = await UserSchema.findOne({email});
     if (existedUser) {
         return res.status(400).json({message: "Email already registered"});
@@ -41,8 +40,7 @@ async function loadNewUser(req, res, next) {
         }
 
         const newUser = await UserSchema.create({
-            username: fullName,
-            displayName,
+            username,
             email,
             password: hashedPassword,
             bio,
@@ -54,7 +52,7 @@ async function loadNewUser(req, res, next) {
         });
 
         printLogsDate(`User with Id ${newUser._id} signed up at : `);
-        return res.status(201).json({ message: 'User created successfully.', userId: newUser._id ,username: newUser.username, displayName: newUser.displayName, email: newUser.email, bio: newUser.bio, gender: newUser.gender, avatar: newUser.avatar});
+        return res.status(201).json({ message: 'User created successfully.', userId: newUser._id ,username: newUser.username, email: newUser.email, bio: newUser.bio, gender: newUser.gender, avatar: newUser.avatar});
     } catch (error) {
         if (error.code === 11000) {
             return res.status(409).json({ message: 'This email or username is already registered.' });

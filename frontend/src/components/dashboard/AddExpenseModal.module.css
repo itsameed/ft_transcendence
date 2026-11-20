@@ -111,6 +111,13 @@
   font-weight: 500;
 }
 
+.amountError {
+  margin-top: -16px;
+  color: var(--owe);
+  font-size: 13px;
+  text-align: center;
+}
+
 .input,
 .field input,
 .select select,

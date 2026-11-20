@@ -17,7 +17,7 @@
 .modeToggle button { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; border: 0; background: none; border-radius: 999px; padding: 7px 16px; color: var(--text-2); font-size: 13px; font-weight: 500; transition: background 0.15s ease, color 0.15s ease; }
 .modeToggle button:hover:not(.modeOn) { color: var(--text); background: var(--hover-wash); }
 .modeToggle .modeOn { background: var(--primary); color: var(--on-primary); font-weight: 600; }
-.threadTitle { font-size: 17px; font-weight: 600; margin: 16px 0 14px; letter-spacing: -0.01em; }
+.threadTitle { font-size: 17px; font-weight: 600; margin: 16px 0 14px; letter-spacing: -0.01em; overflow-wrap: anywhere; }
 .msgs { flex: 1; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; overscroll-behavior: contain; padding: 4px 4px 4px 0; scroll-padding-bottom: 8px; }
 .msg { display: flex; gap: 10px; max-width: 78%; align-items: flex-start; }
 .mine { align-self: flex-end; flex-direction: row-reverse; }

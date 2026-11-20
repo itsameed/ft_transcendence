@@ -1,4 +1,8 @@
 const Expense = require('../models/Schemas/Expenses.js');
+const {
+    MAX_EXPENSE_AMOUNT,
+    MAX_EXPENSE_DESCRIPTION_LENGTH,
+} = require('../config/expenseLimits');
 const printLogsDate = require('./printLogs.js');
 const Group = require('../models/Schemas/Group.js');
 const { createNotification } = require("./notificationService");
@@ -17,6 +21,19 @@ async function createExpense(req, res, next) {
         return res.status(400).json({
             message: 'Invalid expense details.'
         });
+    }
+    if (description !== undefined && (
+        typeof description !== 'string' ||
+        description.trim().length > MAX_EXPENSE_DESCRIPTION_LENGTH
+    )) {
+        return res.status(400).json({
+            message: 'Expense description must be text with no more than 140 characters.'
+        });
+    }
+
+    const expenseAmount = Number(amount);
+    if (!Number.isFinite(expenseAmount) || expenseAmount <= 0 || expenseAmount > MAX_EXPENSE_AMOUNT) {
+        return res.status(400).json({ message: 'Expense amount must be greater than 0 and no more than 100,000 MAD.' });
     }
 
     let participants;
@@ -53,7 +70,7 @@ async function createExpense(req, res, next) {
             group: groupId,
             payer: payerId,
             participants,
-            amount: Number(amount),
+            amount: expenseAmount,
             description,
             splitMethod,
             customSplit,
@@ -74,7 +91,7 @@ async function createExpense(req, res, next) {
                 type: "EXPENSE_ADDED",
                 title: "New expense",
                 message: `A new expense "${description}" of ${amount} was added to group "${group.name}"`,
-                relatedId: expense._id
+                relatedId: groupId
             });
 
             if (io) {

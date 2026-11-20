@@ -64,6 +64,11 @@
   font-weight: 600;
 }
 
+.preferenceCopy strong,
+.preferenceCopy span {
+  overflow-wrap: anywhere;
+}
+
 .preferenceCopy span,
 .accountIdentity span {
   color: var(--text-2);
@@ -120,6 +125,13 @@
 .accountIdentity span {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountIdentity strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .editLink {
@@ -171,6 +183,8 @@
 
 .pwMessage,
 .pwError {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 13px;
 }
 

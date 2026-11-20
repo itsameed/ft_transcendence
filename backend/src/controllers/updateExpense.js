@@ -1,4 +1,8 @@
 const ExpenseSchema = require('../models/Schemas/Expenses');
+const {
+    MAX_EXPENSE_AMOUNT,
+    MAX_EXPENSE_DESCRIPTION_LENGTH,
+} = require('../config/expenseLimits');
 
 async function updateExpense(req, res, next) {
     try {
@@ -22,9 +26,19 @@ async function updateExpense(req, res, next) {
         const updates = {};
         
         if (updateData.amount !== undefined) {
-            updates.amount = updateData.amount;
+            const amount = Number(updateData.amount);
+            if (!Number.isFinite(amount) || amount <= 0 || amount > MAX_EXPENSE_AMOUNT) {
+                return res.status(400).json({ error: 'Expense amount must be greater than 0 and no more than 100,000 MAD.' });
+            }
+            updates.amount = amount;
         }
         if (updateData.description !== undefined) {
+            if (
+                typeof updateData.description !== 'string' ||
+                updateData.description.trim().length > MAX_EXPENSE_DESCRIPTION_LENGTH
+            ) {
+                return res.status(400).json({ error: 'Expense description must be text with no more than 140 characters.' });
+            }
             updates.description = updateData.description;
         }
         if (updateData.date !== undefined) {

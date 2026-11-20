@@ -32,9 +32,16 @@ export function Dashboard() {
       toastTimer.current = window.setTimeout(() => setToast(null), 2600)
    }, [])
 
+   const requestAddExpense = useCallback(() => {
+      if (groups.length === 0) {
+         notify('You must be in at least one group.')
+         return
+      }
+      setAdding(true)
+   }, [groups.length, notify])
+
    const closeModal = useCallback(() => setAdding(false), [])
 
-   // Keyboard shortcut: "n" opens the add-expense dialog.
    useEffect(() => {
 
       async function loadDashboard() {
@@ -107,16 +114,18 @@ export function Dashboard() {
       }
 
       loadDashboard()
+   }, [])
 
-
+   // Keyboard shortcut: "n" opens the add-expense dialog.
+   useEffect(() => {
       const onKey = (e: KeyboardEvent) => {
-         const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement
-         if (e.key === 'n' && !typing && !e.metaKey && !e.ctrlKey) setAdding(true)
-         }
+         const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement || e.target instanceof HTMLTextAreaElement
+         if (e.key === 'n' && !typing && !e.metaKey && !e.ctrlKey) requestAddExpense()
+      }
       window.addEventListener('keydown', onKey)
       return () => window.removeEventListener('keydown', onKey)
-   }, [])
-   
+   }, [requestAddExpense])
+
 
    // Temporary test display:
    if (!me) {
@@ -128,7 +137,7 @@ export function Dashboard() {
 
          <main className={styles.main}>
             <div className={styles.content}>
-               <Topbar firstName={firstName(me.name)} today={NOW} onAdd={() => setAdding(true)} />
+               <Topbar firstName={firstName(me.name)} today={NOW} onAdd={requestAddExpense} />
 
                <BalanceOverview
                   balances={debts}
@@ -159,8 +168,8 @@ export function Dashboard() {
             </div>
          </main>
 
-         <MobileNav onAdd={() => setAdding(true)} />
-         {groups.length > 0 ?
+         <MobileNav onAdd={requestAddExpense} />
+         {groups.length > 0 && (
             <AddExpenseModal
                open={adding}
                onClose={closeModal}
@@ -174,7 +183,7 @@ export function Dashboard() {
                me={me.id}
                today={NOW}
             />
-         : <Toast message={"You must be in at least one group."} />}
+         )}
 
          <Toast message={toast} />
       </div>
