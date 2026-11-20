@@ -5,7 +5,10 @@ const Conversation = require("../models/Schemas/Conversation");
 const Message = require("../models/Schemas/Message");
 const GroupInvitation = require("../models/Schemas/GroupInvitation");
 const Notification = require("../models/Schemas/Notification");
+const Expense = require("../models/Schemas/Expenses");
+const Settlement = require("../models/Schemas/Settlement");
 const { createNotification } = require("./notificationService");
+const { computeGroupBalances, EPSILON } = require("../services/balances");
 
 const createGroup = async (req, res, next) => {
   try {
@@ -381,6 +384,25 @@ const leaveGroup = async (req, res, next) => {
       });
     }
 
+    const memberIds = group.members.map(
+      (groupMember) => String(groupMember.userId)
+    );
+    const [expenses, settlements] = await Promise.all([
+      Expense.find({ group: groupId }),
+      Settlement.find({ group: groupId, status: "accepted" })
+    ]);
+    const balances = computeGroupBalances(
+      expenses,
+      settlements,
+      memberIds
+    );
+
+    if (Math.abs(balances[currentUserId] ?? 0) > EPSILON) {
+      return res.status(400).json({
+        message: "You cannot leave the group until all your payments are settled"
+      });
+    }
+
     group.members.splice(memberIndex, 1);
     await group.save();
 
@@ -541,6 +563,28 @@ const deleteGroup = async (req, res, next) => {
       });
     }
 
+    const memberIds = group.members.map(
+      (member) => String(member.userId)
+    );
+    const [expenses, settlements] = await Promise.all([
+      Expense.find({ group: groupId }),
+      Settlement.find({ group: groupId, status: "accepted" })
+    ]);
+    const balances = computeGroupBalances(
+      expenses,
+      settlements,
+      memberIds
+    );
+    const hasUnsettledPayments = Object.values(balances).some(
+      (balance) => Math.abs(balance) > EPSILON
+    );
+
+    if (hasUnsettledPayments) {
+      return res.status(400).json({
+        message: "The group cannot be deleted until all payments are settled"
+      });
+    }
+
     if (group.conversationId) {
       await Message.deleteMany({
         conversationId: group.conversationId
@@ -567,6 +611,10 @@ const deleteGroup = async (req, res, next) => {
     await GroupInvitation.deleteMany({
       groupId: group._id
     });
+    await Promise.all([
+      Expense.deleteMany({ group: group._id }),
+      Settlement.deleteMany({ group: group._id })
+    ]);
 
     await Group.findByIdAndDelete(group._id);
 
