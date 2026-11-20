@@ -64,8 +64,7 @@ export function Signup() {
          if (!response.ok) {
             setError(data.message || 'Signup failed')
          } else {
-            console.log('Signup successful:', data)
-            navigate('/login')
+            navigate('/dashboard')
          }
       } catch (err) {
          console.error('Signup error:', err)
