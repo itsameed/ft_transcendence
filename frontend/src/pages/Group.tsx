@@ -41,7 +41,7 @@ export function GroupPage() {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
   const [error, setError] = useState<string | null>(null)
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ message: string; tone: 'success' | 'info' | 'error' } | null>(null)
   const [creating, setCreating] = useState(false)
   const [menuFor, setMenuFor] = useState<string | null>(null)
   const [friendBalances, setFriendBalances] = useState<Record<string, number>>({})
@@ -141,7 +141,10 @@ export function GroupPage() {
 
   async function act(url: string, init: RequestInit, ok: string) {
     const res = await fetch(url, init)
-    setToast(res.ok ? ok : 'Something went wrong — please try again')
+    setToast({
+      message: res.ok ? ok : 'Something went wrong — please try again',
+      tone: res.ok ? 'success' : 'error',
+    })
     return res.ok
   }
   const removeFriend = async (f: User) => {
@@ -159,7 +162,7 @@ export function GroupPage() {
       setPeople((previous) => previous.map((person) => (
         person.id === u.id ? { ...person, relationship: 'request-sent' } : person
       )))
-      setToast(`Friend request sent to ${u.name}`)
+      setToast({ message: `Friend request sent to ${u.name}`, tone: 'success' })
       return
     }
 
@@ -168,10 +171,10 @@ export function GroupPage() {
       setPeople((previous) => previous.map((person) => (
         person.id === u.id ? { ...person, relationship: 'request-sent' } : person
       )))
-      setToast(`Friend request to ${u.name} is already pending`)
+      setToast({ message: `Friend request to ${u.name} is already pending`, tone: 'info' })
       return
     }
-    setToast(data?.message ?? 'Something went wrong — please try again')
+    setToast({ message: data?.message ?? 'Something went wrong — please try again', tone: 'error' })
   }
   const respond = async (r: FriendRequest, accept: boolean) => {
     if (await act(`/api/friends/request/${r._id}/${accept ? 'accept' : 'reject'}`, { method: 'PATCH' }, accept ? `You and ${r.requester.username} are now friends` : 'Request declined')) {
@@ -303,11 +306,15 @@ export function GroupPage() {
         onCreated={(group) => {
           setGroups((prev) => [group, ...prev])
           setCreating(false)
-          setToast(`Created “${group.name}”`)
+          setToast({ message: `Created “${group.name}”`, tone: 'success' })
           navigate(`/groups/${group.id}`)
         }}
       />
-      <Toast message={toast} />
+      <Toast
+        message={toast?.message ?? null}
+        tone={toast?.tone ?? 'success'}
+        onDismiss={() => setToast(null)}
+      />
     </div>
   )
 }

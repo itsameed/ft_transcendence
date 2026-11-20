@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AddExpenseModal } from '../components/dashboard/AddExpenseModal'
 import { BalanceOverview } from '../components/dashboard/BalanceOverview'
@@ -7,7 +7,7 @@ import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Topbar } from '../components/layout/Topbar'
 import { Section, SectionLink } from '../components/ui/Section'
-import { Toast } from '../components/ui/Toast'
+import { Toast, type ToastTone } from '../components/ui/Toast'
 // import { NOW, friendBalances, groups, recentActivity, users } from '../data/mock'
 import { firstName } from '../lib/format'
 import { sendReminder } from '../lib/remind'
@@ -18,18 +18,15 @@ export function Dashboard() {
    const [me, setMe] = useState<User | null>(null)
    // const [activity, setActivity] = useState<Activity[]>(recentActivity)
    const [adding, setAdding] = useState(false)
-   const [toast, setToast] = useState<string | null>(null)
-   const toastTimer = useRef<number>()
+   const [toast, setToast] = useState<{ message: string; tone: ToastTone } | null>(null)
    const navigate = useNavigate();
    const [groups, setGroupList] = useState<Group[]>([])
    const [debts, setDebt] = useState<FriendBalance[]>([])
    const [users, setUsers] = useState<Record<string, User>>({})
    const NOW = new Date()
 
-   const notify = useCallback((message: string) => {
-      setToast(message)
-      window.clearTimeout(toastTimer.current)
-      toastTimer.current = window.setTimeout(() => setToast(null), 2600)
+   const notify = useCallback((message: string, tone: ToastTone = 'info') => {
+      setToast({ message, tone })
    }, [])
 
    const requestAddExpense = useCallback(() => {
@@ -150,7 +147,7 @@ export function Dashboard() {
                      if (shared) navigate(`/groups/${shared.id}`)
                      else notify(`You don't share a group with ${firstName(u.name)} yet.`)
                   }}
-                  onRemind={async (u) => { const r = await sendReminder(u.id, firstName(u.name)); notify(r.message) }}
+                  onRemind={async (u) => { const r = await sendReminder(u.id, firstName(u.name)); notify(r.message, r.ok ? 'success' : 'error') }}
                />
 
                <Section title="Groups" action={<SectionLink href="/groups">All groups</SectionLink>}>
@@ -176,7 +173,7 @@ export function Dashboard() {
                onSave={(expense, group) => {
                   // setActivity((prev) => [expense, ...prev])
                   setAdding(false)
-                  notify(`Added “${expense.title}” to ${group.name}`)
+                  notify(`Added “${expense.title}” to ${group.name}`, 'success')
                }}
                groups={groups}
                users={users}
@@ -185,7 +182,7 @@ export function Dashboard() {
             />
          )}
 
-         <Toast message={toast} />
+         <Toast message={toast?.message ?? null} tone={toast?.tone} duration={2600} onDismiss={() => setToast(null)} />
       </div>
    )
 }
