@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Moon, Sun } from 'lucide-react'
+import { Eye, EyeOff, LoaderCircle, Moon, Split, Sun } from 'lucide-react'
 import { useTheme } from '../lib/useTheme'
 import { AvatarPicker } from '../components/ui/AvatarPicker'
 import { Button } from '../components/ui/Button'
@@ -15,7 +15,7 @@ export function Signup() {
    const [username, setUsername] = useState('')
    const [email, setEmail] = useState('')
    const [password, setPassword] = useState('')
-   const [confirmPassword, setConfirmPassword] = useState('')
+   const [passwordVisible, setPasswordVisible] = useState(false)
    const [error, setError] = useState<string | null>(null)
    const [loading, setLoading] = useState(false)
    const [avatarId, setAvatarId] = useState<string>(DEFAULT_AVATARS[0].id)
@@ -43,12 +43,6 @@ export function Signup() {
       e.preventDefault()
       setError(null)
       setLoading(true)
-
-      if (password !== confirmPassword) {
-         setError('Passwords do not match')
-         setLoading(false)
-         return
-      }
 
       try {
          // Multipart so the optional photo rides along with the same request.
@@ -95,26 +89,33 @@ export function Signup() {
          <main className={styles.content}>
             <div className={styles.card}>
                <div className={styles.header}>
+                  <span className={styles.brandMark} aria-hidden="true">
+                     <Split size={18} strokeWidth={2.2} />
+                  </span>
                   <h1 className={styles.title}>Create an account</h1>
                   <p className={styles.subtitle}>Get started tracking and settling group balances</p>
                </div>
 
+               <GoogleButton label="Sign up with Google" compact />
+               <OrDivider label="or continue with email" />
+
                <form className={styles.form} onSubmit={handleSubmit}>
-                  {error && <div className={styles.errorAlert}>{error}</div>}
+                  {error && <div className={styles.errorAlert} role="alert">{error}</div>}
 
                   <div className={styles.field}>
-                        <label htmlFor="username">Username</label>
-                        <input
-                           type="text"
-                           id="username"
-                           name="username"
-                           className={styles.input}
-                           value={username}
-                           onChange={(e) => setUsername(e.target.value)}
-                           placeholder="alex"
-                           maxLength={40}
-                           required
-                        />
+                     <label htmlFor="username">Username</label>
+                     <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        autoComplete="username"
+                        className={styles.input}
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="alex"
+                        maxLength={40}
+                        required
+                     />
                   </div>
 
                   <div className={styles.field}>
@@ -123,6 +124,7 @@ export function Signup() {
                         type="email"
                         id="email"
                         name="email"
+                        autoComplete="email"
                         className={styles.input}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -131,34 +133,35 @@ export function Signup() {
                      />
                   </div>
 
-                  <div className={styles.grid}>
-                     <div className={styles.field}>
-                        <label htmlFor="password">Password</label>
+                  <div className={styles.field}>
+                     <label htmlFor="password">Password</label>
+                     <div className={styles.passwordInputWrap}>
                         <input
-                           type="password"
+                           type={passwordVisible ? 'text' : 'password'}
                            id="password"
                            name="password"
-                           className={styles.input}
+                           autoComplete="new-password"
+                           className={`${styles.input} ${styles.passwordInput}`}
                            value={password}
                            onChange={(e) => setPassword(e.target.value)}
-                           placeholder="••••••••"
+                           placeholder="At least 8 characters"
+                           minLength={8}
                            required
+                           aria-describedby="passwordHint"
                         />
+                        <button
+                           type="button"
+                           className={styles.passwordToggle}
+                           onClick={() => setPasswordVisible((visible) => !visible)}
+                           aria-label={passwordVisible ? 'Hide password' : 'Show password'}
+                           aria-pressed={passwordVisible}
+                        >
+                           {passwordVisible ? <EyeOff size={17} /> : <Eye size={17} />}
+                        </button>
                      </div>
-
-                     <div className={styles.field}>
-                        <label htmlFor="confirmPassword">Confirm</label>
-                        <input
-                           type="password"
-                           id="confirmPassword"
-                           name="confirmPassword"
-                           className={styles.input}
-                           value={confirmPassword}
-                           onChange={(e) => setConfirmPassword(e.target.value)}
-                           placeholder="••••••••"
-                           required
-                        />
-                     </div>
+                     <p id="passwordHint" className={styles.passwordHint}>
+                        At least 8 characters
+                     </p>
                   </div>
 
                   <AvatarPicker
@@ -174,14 +177,20 @@ export function Signup() {
                      type="submit"
                      variant="primary"
                      disabled={loading}
+                     aria-busy={loading}
                      className={styles.submitBtn}
                   >
+                     {loading && <LoaderCircle className={styles.spinner} size={17} aria-hidden="true" />}
                      {loading ? 'Creating account...' : 'Create Account'}
                   </Button>
-               </form>
 
-               <OrDivider />
-               <GoogleButton label="Sign up with Google" />
+                  <p className={styles.legalNotice}>
+                     By creating an account, you agree to the{' '}
+                     <Link to="/terms" className={styles.policyLink}>Terms of Service</Link>
+                     {' '}and{' '}
+                     <Link to="/privacy" className={styles.policyLink}>Privacy Policy</Link>
+                  </p>
+               </form>
 
                <p className={styles.footer}>
                   Already have an account?{' '}
