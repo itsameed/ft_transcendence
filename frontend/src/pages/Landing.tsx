@@ -51,7 +51,7 @@ export function Landing() {
               Shared money, made clear
             </p>
             <h1 className={styles.headline}>
-              l7ssab <span>saboon.</span>
+              Good times shouldn’t come with <span>messy math.</span>
             </h1>
             <p className={styles.description}>
               Keep the group tab in one place. See who paid, what you owe, and when
@@ -143,10 +143,78 @@ export function Landing() {
             </div>
           </div>
         </section>
+
+        <section className={styles.howSection} aria-labelledby="how-it-works">
+          <div className={styles.howHeader}>
+            <p className={styles.eyebrow}>How it works</p>
+            <h2 id="how-it-works" className={styles.howTitle}>From plans to paid, in three steps.</h2>
+          </div>
+          <ol className={styles.steps}>
+            <li className={styles.step}>
+              <span className={styles.stepNumber}>01</span>
+              <div>
+                <h3>Create a group</h3>
+                <p>Start a trip, dinner, household, or anything you share.</p>
+              </div>
+            </li>
+            <li className={styles.step}>
+              <span className={styles.stepNumber}>02</span>
+              <div>
+                <h3>Add an expense</h3>
+                <p>Log who paid and choose an even or custom split.</p>
+              </div>
+            </li>
+            <li className={styles.step}>
+              <span className={styles.stepNumber}>03</span>
+              <div>
+                <h3>Settle up</h3>
+                <p>See the simplest payments and mark balances as paid.</p>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section className={styles.faqSection} aria-labelledby="faq-heading">
+          <div className={styles.faqIntro}>
+            <p className={styles.eyebrow}>FAQ</p>
+            <h2 id="faq-heading" className={styles.faqTitle}>Good to know.</h2>
+          </div>
+          <div className={styles.faqList}>
+            <details className={styles.faqItem}>
+              <summary>Is it free?</summary>
+              <p>Yes. Creating groups, adding expenses, and settling balances is free. No card is needed.</p>
+            </details>
+            <details className={styles.faqItem}>
+              <summary>Do friends need an account?</summary>
+              <p>Friends can join your group from an invitation. An account makes it easier to keep expenses and balances in sync.</p>
+            </details>
+          </div>
+        </section>
+
+        <section className={styles.ctaBand} aria-labelledby="cta-heading">
+          <div>
+            <p className={styles.ctaKicker}>Ready when you are</p>
+            <h2 id="cta-heading" className={styles.ctaTitle}>Make the next split the easy one.</h2>
+          </div>
+          <Link to="/signup" className={styles.linkButton}>
+            <Button variant="primary" size="md" icon={<ArrowRight size={18} />} className={styles.ctaButton}>
+              Get started for free
+            </Button>
+          </Link>
+        </section>
       </main>
 
       <footer className={styles.footer}>
-        <p>© 2026 Splitify. Made for sharing, not keeping score.</p>
+        <div className={styles.footerInner}>
+          <Link to="/" className={styles.footerBrand} aria-label="Splitify home">
+            <Logo />
+          </Link>
+          <nav className={styles.footerLinks} aria-label="Footer">
+            <Link to="/terms">Terms</Link>
+            <Link to="/privacy">Privacy</Link>
+          </nav>
+          <p className={styles.copyright}>© 2026 Splitify. Made for sharing.</p>
+        </div>
       </footer>
     </div>
   )
