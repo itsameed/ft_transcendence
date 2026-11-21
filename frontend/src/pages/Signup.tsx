@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Eye, EyeOff, LoaderCircle, Moon, Split, Sun } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, Moon, Split, Sun } from 'lucide-react'
 import { useTheme } from '../lib/useTheme'
-import { AvatarPicker } from '../components/ui/AvatarPicker'
+import { AvatarStep, type AvatarResult } from '../components/ui/AvatarStep'
 import { Button } from '../components/ui/Button'
 import { GoogleButton, OrDivider } from '../components/auth/GoogleButton'
 import { Logo } from '../components/layout/Sidebar'
-import { DEFAULT_AVATARS } from '../lib/avatars'
+import { AVATAR_COLORS, getInitials, renderInitialsToFile } from '../lib/avatars'
 import styles from './Signup.module.css'
 
 type Step = 1 | 2
@@ -27,29 +27,8 @@ export function Signup() {
    const [error, setError] = useState<string | null>(null)
    const [loading, setLoading] = useState(false)
 
-   // ── Avatar ───────────────────────────────────────
-   const [avatarId, setAvatarId] = useState<string>(DEFAULT_AVATARS[0].id)
-   const [avatarFile, setAvatarFile] = useState<File | null>(null)
-   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-
    // Refs for native validation
    const credentialsFormRef = useRef<HTMLFormElement>(null)
-
-   // Revoke the object URL when the photo is replaced or the page unmounts.
-   useEffect(() => {
-      if (!avatarPreview) return
-      return () => URL.revokeObjectURL(avatarPreview)
-   }, [avatarPreview])
-
-   function pickPhoto(file: File) {
-      setAvatarPreview(URL.createObjectURL(file))
-      setAvatarFile(file)
-   }
-
-   function clearPhoto() {
-      setAvatarPreview(null)
-      setAvatarFile(null)
-   }
 
    // ── Step navigation ──────────────────────────────
    const goToStep2 = useCallback(() => {
@@ -69,19 +48,17 @@ export function Signup() {
    }, [])
 
    // ── Submit ───────────────────────────────────────
-   const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault()
+   const submitAccount = useCallback(async (avatarPayload: { file?: File; id?: string }) => {
       setError(null)
       setLoading(true)
 
       try {
-         // Multipart so the optional photo rides along with the same request.
          const body = new FormData()
          body.append('username', username)
          body.append('email', email)
          body.append('password', password)
-         if (avatarFile) body.append('avatar', avatarFile)
-         else body.append('avatar', avatarId)
+         if (avatarPayload.file) body.append('avatar', avatarPayload.file)
+         else if (avatarPayload.id) body.append('avatar', avatarPayload.id)
 
          const response = await fetch('/auth/signup', { method: 'POST', body })
          const data = await response.json()
@@ -100,7 +77,31 @@ export function Signup() {
       } finally {
          setLoading(false)
       }
-   }
+   }, [username, email, password, navigate])
+
+   const handleAvatarSubmit = useCallback(async (avatar: AvatarResult) => {
+      if (avatar.type === 'photo') {
+         submitAccount({ file: avatar.file })
+      } else if (avatar.type === 'preset') {
+         submitAccount({ id: avatar.id })
+      } else {
+         try {
+            const file = await renderInitialsToFile(getInitials(username), avatar.colorId)
+            submitAccount({ file })
+         } catch {
+            submitAccount({ id: avatar.colorId })
+         }
+      }
+   }, [submitAccount, username])
+
+   const handleSkip = useCallback(async () => {
+      try {
+         const file = await renderInitialsToFile(getInitials(username), AVATAR_COLORS[0].id)
+         submitAccount({ file })
+      } catch {
+         submitAccount({ id: AVATAR_COLORS[0].id })
+      }
+   }, [submitAccount, username])
 
    // ── Shared animation class ───────────────────────
    const stepClass = direction === 'back' ? styles.stepBack : styles.step
@@ -121,18 +122,18 @@ export function Signup() {
 
          <main className={styles.content}>
             <div className={styles.card}>
-               {/* ── Header (always visible) ─────────────── */}
-               <div className={styles.header}>
-                  <span className={styles.brandMark} aria-hidden="true">
-                     <Split size={18} strokeWidth={2.2} />
-                  </span>
-                  <h1 className={styles.title}>Create an account</h1>
-                  <p className={styles.subtitle}>Get started tracking and settling group balances</p>
-               </div>
-
                {/* ── Step 1: Credentials ─────────────────── */}
                {step === 1 && (
                   <div className={stepClass} key="step-1">
+                     {/* Header */}
+                     <div className={styles.header}>
+                        <span className={styles.brandMark} aria-hidden="true">
+                           <Split size={18} strokeWidth={2.2} />
+                        </span>
+                        <h1 className={styles.title}>Create an account</h1>
+                        <p className={styles.subtitle}>Get started tracking and settling group balances</p>
+                     </div>
+
                      <GoogleButton label="Sign up with Google" compact />
                      <OrDivider label="or continue with email" />
 
@@ -232,7 +233,7 @@ export function Signup() {
 
                {/* ── Step 2: Avatar & Finish ─────────────── */}
                {step === 2 && (
-                  <div className={stepClass} key="step-2">
+                  <div key="step-2">
                      {/* Step indicator */}
                      <div className={styles.stepIndicator}>
                         <span className={styles.stepDot} />
@@ -249,29 +250,13 @@ export function Signup() {
                         Back
                      </button>
 
-                     <form className={styles.form} onSubmit={handleSubmit}>
-                        {error && <div className={styles.errorAlert} role="alert">{error}</div>}
-
-                        <AvatarPicker
-                           value={avatarId}
-                           onChange={(id) => { setAvatarId(id); clearPhoto() }}
-                           preview={avatarPreview}
-                           onFile={pickPhoto}
-                           onClearPhoto={clearPhoto}
-                           disabled={loading}
-                        />
-
-                        <Button
-                           type="submit"
-                           variant="primary"
-                           disabled={loading}
-                           aria-busy={loading}
-                           className={styles.submitBtn}
-                        >
-                           {loading && <LoaderCircle className={styles.spinner} size={17} aria-hidden="true" />}
-                           {loading ? 'Creating account...' : 'Create Account'}
-                        </Button>
-                     </form>
+                     <AvatarStep
+                        username={username}
+                        onSubmit={handleAvatarSubmit}
+                        onSkip={handleSkip}
+                        loading={loading}
+                        error={error}
+                     />
                   </div>
                )}
             </div>
