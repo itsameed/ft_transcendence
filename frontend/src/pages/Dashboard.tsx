@@ -61,7 +61,7 @@ export function Dashboard() {
                   id: group.groupId,
                   name: group.name,
                   emoji: '',
-                  kind: 'other',
+                  kind: group.kind ?? 'other',
                   memberIds: group.memberIds,
                   totalSpent: 0,
                   yourBalance: group.balance,
@@ -154,7 +154,7 @@ export function Dashboard() {
                />
 
                <Section title="Groups" action={<SectionLink href="/groups">All groups</SectionLink>}>
-                  <GroupsGrid groups={groups} now={NOW} />
+                  <GroupsGrid groups={groups} users={users} now={NOW} />
                </Section>
 
                {/* <Section title="Recent activity" action={<SectionLink>View all</SectionLink>}>

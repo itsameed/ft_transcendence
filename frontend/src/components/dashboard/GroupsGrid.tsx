@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import type { Group } from '../../types'
+import type { Group, User } from '../../types'
 import { money } from '../../lib/format'
 import { iconForKind } from '../../lib/GroupKinds'
+import { Avatar } from '../ui/Avatar'
 import styles from './GroupsGrid.module.css'
 
 /** One quiet line of context under the group name. */
@@ -9,7 +10,7 @@ function describe(group: Group): string {
    return `${group.memberIds.length} ${group.memberIds.length === 1 ? 'person' : 'people'}`
 }
 
-export function GroupsGrid({ groups, onCreate }: { groups: Group[]; now?: Date; onCreate?: () => void }) {
+export function GroupsGrid({ groups, users = {}, onCreate }: { groups: Group[]; users?: Record<string, User>; now?: Date; onCreate?: () => void }) {
    return (
       <div className={styles.grid}>
          {groups.map((g) => {
@@ -17,8 +18,16 @@ export function GroupsGrid({ groups, onCreate }: { groups: Group[]; now?: Date; 
             const Icon = iconForKind(g.kind)
             return (
                <Link key={g.id} to={`/groups/${g.id}`} className={styles.tile}>
-                  <span className={styles.emoji} aria-hidden>
-                     <Icon size={26} strokeWidth={1.5} />
+                  <span className={styles.tileTop}>
+                     <span className={styles.emoji} aria-hidden>
+                        <Icon size={26} strokeWidth={1.5} />
+                     </span>
+                     <span className={styles.stack} aria-hidden>
+                        {g.memberIds.slice(0, 4).map((id) => (
+                           <Avatar key={id} user={users[id] ?? { id, name: '?', email: '' }} size={26} />
+                        ))}
+                        {g.memberIds.length > 4 && <span className={styles.more}>+{g.memberIds.length - 4}</span>}
+                     </span>
                   </span>
                   <span className={styles.titles}>
                      <strong title={g.name}>{g.name}</strong>

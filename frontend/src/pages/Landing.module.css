@@ -106,7 +106,7 @@
 }
 
 .headline {
-  max-width: 590px;
+  max-width: 600px;
   margin: 0 0 22px;
   color: var(--text);
   font-size: clamp(42px, 5.3vw, 68px);
@@ -120,10 +120,10 @@
 }
 
 .description {
-  max-width: 460px;
+  max-width: 500px;
   margin: 0 0 28px;
   color: var(--text-2);
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.65;
 }
 
@@ -151,8 +151,8 @@
 
 .reassurance {
   margin: 15px 0 0;
-  color: var(--text-3);
-  font-size: 12px;
+  color: var(--text-2);
+  font-size: 13px;
 }
 
 .scene {
@@ -392,53 +392,352 @@
 
 .sectionSubtitle {
   color: var(--text-2);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .featuresGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
 .featureCard {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.featureVisual {
+  display: grid;
+  place-items: center;
+  min-height: 132px;
+  padding: 22px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.featureText {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 22px 24px;
+}
+
+.featureHead {
+  display: flex;
+  align-items: center;
   gap: 12px;
-  padding: 23px 22px;
-  border-top: 1px solid var(--border-strong);
 }
 
 .featureIcon {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
   border-radius: 11px;
-  background: var(--surface-2);
+  background: var(--accent-soft);
   color: var(--owed);
 }
 
 .featureName {
-  margin: 4px 0 0;
   color: var(--text);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .featureDesc {
-  max-width: 300px;
+  max-width: 440px;
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text-3);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.flowBefore {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--danger-soft);
+  color: var(--owe);
+}
+
+.flowAfter {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--owed);
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(300px, 100%);
+}
+
+.bubble {
+  align-self: flex-start;
+  max-width: 85%;
+  padding: 9px 13px;
+  border: 1px solid var(--border);
+  border-radius: 14px 14px 14px 4px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.bubbleMine {
+  align-self: flex-end;
+  border-radius: 14px 14px 4px 14px;
+  background: var(--bubble-mine);
+}
+
+.splitDemo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
   color: var(--text-2);
   font-size: 13px;
-  line-height: 1.6;
+  font-weight: 500;
+}
+
+.splitDemo > span:not(.splitAmount) {
+  padding: 6px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+}
+
+.splitDemo .splitActive {
+  border-color: var(--text);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.splitAmount {
+  width: 100%;
+  text-align: center;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.howSection {
+  margin-top: 86px;
+  padding: 34px 38px 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.howHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.howTitle,
+.faqTitle {
+  color: var(--text);
+  font-size: clamp(23px, 3vw, 30px);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 14px;
+  padding: 4px 24px 4px 0;
+}
+
+.step + .step {
+  padding-left: 24px;
+  border-left: 1px solid var(--border);
+}
+
+.stepNumber {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--owed);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.step h3 {
+  margin: 1px 0 5px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.step p {
+  max-width: 240px;
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.faqSection {
+  display: grid;
+  grid-template-columns: 0.7fr 1.3fr;
+  gap: 64px;
+  margin-top: 86px;
+  padding: 0 38px;
+}
+
+.faqIntro {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.faqList {
+  border-top: 1px solid var(--border-strong);
+}
+
+.faqItem {
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.faqItem summary {
+  position: relative;
+  padding: 18px 36px 18px 0;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.faqItem summary::-webkit-details-marker {
+  display: none;
+}
+
+.faqItem summary::after {
+  content: '+';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  color: var(--text-3);
+  font-size: 18px;
+  font-weight: 400;
+  transform: translateY(-50%);
+  transition: transform 0.15s ease;
+}
+
+.faqItem[open] summary::after {
+  content: '−';
+}
+
+.faqItem p {
+  max-width: 620px;
+  padding: 0 36px 18px 0;
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.ctaBand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  margin-top: 86px;
+  padding: 44px 46px;
+  border-radius: var(--radius-lg);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.ctaTitle {
+  max-width: 620px;
+  color: var(--on-primary);
+  font-size: clamp(26px, 4vw, 42px);
+  font-weight: 600;
+  letter-spacing: -0.055em;
+  line-height: 1.08;
+}
+
+.ctaSub {
+  margin-top: 10px;
+  color: var(--on-primary);
+  font-size: 16px;
+  opacity: 0.75;
+}
+
+.ctaButton {
+  height: 46px;
+  padding: 0 19px;
 }
 
 .footer {
   border-top: 1px solid var(--border);
-  padding: 25px 24px;
-  text-align: center;
+  background: var(--surface);
+}
+
+.footerInner {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: 26px 28px;
+}
+
+.footerBrand {
+  width: fit-content;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.footerLinks {
+  display: flex;
+  gap: 22px;
+}
+
+.footerLinks a {
+  color: var(--text-2);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.footerLinks a:hover {
+  color: var(--text);
+}
+
+.copyright {
+  justify-self: end;
   color: var(--text-3);
   font-size: 12px;
 }
@@ -510,6 +809,28 @@
     right: -4px;
     bottom: 15px;
   }
+
+  .featuresGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .howSection {
+    margin-top: 68px;
+  }
+
+  .faqSection {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    margin-top: 68px;
+  }
+
+  .ctaBand {
+    margin-top: 68px;
+  }
+
+  .footerInner {
+    padding-inline: 24px;
+  }
 }
 
 @media (max-width: 620px) {
@@ -559,22 +880,65 @@
 
   .featuresGrid {
     grid-template-columns: 1fr;
+  }
+
+  .howSection {
+    margin-top: 56px;
+    padding: 28px 22px;
+  }
+
+  .howHeader {
+    display: grid;
     gap: 8px;
   }
 
-  .featureCard {
-    display: grid;
-    grid-template-columns: 38px 1fr;
-    column-gap: 14px;
-    padding: 17px 0;
+  .steps {
+    grid-template-columns: 1fr;
   }
 
-  .featureIcon {
-    grid-row: span 2;
+  .step {
+    padding: 18px 0;
   }
 
-  .featureName {
-    margin: 0;
+  .step + .step {
+    padding-left: 0;
+    border-top: 1px solid var(--border);
+    border-left: 0;
+  }
+
+  .faqSection {
+    margin-top: 56px;
+    padding: 0 4px;
+  }
+
+  .ctaBand {
+    align-items: stretch;
+    flex-direction: column;
+    margin-top: 56px;
+    padding: 30px 24px;
+  }
+
+  .ctaBand > .linkButton {
+    width: 100%;
+  }
+
+  .ctaButton {
+    width: 100%;
+  }
+
+  .footerInner {
+    grid-template-columns: 1fr auto;
+    row-gap: 16px;
+    padding: 24px 20px;
+  }
+
+  .footerLinks {
+    justify-self: end;
+  }
+
+  .copyright {
+    grid-column: 1 / -1;
+    justify-self: start;
   }
 }
 

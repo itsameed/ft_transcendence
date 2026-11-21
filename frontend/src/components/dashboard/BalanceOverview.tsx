@@ -21,7 +21,9 @@ interface Props {
  */
 export function BalanceOverview({ balances, users, groupCount, onSettle, onRemind }: Props) {
   const rows = Array.isArray(balances) ? balances : []
-  const { net, owedToYou, youOwe } = summarize(rows)
+  const { net, owedToYou, youOwe, peopleOwingYou, peopleYouOwe } = summarize(rows)
+  const total = owedToYou + youOwe
+  const owedPct = total > 0 ? (owedToYou / total) * 100 : 0
   const owing = rows.filter((b) => b.amount < 0).sort((a, b) => a.amount - b.amount)
   const owed = rows.filter((b) => b.amount > 0).sort((a, b) => b.amount - a.amount)
 
@@ -32,8 +34,28 @@ export function BalanceOverview({ balances, users, groupCount, onSettle, onRemin
           {net > 0 ? 'Overall, you’re owed' : net < 0 ? 'Overall, you owe' : 'You’re all settled up'}
         </p>
         <p className={styles.net} data-tone={net > 0 ? 'owed' : net < 0 ? 'owe' : 'settled'}>{money(net)}</p>
+        {total > 0 && (
+          <div className={styles.balanceBar}>
+            <div
+              className={styles.bar}
+              role="img"
+              aria-label={`Owed to you ${money(owedToYou)}, you owe ${money(youOwe)}`}
+            >
+              <span className={styles.barOwed} style={{ width: `${owedPct}%` }} />
+              <span className={styles.barOwe} style={{ width: `${100 - owedPct}%` }} />
+            </div>
+            <p className={styles.barLegend}>
+              <span>
+                {peopleOwingYou} {peopleOwingYou === 1 ? 'person owes' : 'people owe'} you {money(owedToYou)}
+              </span>
+              <span>
+                You owe {peopleYouOwe} {peopleYouOwe === 1 ? 'person' : 'people'} {money(youOwe)}
+              </span>
+            </p>
+          </div>
+        )}
         <p className={styles.meta}>
-          Debts are simplified across your {groupCount} groups, so everyone makes as few payments as possible.
+          Debts are simplified across your {groupCount} {groupCount === 1 ? 'group' : 'groups'}, so everyone makes as few payments as possible.
         </p>
       </div>
 
