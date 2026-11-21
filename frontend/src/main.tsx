@@ -16,34 +16,35 @@ import { GroupDetailPage } from './pages/GroupDetail'
 import { NotificationsPage } from './pages/Notifications'
 import { AdminPanelPage } from './pages/AdminPanel'
 import { NotFoundPage } from './pages/NotFound'
-import { LegalPlaceholderPage } from './pages/LegalPlaceholder'
+import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
 
 export function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Landing/>}/>
-        <Route path="/login" element={<Login/>}/>
-        <Route path="/signup" element={<Signup/>}/>
-        <Route path="/terms" element={<LegalPlaceholderPage title="Terms of Service"/>}/>
-        <Route path="/privacy" element={<LegalPlaceholderPage title="Privacy Policy"/>}/>
-        <Route path="/dashboard" element={<Dashboard/>}/>
-        <Route path="/groups" element={<GroupPage/>}/>
-        <Route path="/chat" element={<ChatPage/>}/>
-        <Route path="/profile" element={<ProfilePage/>}/>
-        <Route path="/settings" element={<SettingsPage/>}/>
-        <Route path="/users/:userId" element={<UserProfilePage/>}/>
-        <Route path="/groups/:groupId" element={<GroupDetailPage/>}/>
-        <Route path="/notifications" element={<NotificationsPage/>}/>
-        <Route path="/admin" element={<AdminPanelPage/>}/>
-        <Route path="*" element={<NotFoundPage/>}/>
-      </Routes>
-    </Router>
-  )
+   return (
+      <Router>
+         <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/groups" element={<GroupPage />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/users/:userId" element={<UserProfilePage />} />
+            <Route path="/groups/:groupId" element={<GroupDetailPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/admin" element={<AdminPanelPage />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="*" element={<NotFoundPage />} />
+         </Routes>
+      </Router>
+   )
 }
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+   <StrictMode>
+      <App />
+   </StrictMode>,
 )
