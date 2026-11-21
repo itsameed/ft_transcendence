@@ -1,0 +1,341 @@
+/* ── AvatarStep — Step 2 of signup ─────────────────────────────────── */
+
+/* Layout */
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ── Heading ───────────────────────────────────────────────────────── */
+.heading {
+  text-align: center;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--text-2);
+  margin: 0;
+}
+
+/* ── Live preview ──────────────────────────────────────────────────── */
+.previewWrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+}
+
+.previewImg {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 150ms var(--ease);
+}
+
+.previewFading {
+  opacity: 0;
+}
+
+/* ── Context mock (balance row) ────────────────────────────────────── */
+.contextMock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.contextAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.contextText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.contextName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contextBalance {
+  font-size: 12px;
+  color: var(--owe);
+}
+
+/* ── Section label ─────────────────────────────────────────────────── */
+.sectionLabel {
+  width: 100%;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+/* ── Grids ─────────────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 460px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ── Shared option (color swatch + preset avatar + upload tile) ───── */
+.option {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  outline: none;
+  /* ring + scale for selection */
+  box-shadow: 0 0 0 0px transparent, 0 0 0 0px transparent;
+  transform: scale(1);
+  transition: box-shadow 150ms var(--ease), transform 150ms var(--ease);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.optionSelected {
+  box-shadow: 0 0 0 2px var(--text), 0 0 0 5px var(--surface);
+  transform: scale(1.05);
+}
+
+/* ── Color swatch ──────────────────────────────────────────────────── */
+.swatch {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+}
+
+/* ── Preset avatar ─────────────────────────────────────────────────── */
+.presetImg {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Upload tile ───────────────────────────────────────────────────── */
+.uploadTile {
+  border: 2px dashed var(--border-strong);
+  color: var(--text-3);
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease,
+              box-shadow 150ms var(--ease), transform 150ms var(--ease);
+}
+
+.uploadTile:hover {
+  border-color: var(--text-3);
+  color: var(--text-2);
+}
+
+.uploadTileActive {
+  border-color: var(--primary);
+  background: var(--accent-soft);
+}
+
+.uploadLabel {
+  font-size: 9px;
+  font-weight: 500;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+/* ── Shuffle button ────────────────────────────────────────────────── */
+.shuffleRow {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.shuffleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.shuffleBtn:hover {
+  color: var(--text);
+  background: var(--hover-wash);
+}
+
+.shuffleBtn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ── Error alert ───────────────────────────────────────────────────── */
+.uploadError {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  border: 1px solid var(--owe);
+  color: var(--owe);
+  font-size: 13px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+/* ── Actions ───────────────────────────────────────────────────────── */
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.skipLink {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-3);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.skipLink:hover {
+  color: var(--text);
+}
+
+.skipLink:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ── Crop modal ────────────────────────────────────────────────────── */
+.cropOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--scrim);
+}
+
+.cropCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 340px;
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-modal);
+}
+
+.cropTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cropCanvasWrap {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: grab;
+  background: var(--surface-2);
+}
+
+.cropCanvasWrap:active {
+  cursor: grabbing;
+}
+
+.cropCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cropHint {
+  font-size: 12px;
+  color: var(--text-3);
+  text-align: center;
+}
+
+.cropActions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.cropActions button {
+  flex: 1;
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .previewImg,
+  .option,
+  .uploadTile {
+    transition-duration: 0.01ms !important;
+  }
+}
