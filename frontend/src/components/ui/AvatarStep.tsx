@@ -303,15 +303,19 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props
 
   // ── Shuffle ────────────────────────────────────────
   const handleShuffle = useCallback(() => {
-    const coin = Math.random() > 0.5
-    if (coin || mode === 'initials') {
-      const newColor = randomItem(AVATAR_COLORS.filter((c) => c.id !== colorId))
-      setColorId(newColor.id)
-      setMode('initials')
-    } else {
-      const newPreset = randomItem(DEFAULT_AVATARS.filter((a) => a.id !== presetId))
-      setPresetId(newPreset.id)
+    // Alternates between picking a preset icon avatar and an initials color
+    // so every click noticeably changes style and color.
+    const switchToPreset = mode === 'initials' ? Math.random() < 0.65 : Math.random() < 0.35
+    if (switchToPreset) {
+      const available = DEFAULT_AVATARS.filter((a) => a.id !== presetId)
+      const nextPreset = randomItem(available)
+      setPresetId(nextPreset.id)
       setMode('preset')
+    } else {
+      const available = AVATAR_COLORS.filter((c) => c.id !== colorId)
+      const nextColor = randomItem(available)
+      setColorId(nextColor.id)
+      setMode('initials')
     }
   }, [mode, colorId, presetId])
 
@@ -412,45 +416,41 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props
             </li>
           )
         })}
+      </ul>
 
-        {/* Upload tile */}
-        <li>
+      {/* Action companion row: Upload Photo + Shuffle */}
+      <div className={styles.actionRow}>
+        <div className={styles.uploadGroup}>
           <button
             ref={uploadRef}
             type="button"
-            role="radio"
-            aria-checked={mode === 'photo'}
-            aria-label="Upload photo avatar"
-            tabIndex={mode === 'photo' ? 0 : -1}
-            className={`${styles.option} ${styles.uploadTile} ${mode === 'photo' ? styles.optionSelected : ''} ${dragActive ? styles.uploadTileActive : ''}`}
+            className={`${styles.uploadBtn} ${mode === 'photo' ? styles.uploadBtnSelected : ''} ${dragActive ? styles.uploadBtnActive : ''}`}
             onClick={() => fileRef.current?.click()}
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
             onDrop={onDrop}
+            aria-label={mode === 'photo' && photoPreview ? 'Change uploaded photo' : 'Upload photo'}
           >
-            <Camera size={18} aria-hidden />
-            <span className={styles.uploadLabel}>Upload</span>
+            <Camera size={16} aria-hidden />
+            <span>{mode === 'photo' && photoPreview ? 'Change photo' : 'Upload photo'}</span>
           </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="visually-hidden"
-            tabIndex={-1}
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) handleFileSelect(file)
-              e.target.value = ''
-            }}
-          />
-        </li>
-      </ul>
+          {mode === 'photo' && (
+            <button
+              type="button"
+              className={styles.removePhotoBtn}
+              onClick={() => {
+                setMode('initials')
+                setPhotoFile(null)
+                if (photoPreview) URL.revokeObjectURL(photoPreview)
+                setPhotoPreview(null)
+              }}
+              title="Remove photo"
+            >
+              Remove
+            </button>
+          )}
+        </div>
 
-      {/* Upload error */}
-      {uploadError && <div className={styles.uploadError} role="alert">{uploadError}</div>}
-
-      {/* Shuffle */}
-      <div className={styles.shuffleRow}>
         <button
           type="button"
           className={styles.shuffleBtn}
@@ -458,9 +458,25 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props
           aria-label="Shuffle avatar style"
         >
           <Shuffle size={14} aria-hidden />
-          Shuffle
+          <span>Shuffle</span>
         </button>
       </div>
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="visually-hidden"
+        tabIndex={-1}
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) handleFileSelect(file)
+          e.target.value = ''
+        }}
+      />
+
+      {/* Upload error */}
+      {uploadError && <div className={styles.uploadError} role="alert">{uploadError}</div>}
 
       {/* Actions */}
       <form className={styles.actions} onSubmit={handleFormSubmit}>
