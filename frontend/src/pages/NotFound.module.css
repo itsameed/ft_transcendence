@@ -13,6 +13,7 @@
   min-height: 84px;
   margin: 0 auto;
   align-items: center;
+  justify-content: space-between;
 }
 
 .brand {
@@ -34,6 +35,25 @@
   border-radius: 9px;
   background: var(--primary);
   color: var(--on-primary);
+}
+
+.themeToggle {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.themeToggle:hover {
+  border-color: var(--text-3);
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 .main {

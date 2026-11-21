@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Button } from '../components/ui/Button'
 import { Section } from '../components/ui/Section'
+import { Toast } from '../components/ui/Toast'
 import type { User } from '../types'
 import styles from './AdminPanel.module.css'
 
@@ -52,6 +53,7 @@ export function AdminPanelPage() {
   const [groups, setGroups] = useState<AdminGroup[]>([])
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null)
 
   useEffect(() => {
     let ignore = false
@@ -132,9 +134,14 @@ export function AdminPanelPage() {
           },
         }
       })
+      const username = users.find((user) => user._id === userId)?.username ?? 'User'
+      setToast({
+        message: nextStatus === 'active' ? `${username} was reactivated.` : `${username} was suspended.`,
+        tone: 'success',
+      })
     } catch (error) {
       console.error('Status update failed', error)
-      window.alert(error instanceof Error ? error.message : 'Status update failed')
+      setToast({ message: error instanceof Error ? error.message : 'Status update failed', tone: 'error' })
     } finally {
       setBusyId(null)
     }
@@ -260,6 +267,11 @@ export function AdminPanelPage() {
           </div>
         </div>
       </main>
+      <Toast
+        message={toast?.message ?? null}
+        tone={toast?.tone ?? 'success'}
+        onDismiss={() => setToast(null)}
+      />
     </div>
   )
 }
