@@ -57,3 +57,34 @@ export function generateInitialsAvatar(initials: string, colorId: string): strin
 </svg>`
   return `data:image/svg+xml,${encodeURIComponent(svg)}`
 }
+
+/** Render initials on colored background to an image File for uploading. */
+export function renderInitialsToFile(initials: string, colorId: string): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 240
+    canvas.height = 240
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return reject(new Error('Canvas not supported'))
+    const color = AVATAR_COLORS.find((c) => c.id === colorId) ?? AVATAR_COLORS[0]
+
+    ctx.beginPath()
+    ctx.arc(120, 120, 120, 0, Math.PI * 2)
+    ctx.fillStyle = color.bg
+    ctx.fill()
+
+    ctx.fillStyle = color.text
+    ctx.font = `600 ${initials.length > 1 ? 80 : 96}px 'Inter Variable', system-ui, -apple-system, sans-serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(initials, 120, 125)
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(new File([blob], 'initials-avatar.png', { type: 'image/png' }))
+      } else {
+        reject(new Error('toBlob failed'))
+      }
+    }, 'image/png')
+  })
+}
