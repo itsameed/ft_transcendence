@@ -144,7 +144,7 @@
 }
 
 .optionSelected {
-  box-shadow: 0 0 0 2px var(--text), 0 0 0 5px var(--surface);
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--text);
   transform: scale(1.05);
 }
 
@@ -168,7 +168,13 @@
 /* ── Upload tile ───────────────────────────────────────────────────── */
 .uploadTile {
   border: 2px dashed var(--border-strong);
+  border-radius: 50%;
   color: var(--text-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
   transition: border-color 150ms ease, background 150ms ease, color 150ms ease,
               box-shadow 150ms var(--ease), transform 150ms var(--ease);
 }

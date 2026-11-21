@@ -48,9 +48,9 @@ function handleRadioKeyDown(
   e: KeyboardEvent<HTMLElement>,
   index: number,
   total: number,
-  columns: number,
   onSelect: (i: number) => void,
 ) {
+  const columns = typeof window !== 'undefined' && window.innerWidth <= 460 ? 4 : 8
   let next = index
   switch (e.key) {
     case 'ArrowRight': next = (index + 1) % total; break
@@ -62,7 +62,7 @@ function handleRadioKeyDown(
   e.preventDefault()
   onSelect(next)
   // Focus the newly selected element
-  const group = (e.currentTarget.parentElement as HTMLElement | null)
+  const group = e.currentTarget.closest('[role="radiogroup"]')
   const target = group?.querySelectorAll<HTMLElement>('[role="radio"]')[next]
   target?.focus()
 }
@@ -252,16 +252,13 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props
     }
   }, [previewSrc])
 
-  // ── Columns (responsive) ───────────────────────────
-  const cols = typeof window !== 'undefined' && window.innerWidth <= 460 ? 4 : 8
-
   // ── File validation ────────────────────────────────
   const validateFile = useCallback((file: File): string | null => {
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      return 'Please use a JPG, PNG, or WebP image.'
+      return 'Invalid file format. Please upload a JPG, PNG, or WebP photo.'
     }
     if (file.size > MAX_FILE_SIZE) {
-      return `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max size is 5 MB.`
+      return `Photo is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Please choose an image under 5MB or compress it before uploading.`
     }
     return null
   }, [])
@@ -361,7 +358,7 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props
 
       {/* Color swatches */}
       <p className={styles.sectionLabel}>Colors</p>
-      <ul className={styles.grid} role="radiogroup" aria-label="Avatar colors">
+      <ul className={styles.grid} role="radiogroup" aria-label="Initials avatar color options">
         {AVATAR_COLORS.map((color, i) => {
           const selected = mode === 'initials' && colorId === color.id
           return (
@@ -375,7 +372,7 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props
                 className={`${styles.option} ${selected ? styles.optionSelected : ''}`}
                 onClick={() => { setMode('initials'); setColorId(color.id) }}
                 onKeyDown={(e) =>
-                  handleRadioKeyDown(e, i, AVATAR_COLORS.length, cols, (next) => {
+                  handleRadioKeyDown(e, i, AVATAR_COLORS.length, (next) => {
                     setMode('initials')
                     setColorId(AVATAR_COLORS[next].id)
                   })
@@ -390,7 +387,7 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props
 
       {/* Preset avatars */}
       <p className={styles.sectionLabel}>Avatars</p>
-      <ul className={styles.grid} role="radiogroup" aria-label="Preset avatars">
+      <ul className={styles.grid} role="radiogroup" aria-label="Preset avatar style options">
         {DEFAULT_AVATARS.map((avatar, i) => {
           const selected = mode === 'preset' && presetId === avatar.id
           return (
@@ -404,7 +401,7 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props
                 className={`${styles.option} ${selected ? styles.optionSelected : ''}`}
                 onClick={() => { setMode('preset'); setPresetId(avatar.id) }}
                 onKeyDown={(e) =>
-                  handleRadioKeyDown(e, i, DEFAULT_AVATARS.length, cols, (next) => {
+                  handleRadioKeyDown(e, i, DEFAULT_AVATARS.length, (next) => {
                     setMode('preset')
                     setPresetId(DEFAULT_AVATARS[next].id)
                   })
@@ -423,7 +420,7 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props
             type="button"
             role="radio"
             aria-checked={mode === 'photo'}
-            aria-label="Upload a photo"
+            aria-label="Upload photo avatar"
             tabIndex={mode === 'photo' ? 0 : -1}
             className={`${styles.option} ${styles.uploadTile} ${mode === 'photo' ? styles.optionSelected : ''} ${dragActive ? styles.uploadTileActive : ''}`}
             onClick={() => fileRef.current?.click()}
