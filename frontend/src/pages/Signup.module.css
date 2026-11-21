@@ -58,6 +58,12 @@
   animation: appear 0.28s var(--ease);
 }
 
+@media (max-width: 400px) {
+  .card {
+    padding: 24px 16px;
+  }
+}
+
 @keyframes appear {
   from {
     opacity: 0;
@@ -67,6 +73,17 @@
 
 .header {
   margin-bottom: 24px;
+}
+
+.brandMark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  background: var(--primary);
+  color: var(--on-primary);
 }
 
 .title {
@@ -87,18 +104,6 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-@media (max-width: 480px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .field {
@@ -130,6 +135,54 @@
   background: var(--surface);
 }
 
+.input:focus-visible,
+.themeToggle:focus-visible,
+.passwordToggle:focus-visible,
+.policyLink:focus-visible,
+.link:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.input:focus-visible {
+  border-color: var(--primary);
+}
+
+.passwordInputWrap {
+  position: relative;
+}
+
+.passwordInput {
+  padding-right: 46px;
+}
+
+.passwordToggle {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.passwordToggle:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.passwordHint {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
 .errorAlert {
   padding: 10px 14px;
   border-radius: var(--radius-sm);
@@ -141,6 +194,90 @@
   overflow-wrap: anywhere;
 }
 
+/* ── Step transition ────────────────────────────────── */
+
+.stepContainer {
+  position: relative;
+  overflow: hidden;
+}
+
+.step {
+  animation: stepIn 0.3s var(--ease) both;
+}
+
+@keyframes stepIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+.stepBack {
+  animation: stepInBack 0.3s var(--ease) both;
+}
+
+@keyframes stepInBack {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+
+/* ── Step indicator ────────────────────────────────── */
+
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+.stepDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.stepDotActive {
+  background: var(--primary);
+  transform: scale(1.25);
+}
+
+/* ── Back button ───────────────────────────────────── */
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.backBtn:hover {
+  color: var(--text);
+}
+
+.backBtn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Submit & continue buttons ─────────────────────── */
+
 .submitBtn {
   margin-top: 6px;
   width: 100%;
@@ -148,6 +285,35 @@
   border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 500;
+}
+
+.spinner {
+  margin-right: 8px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.legalNotice {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.policyLink {
+  color: var(--text-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.policyLink:hover {
+  color: var(--text);
 }
 
 .footer {
@@ -167,5 +333,11 @@
 
 .link:hover {
   opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
 }
 

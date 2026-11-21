@@ -9,7 +9,7 @@ import {
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Avatar } from '../components/ui/Avatar'
-import { Toast } from '../components/ui/Toast'
+import { Toast, type ToastTone } from '../components/ui/Toast'
 import { AddExpenseModal } from '../components/dashboard/AddExpenseModal'
 import { CreateGroupModal } from '../components/groups/CreateGroupModal'
 import { iconForKind } from '../lib/GroupKinds'
@@ -56,7 +56,7 @@ export function ChatPage() {
   const [streaming, setStreaming] = useState(false)
   const [filter, setFilter] = useState<Filter>('all')
   const [mobileThread, setMobileThread] = useState(false)
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ message: string; tone: ToastTone } | null>(null)
   const [emojiOpen, setEmojiOpen] = useState(false)
   const [addingExpense, setAddingExpense] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -75,7 +75,6 @@ export function ChatPage() {
   const socketRef = useRef<Socket | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
-  const toastTimer = useRef<number>()
   const typingTimer = useRef<number>()
   const navigate = useNavigate()
   const [params] = useSearchParams()
@@ -84,10 +83,8 @@ export function ChatPage() {
   const activeConvId = dmTarget && selected === null ? dms.find((d) => d.other.id === dmTarget.id)?.conversationId : selected?.conversationId
   const inDm = Boolean(dmTarget) && !selected
 
-  const notify = useCallback((message: string) => {
-    setToast(message)
-    window.clearTimeout(toastTimer.current)
-    toastTimer.current = window.setTimeout(() => setToast(null), 2600)
+  const notify = useCallback((message: string, tone: ToastTone = 'info') => {
+    setToast({ message, tone })
   }, [])
 
   useEffect(() => { saveLocal('splitify-chat-pinned', pinned) }, [pinned])
@@ -269,7 +266,7 @@ export function ChatPage() {
     const res = await fetch(`/api/conversations/${activeConvId}/messages`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content }),
     })
-    if (!res.ok) { setDraft(content); notify('Could not send — please try again'); return }
+    if (!res.ok) { setDraft(content); notify('Could not send — please try again', 'error'); return }
     const m = await res.json()
     setMessages((prev) => prev.some((x) => x.id === m._id) ? prev : [...prev, { id: m._id, senderId: me!.id, senderName: me!.name, content: m.content, createdAt: m.createdAt }])
   }
@@ -316,14 +313,14 @@ export function ChatPage() {
       setUsers((p) => ({ ...p, [friend.id]: friend }))
       setSelectedId(null); setDmTarget(friend); setMode('group'); setMobileThread(true)
     } catch (err) {
-      notify(err instanceof Error ? err.message : 'Could not start the conversation.')
+      notify(err instanceof Error ? err.message : 'Could not start the conversation.', 'error')
     } finally { setDmBusy(false) }
   }
 
   function togglePin(m: Msg) {
     if (!selected) return
     setPinned((p) => ({ ...p, [selected.id]: p[selected.id] === m.id ? '' : m.id }))
-    notify(pinned[selected.id] === m.id ? 'Message unpinned' : 'Message pinned to this conversation')
+    notify(pinned[selected.id] === m.id ? 'Message unpinned' : 'Message pinned to this conversation', 'success')
   }
 
   if (loading || !me) return <div className="page-state" role={error ? 'alert' : 'status'}>{error ?? 'Loading…'}</div>
@@ -417,7 +414,7 @@ export function ChatPage() {
                       <Wallet size={19} style={{ flex: 'none', color: myBalance > 0 ? 'var(--owed)' : myBalance < 0 ? 'var(--owe)' : 'var(--text-3)' }} />
                       <span className={styles.grow}><strong>{myBalance > 0 ? `You’re owed ${money(myBalance)}` : myBalance < 0 ? `You owe ${money(myBalance)}` : 'You’re all settled up'}</strong>
                         <p>{balanceKnown ? `${money(totalSpent)} spent together · ${expenseCount} expenses` : 'Across your recent groups'}</p></span>
-                      {myBalance > 0 && topDebtor && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={async () => { const r = await sendReminder(topDebtor.user.id, firstName(topDebtor.user.name)); notify(r.message) }}>Remind</button>}
+                      {myBalance > 0 && topDebtor && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={async () => { const r = await sendReminder(topDebtor.user.id, firstName(topDebtor.user.name)); notify(r.message, r.ok ? 'success' : 'error') }}>Remind</button>}
                       {myBalance < 0 && selected && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => navigate(`/groups/${selected.id}`)}>Settle up</button>}
                       {selected && <button className={styles.stripBtn} onClick={() => navigate(`/groups/${selected.id}`)}>Balances</button>}
                     </div>
@@ -517,14 +514,14 @@ export function ChatPage() {
           setCreatingGroup(false)
           setGroups((p) => [group, ...p])
           setSelectedId(group.id); setDmTarget(null); setMode('group'); setMobileThread(true)
-          notify(`Created “${group.name}”`)
+          notify(`Created “${group.name}”`, 'success')
         }} />
       {addingExpense && (
         <AddExpenseModal open={addingExpense} onClose={() => setAddingExpense(false)}
-          onSave={(expense, group) => { setAddingExpense(false); notify(`Added “${expense.title}” to ${group.name}`) }}
+          onSave={(expense, group) => { setAddingExpense(false); notify(`Added “${expense.title}” to ${group.name}`, 'success') }}
           groups={groups} users={users} me={me.id} today={new Date()} />
       )}
-      <Toast message={toast} />
+      <Toast message={toast?.message ?? null} tone={toast?.tone} duration={2600} onDismiss={() => setToast(null)} />
     </div>
   )
 }

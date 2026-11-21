@@ -32,6 +32,7 @@
 .who strong { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .who small { color: var(--text-3); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .actions { margin-left: auto; display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+.requestPending { padding: 6px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--owed); font-size: 12px; font-weight: 600; white-space: nowrap; }
 .chatLink { display: inline-flex; align-items: center; min-height: 36px; color: var(--text-2); font-size: 13px; font-weight: 500; text-decoration: none; padding: 7px 10px; border-radius: 8px; transition: background 0.15s ease, color 0.15s ease; }
 .chatLink:hover { color: var(--text); background: var(--hover-wash); }
 .remove { min-height: 36px; border: 0; border-radius: 8px; background: none; color: var(--text-3); font-size: 13px; font-weight: 500; padding: 7px 10px; transition: background 0.15s ease, color 0.15s ease; }

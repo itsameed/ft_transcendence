@@ -1,5 +1,7 @@
 /* In dev the vite proxy forwards /auth to the backend; in production set
    VITE_API_BASE_URL to the API origin. Relative path keeps cookies first-party. */
+import styles from './GoogleButton.module.css'
+
 const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL ?? ''
 
 function GoogleMark() {
@@ -14,16 +16,17 @@ function GoogleMark() {
 }
 
 /** Full-page navigation: the OAuth dance needs top-level redirects, not fetch. */
-export function GoogleButton({ label = 'Continue with Google' }: { label?: string }) {
+export function GoogleButton({
+  label = 'Continue with Google',
+  compact = false,
+}: {
+  label?: string
+  compact?: boolean
+}) {
   return (
     <a
       href={`${API_BASE}/auth/google`}
-      style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-        width: '100%', height: 44, marginTop: 12, borderRadius: 'var(--radius-sm)',
-        border: '1px solid var(--border-strong)', background: 'var(--surface)',
-        color: 'var(--text)', fontSize: 14, fontWeight: 500, textDecoration: 'none',
-      }}
+      className={[styles.googleButton, compact ? styles.compact : ''].filter(Boolean).join(' ')}
     >
       <GoogleMark />
       {label}
@@ -31,12 +34,12 @@ export function GoogleButton({ label = 'Continue with Google' }: { label?: strin
   )
 }
 
-export function OrDivider() {
+export function OrDivider({ label = 'or' }: { label?: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0 2px', color: 'var(--text-3)', fontSize: 12 }} aria-hidden>
-      <span style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      or
-      <span style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+    <div className={styles.divider} role="separator" aria-label={label}>
+      <span className={styles.dividerLine} />
+      <span>{label}</span>
+      <span className={styles.dividerLine} />
     </div>
   )
 }

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Crown, FolderX, LogOut, MessageSquare, Plus, ShieldAlert, Trash2, UserPlus } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Crown, FolderX, LogOut, MessageSquare, Plus, ShieldAlert, Trash2, UserPlus, X } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { AddExpenseModal } from '../components/dashboard/AddExpenseModal'
@@ -8,13 +8,13 @@ import { AddMembersModal } from '../components/groups/AddMembersModal'
 import { SettleUpModal } from '../components/groups/SettleUpModal'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
-import { Card } from '../components/ui/Card'
+import { Toast } from '../components/ui/Toast'
 import { iconForKind } from '../lib/GroupKinds'
 import { categoryIcon } from '../lib/categories'
 import { money, relativeDay } from '../lib/format'
 import type { Category, Group, User } from '../types'
 import pageStyles from './Dashboard.module.css'
-import styles from './Profile.module.css'
+import styles from './GroupDetail.module.css'
 
 interface GroupExpense {
   id: string; title: string; category: Category; amount: number
@@ -31,6 +31,14 @@ interface GroupBalances {
 interface GroupDetail {
   id: string; name: string; kind: string; description: string
   createdBy: User; createdAt: string; conversationId?: string; members: GroupMember[]
+}
+
+type ToastTone = 'success' | 'info' | 'error'
+interface Confirmation {
+  title: string
+  description: string
+  confirmLabel: string
+  onConfirm: () => Promise<void>
 }
 
 function mapUser(raw: any): User {
@@ -52,11 +60,12 @@ export function GroupDetailPage() {
   const [deletingGroup, setDeletingGroup] = useState(false)
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
   const [balances, setBalances] = useState<GroupBalances | null>(null)
-  const [notice, setNotice] = useState('')
-  const [memberActionMessage, setMemberActionMessage] = useState('')
-  const [memberActionError, setMemberActionError] = useState('')
+  const [toast, setToast] = useState<{ message: string; tone: ToastTone } | null>(null)
+  const [confirmation, setConfirmation] = useState<Confirmation | null>(null)
+  const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState('')
   const [errorStatus, setErrorStatus] = useState<404 | 403 | null>(null)
+  const cancelConfirmationRef = useRef<HTMLButtonElement>(null)
   const navigate = useNavigate()
   const [today] = useState(() => new Date())
   const expenseGroup = useMemo<Group | null>(() => group ? ({
@@ -76,6 +85,20 @@ export function GroupDetailPage() {
     if (me) users[me.id] = me
     return users
   }, [group?.members, me])
+
+  function showToast(message: string, tone: ToastTone = 'success') {
+    setToast({ message, tone })
+  }
+
+  useEffect(() => {
+    if (!confirmation) return
+    cancelConfirmationRef.current?.focus()
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !confirming) setConfirmation(null)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [confirmation, confirming])
 
   useEffect(() => {
     let cancelled = false
@@ -195,11 +218,8 @@ export function GroupDetailPage() {
 
   async function removeMember(user: User) {
     if (user.id === currentUser.id || !isOwner) return
-    if (!window.confirm(`Remove ${user.name} from ${currentGroup.name}?`)) return
 
     setRemovingMemberId(user.id)
-    setMemberActionMessage('')
-    setMemberActionError('')
     try {
       const res = await fetch(`/api/groups/${currentGroup.id}/members/${user.id}`, { method: 'DELETE' })
       const data = await res.json().catch(() => null)
@@ -209,10 +229,10 @@ export function GroupDetailPage() {
         ...current,
         members: current.members.filter((member) => member.user.id !== user.id),
       } : current)
-      setMemberActionMessage(`${user.name} was removed from the group.`)
+      showToast(`${user.name} was removed from the group.`)
       loadBalances()
     } catch (err) {
-      setMemberActionError(err instanceof Error ? err.message : 'Could not remove this member.')
+      showToast(err instanceof Error ? err.message : 'Could not remove this member.', 'error')
     } finally {
       setRemovingMemberId(null)
     }
@@ -220,18 +240,15 @@ export function GroupDetailPage() {
 
   async function leaveGroup() {
     if (isOwner) return
-    if (!window.confirm(`Leave ${currentGroup.name}? You will lose access to this group.`)) return
 
     setLeaving(true)
-    setMemberActionMessage('')
-    setMemberActionError('')
     try {
       const res = await fetch(`/api/groups/${currentGroup.id}/leave`, { method: 'DELETE' })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.message ?? 'Could not leave this group.')
       navigate('/groups')
     } catch (err) {
-      setMemberActionError(err instanceof Error ? err.message : 'Could not leave this group.')
+      showToast(err instanceof Error ? err.message : 'Could not leave this group.', 'error')
     } finally {
       setLeaving(false)
     }
@@ -239,11 +256,8 @@ export function GroupDetailPage() {
 
   async function deleteGroup() {
     if (!isOwner || deletingGroup) return
-    if (!window.confirm(`Delete "${currentGroup.name}"? This will remove the group, its chat, messages, and invitations. This action cannot be undone.`)) return
 
     setDeletingGroup(true)
-    setMemberActionMessage('')
-    setMemberActionError('')
     try {
       const res = await fetch(`/api/groups/${currentGroup.id}`, { method: 'DELETE' })
       const data = await res.json().catch(() => null)
@@ -251,9 +265,20 @@ export function GroupDetailPage() {
       if (!res.ok) throw new Error(data?.message ?? 'Could not delete this group.')
       navigate('/groups', { replace: true })
     } catch (err) {
-      setMemberActionError(err instanceof Error ? err.message : 'Could not delete this group.')
+      showToast(err instanceof Error ? err.message : 'Could not delete this group.', 'error')
     } finally {
       setDeletingGroup(false)
+    }
+  }
+
+  async function confirmAction() {
+    if (!confirmation || confirming) return
+    setConfirming(true)
+    try {
+      await confirmation.onConfirm()
+      setConfirmation(null)
+    } finally {
+      setConfirming(false)
     }
   }
 
@@ -264,110 +289,128 @@ export function GroupDetailPage() {
         <div className={styles.content}>
           <Link to="/groups" className={styles.backLink}><ArrowLeft size={16} aria-hidden /> Groups &amp; Friends</Link>
 
-          <header className={`${styles.heading} ${styles.groupHeading}`}>
-            <div className={styles.groupHeadingRow}>
-              <div>
-                <p className={styles.eyebrow}>Group</p>
+          <header className={styles.groupHero}>
+            <div className={styles.groupIdentity}>
+              <span className={styles.groupBadge}><Icon size={26} strokeWidth={1.6} aria-hidden /></span>
+              <div className={styles.groupTitle}>
+                <p className={styles.eyebrow}>Shared group</p>
                 <h1 title={group.name}>{group.name}</h1>
+                {group.description && <p className={styles.groupDescription}>{group.description}</p>}
+                <div className={styles.groupMeta}>
+                  <span>Created by <Link to={`/users/${group.createdBy.id}`}>{group.createdBy.name}</Link></span>
+                  <span>{created}</span>
+                  <span>{group.members.length} {group.members.length === 1 ? 'member' : 'members'}</span>
+                </div>
               </div>
+            </div>
+            <div className={styles.headerActions}>
+              {group.conversationId && (
+                <Link to={`/chat?group=${group.id}`} className={styles.groupChatAction}>
+                  <MessageSquare size={16} aria-hidden /> Open chat
+                </Link>
+              )}
               <Button variant="primary" icon={<Plus size={16} aria-hidden />} onClick={() => setAddingExpense(true)}>
                 Add expense
               </Button>
             </div>
-            <p className={styles.groupDescription}>{group.description || 'No description yet.'}</p>
           </header>
 
-          <Card className={`${styles.identity} ${styles.groupIdentity}`}>
-            <span className={styles.groupBadge}><Icon size={28} strokeWidth={1.5} aria-hidden /></span>
-            <div className={styles.identityText}>
-              <h2 title={group.name}>{group.name}</h2>
-              <p>Created by <Link to={`/users/${group.createdBy.id}`}>{group.createdBy.name}</Link></p>
-              <span>Created {created} · {group.members.length} {group.members.length === 1 ? 'member' : 'members'}</span>
+          <section className={styles.balanceSection} aria-labelledby="group-balances">
+            <div className={styles.sectionHeading}>
+              <div>
+                <h2 id="group-balances">Your balance</h2>
+                <p>Your share of the group’s expenses after recorded payments.</p>
+              </div>
             </div>
-            {group.conversationId && (
-              <Link to={`/chat?group=${group.id}`} className={styles.groupChatAction}><MessageSquare size={15} aria-hidden /> Open chat</Link>
-            )}
-          </Card>
-
-          <section className={styles.section} aria-labelledby="group-balances">
-            <div className={styles.sectionHeadingRow}>
-              <div className={styles.sectionHeading}>
-                <h2 id="group-balances">Balances</h2>
-                <p>
-                  {balances
-                    ? balances.myBalance > 0
-                      ? `You are owed ${money(balances.myBalance)} in this group.`
-                      : balances.myBalance < 0
-                        ? `You owe ${money(-balances.myBalance)} in this group.`
-                        : 'You are all settled up in this group.'
-                    : 'Who owes whom, after recorded payments.'}
-                </p>
+            <div className={[
+              styles.balanceSummary,
+              balances && balances.myBalance > 0 ? styles.balanceOwed : '',
+              balances && balances.myBalance < 0 ? styles.balanceOwing : '',
+            ].filter(Boolean).join(' ')}>
+              <div>
+                <span className={styles.balanceLabel}>Net balance</span>
+                {balances ? (
+                  <>
+                    <strong className={styles.balanceValue}>{money(Math.abs(balances.myBalance))}</strong>
+                    <p className={styles.balanceStatus}>
+                      {balances.myBalance > 0
+                        ? 'Others owe you'
+                        : balances.myBalance < 0
+                          ? 'You owe others'
+                          : balances.youOwe.length > 0 || balances.oweYou.length > 0
+                            ? 'You owe some members and are owed by others'
+                            : 'You are all settled up'}
+                    </p>
+                  </>
+                ) : <p className={styles.balanceStatus}>Loading your balance…</p>}
               </div>
               {balances && balances.youOwe.length > 0 && (
-                <Button variant="primary" size="sm" onClick={() => setSettling(true)}>
-                  Settle up
-                </Button>
+                <Button variant="primary" size="sm" onClick={() => setSettling(true)}>Settle up</Button>
               )}
             </div>
 
-            {notice && <p className={styles.note} role="status">{notice}</p>}
-
             {balances && (balances.youOwe.length > 0 || balances.oweYou.length > 0) ? (
-              <ul className={styles.groupList}>
-                {balances.youOwe.map((d) => (
-                  <li key={`owe-${d.user.id}`} className={styles.groupRow}>
-                    <Avatar user={d.user} size={34} />
-                    <span className={styles.expenseMain}>
-                      <strong>{d.user.name}</strong>
-                      <small>you owe</small>
-                    </span>
-                    <span className={styles.expenseAmount}>
-                      <strong className="tabular">{money(d.amount)}</strong>
-                    </span>
-                  </li>
-                ))}
-                {balances.oweYou.map((d) => (
-                  <li key={`owed-${d.user.id}`} className={styles.groupRow}>
-                    <Avatar user={d.user} size={34} />
-                    <span className={styles.expenseMain}>
-                      <strong>{d.user.name}</strong>
-                      <small>owes you</small>
-                    </span>
-                    <span className={styles.expenseAmount}>
-                      <strong className="tabular">{money(d.amount)}</strong>
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <div className={styles.balanceDetails} aria-label="Open balances by person">
+                {balances.youOwe.length > 0 && (
+                  <div className={styles.debtGroup}>
+                    <h3>You owe</h3>
+                    <ul className={styles.rows}>
+                      {balances.youOwe.map((debt) => (
+                        <li key={`owe-${debt.user.id}`} className={styles.debtRow}>
+                          <Avatar user={debt.user} size={36} />
+                          <span className={styles.personName}>{debt.user.name}</span>
+                          <strong className={styles.debtAmount} data-direction="outgoing">{money(debt.amount)}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {balances.oweYou.length > 0 && (
+                  <div className={styles.debtGroup}>
+                    <h3>Owed to you</h3>
+                    <ul className={styles.rows}>
+                      {balances.oweYou.map((debt) => (
+                        <li key={`owed-${debt.user.id}`} className={styles.debtRow}>
+                          <Avatar user={debt.user} size={36} />
+                          <span className={styles.personName}>{debt.user.name}</span>
+                          <strong className={styles.debtAmount} data-direction="incoming">{money(debt.amount)}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             ) : (
-              <p className={styles.intro}>
-                {balances ? 'No open balances — every expense has been settled.' : 'Balances are not available for this group yet.'}
+              <p className={styles.emptyState}>
+                {balances ? 'No open balances. Everyone is settled up.' : 'Balance details will appear here.'}
               </p>
             )}
           </section>
 
           <section className={styles.section} aria-labelledby="group-expenses">
             <div className={styles.sectionHeading}>
-              <h2 id="group-expenses">Expenses ({expenses.length})</h2>
-              <p>{expenses.length > 0 ? `Total spent: ${money(expenses.reduce((sum, e) => sum + e.amount, 0))}` : 'Every expense shared in this group.'}</p>
+              <div>
+                <h2 id="group-expenses">Expenses <span className={styles.count}>{expenses.length}</span></h2>
+                <p>{expenses.length > 0 ? `The group has spent ${money(expenses.reduce((sum, expense) => sum + expense.amount, 0))} in total.` : 'Shared costs, all in one place.'}</p>
+              </div>
             </div>
             {expenses.length === 0 ? (
-              <p className={styles.intro}>{expensesNote || 'No expenses yet — add one to start tracking costs in this group.'}</p>
+              <p className={styles.emptyState}>{expensesNote || 'No expenses yet. Add the first one to start tracking group costs.'}</p>
             ) : (
-              <ul className={styles.groupList}>
-                {expenses.map((e) => {
-                  const Icon = categoryIcon[e.category] ?? categoryIcon.other
-                  const mine = e.paidBy.id === me.id
+              <ul className={styles.rows}>
+                {expenses.map((expense) => {
+                  const ExpenseIcon = categoryIcon[expense.category] ?? categoryIcon.other
+                  const mine = expense.paidBy.id === me.id
                   return (
-                    <li key={e.id} className={styles.groupRow}>
-                      <span className={styles.groupIcon}><Icon size={19} strokeWidth={1.6} aria-hidden /></span>
+                    <li key={expense.id} className={styles.listRow}>
+                      <span className={styles.expenseIcon}><ExpenseIcon size={18} strokeWidth={1.7} aria-hidden /></span>
                       <span className={styles.expenseMain}>
-                        <strong>{e.title}</strong>
-                        <small>{mine ? 'You' : e.paidBy.name} paid · {relativeDay(e.date, new Date())}</small>
+                        <strong>{expense.title}</strong>
+                        <small>{mine ? 'You' : expense.paidBy.name} paid · {relativeDay(expense.date, new Date())}</small>
                       </span>
                       <span className={styles.expenseAmount}>
-                        <strong className="tabular">{money(e.amount)}</strong>
-                        {e.myShare != null && <small>{mine ? 'you lent' : 'your share'} {money(Math.abs(e.myShare))}</small>}
+                        <strong className="tabular">{money(expense.amount)}</strong>
+                        {expense.myShare != null && <small>{mine ? 'Your share' : 'Your portion'} {money(Math.abs(expense.myShare))}</small>}
                       </span>
                     </li>
                   )
@@ -379,60 +422,85 @@ export function GroupDetailPage() {
           <section className={styles.section} aria-labelledby="group-members">
             <div className={styles.sectionHeadingRow}>
               <div className={styles.sectionHeading}>
-                <h2 id="group-members">Members ({group.members.length})</h2>
-                <p>Select a member to view their profile.</p>
+                <h2 id="group-members">People in this group <span className={styles.count}>{group.members.length}</span></h2>
+                <p>See who’s here and manage the group.</p>
               </div>
-              {isOwner && (
-                <Button variant="primary" size="sm" icon={<UserPlus size={15} />} onClick={() => setAdding(true)}>
-                  Add people
-                </Button>
-              )}
-              {!isOwner && (
-                <button className={styles.removeBtn} type="button" onClick={leaveGroup} disabled={leaving}>
-                  <LogOut size={15} aria-hidden /> {leaving ? 'Leaving…' : 'Leave group'}
-                </button>
-              )}
+              <div className={styles.memberActions}>
+                {isOwner && (
+                  <Button variant="secondary" size="sm" icon={<UserPlus size={15} />} onClick={() => setAdding(true)}>
+                    Add people
+                  </Button>
+                )}
+                {!isOwner && (
+                  <button
+                    className={styles.leaveButton}
+                    type="button"
+                    onClick={() => setConfirmation({
+                      title: `Leave ${group.name}?`,
+                      description: 'You will lose access to this group. Any open balance must be settled before you can leave.',
+                      confirmLabel: 'Leave group',
+                      onConfirm: leaveGroup,
+                    })}
+                    disabled={leaving}
+                  >
+                    <LogOut size={15} aria-hidden /> Leave group
+                  </button>
+                )}
+              </div>
             </div>
-            {notice && <p className={styles.note} role="status">{notice}</p>}
-            {memberActionMessage && <p className={styles.note} role="status">{memberActionMessage}</p>}
-            {memberActionError && <p className={styles.note} role="alert">{memberActionError}</p>}
-            <ul className={styles.groupList}>
-              {group.members.map((m) => (
-                <li key={m.user.id} className={styles.groupRow}>
-                  <Link to={`/users/${m.user.id}`} className={styles.groupMemberLink}>
-                    <Avatar user={m.user} size={34} />
-                    <span className={styles.groupName}>{m.user.name}{m.user.id === me.id ? ' (you)' : ''}</span>
-                    {m.role === 'owner' && <span className={styles.badge}><Crown size={13} aria-hidden /> Owner</span>}
-                    <span className={styles.groupMeta}>{m.user.email}</span>
+            <ul className={styles.rows}>
+              {group.members.map((member) => (
+                <li key={member.user.id} className={styles.listRow}>
+                  <Link to={`/users/${member.user.id}`} className={styles.memberLink}>
+                    <Avatar user={member.user} size={38} />
+                    <span className={styles.memberInfo}>
+                      <strong>{member.user.name}{member.user.id === me.id ? ' (you)' : ''}</strong>
+                      <small>{member.user.email}</small>
+                    </span>
                   </Link>
-                  {isOwner && m.role !== 'owner' && (
+                  {member.role === 'owner' && <span className={styles.ownerBadge}><Crown size={13} aria-hidden /> Owner</span>}
+                  {isOwner && member.role !== 'owner' && (
                     <button
                       type="button"
-                      className={styles.removeBtn}
+                      className={styles.removeButton}
                       disabled={removingMemberId !== null}
-                      onClick={() => removeMember(m.user)}
-                      aria-label={`Remove ${m.user.name} from group`}
+                      onClick={() => setConfirmation({
+                        title: `Remove ${member.user.name}?`,
+                        description: `They will no longer be able to view ${group.name}.`,
+                        confirmLabel: 'Remove member',
+                        onConfirm: () => removeMember(member.user),
+                      })}
+                      aria-label={`Remove ${member.user.name} from group`}
                     >
-                      {removingMemberId === m.user.id ? 'Removing…' : 'Remove'}
+                      {removingMemberId === member.user.id ? 'Removing…' : 'Remove'}
                     </button>
                   )}
                 </li>
               ))}
             </ul>
           </section>
+
           {isOwner && (
-            <section className={`${styles.section} ${styles.dangerZone}`} aria-labelledby="delete-group">
-              <div className={styles.sectionHeading}>
-                <h2 id="delete-group">Delete group</h2>
-                <p>Permanently remove this group, its chat, messages, and invitations.</p>
+            <section className={styles.dangerZone} aria-labelledby="delete-group">
+              <div className={styles.dangerCopy}>
+                <span className={styles.dangerIcon}><AlertTriangle size={17} aria-hidden /></span>
+                <div>
+                  <h2 id="delete-group">Delete this group</h2>
+                  <p>Remove the group and its related chat and records permanently.</p>
+                </div>
               </div>
               <button
                 type="button"
                 className={styles.deleteGroupButton}
-                onClick={deleteGroup}
+                onClick={() => setConfirmation({
+                  title: `Delete ${group.name}?`,
+                  description: 'This permanently deletes the group, chat, messages, invitations, expenses, and settlements. This can’t be undone.',
+                  confirmLabel: 'Delete group',
+                  onConfirm: deleteGroup,
+                })}
                 disabled={deletingGroup}
               >
-                <Trash2 size={15} aria-hidden /> {deletingGroup ? 'Deleting…' : 'Delete group'}
+                <Trash2 size={15} aria-hidden /> Delete group
               </button>
             </section>
           )}
@@ -447,7 +515,7 @@ export function GroupDetailPage() {
         onClose={() => setSettling(false)}
         onSettled={(message) => {
           setSettling(false)
-          setNotice(message)
+          showToast(message)
           loadBalances()
         }}
       />
@@ -479,8 +547,44 @@ export function GroupDetailPage() {
             members: [...current.members, ...addedUsers.map((u) => ({ user: u, role: 'member', joinedAt: new Date().toISOString() }))],
           } : current)
           setAdding(false)
-          setNotice(addedUsers.length === 1 ? `Added ${addedUsers[0].name} to ${group.name}.` : `Added ${addedUsers.length} people to ${group.name}.`)
+          showToast(addedUsers.length === 1 ? `Added ${addedUsers[0].name} to ${group.name}.` : `Added ${addedUsers.length} people to ${group.name}.`)
         }}
+      />
+      {confirmation && (
+        <div
+          className={styles.confirmBackdrop}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !confirming) setConfirmation(null)
+          }}
+        >
+          <section className={styles.confirmDialog} role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description">
+            <div className={styles.confirmIcon}><AlertTriangle size={19} aria-hidden /></div>
+            <button type="button" className={styles.confirmClose} onClick={() => setConfirmation(null)} disabled={confirming} aria-label="Close dialog">
+              <X size={18} />
+            </button>
+            <h2 id="confirm-title">{confirmation.title}</h2>
+            <p id="confirm-description">{confirmation.description}</p>
+            <div className={styles.confirmActions}>
+              <button
+                type="button"
+                className={styles.confirmCancel}
+                onClick={() => setConfirmation(null)}
+                disabled={confirming}
+                ref={cancelConfirmationRef}
+              >
+                Cancel
+              </button>
+              <button type="button" className={styles.confirmDanger} onClick={confirmAction} disabled={confirming}>
+                {confirming ? 'Please wait…' : confirmation.confirmLabel}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+      <Toast
+        message={toast?.message ?? null}
+        tone={toast?.tone ?? 'success'}
+        onDismiss={() => setToast(null)}
       />
     </div>
   )

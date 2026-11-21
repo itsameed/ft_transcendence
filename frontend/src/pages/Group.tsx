@@ -16,6 +16,15 @@ import styles from './Group.module.css'
 interface ApiMember { userId: { _id: string; username: string; email: string; avatar?: string | null }; role: string }
 interface ApiGroup { _id: string; name: string; kind: string; description?: string; conversationId?: string; createdAt: string; members: ApiMember[] }
 interface FriendRequest { _id: string; requester: { _id: string; username: string; email: string; avatar?: string | null } }
+type SearchRelationship = 'none' | 'friends' | 'request-sent' | 'request-received'
+interface SearchPerson extends User { relationship: SearchRelationship }
+interface ApiSearchPerson {
+  _id: string
+  username: string
+  email?: string
+  avatar?: string | null
+  relationship?: SearchRelationship
+}
 type Filter = 'all' | 'groups' | 'friends' | 'requests'
 
 const FILTERS: { id: Filter; label: string }[] = [
@@ -27,12 +36,12 @@ export function GroupPage() {
   const [groups, setGroups] = useState<Group[]>([])
   const [friends, setFriends] = useState<User[]>([])
   const [requests, setRequests] = useState<FriendRequest[]>([])
-  const [people, setPeople] = useState<User[]>([])
+  const [people, setPeople] = useState<SearchPerson[]>([])
   const [me, setMe] = useState<User | null>(null)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
   const [error, setError] = useState<string | null>(null)
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ message: string; tone: 'success' | 'info' | 'error' } | null>(null)
   const [creating, setCreating] = useState(false)
   const [menuFor, setMenuFor] = useState<string | null>(null)
   const [friendBalances, setFriendBalances] = useState<Record<string, number>>({})
@@ -95,9 +104,23 @@ export function GroupPage() {
       try {
         const res = await fetch(`/search?q=${encodeURIComponent(q)}`)
         if (!res.ok) return
-        const data = await res.json()
+        const data: ApiSearchPerson[] = await res.json()
         const friendIds = new Set(friends.map((f) => f.id))
-        setPeople((Array.isArray(data) ? data : []).map((u: any) => ({ id: u._id, name: u.username, email: u.email ?? '', avatar: u.avatar ?? null })).filter((u: User) => u.id && u.id !== me?.id && !friendIds.has(u.id)))
+        setPeople((Array.isArray(data) ? data : [])
+          .map((u): SearchPerson => ({
+            id: u._id,
+            name: u.username,
+            email: u.email ?? '',
+            avatar: u.avatar ?? null,
+            relationship: u.relationship ?? 'none',
+          }))
+          .filter((u) => (
+            u.id
+            && u.id !== me?.id
+            && !friendIds.has(u.id)
+            && u.relationship !== 'friends'
+            && u.relationship !== 'request-received'
+          )))
       } catch { /* search is best-effort */ }
     }, 250)
     return () => window.clearTimeout(t)
@@ -118,7 +141,10 @@ export function GroupPage() {
 
   async function act(url: string, init: RequestInit, ok: string) {
     const res = await fetch(url, init)
-    setToast(res.ok ? ok : 'Something went wrong — please try again')
+    setToast({
+      message: res.ok ? ok : 'Something went wrong — please try again',
+      tone: res.ok ? 'success' : 'error',
+    })
     return res.ok
   }
   const removeFriend = async (f: User) => {
@@ -126,8 +152,29 @@ export function GroupPage() {
       setFriends((p) => p.filter((x) => x.id !== f.id))
   }
   const addFriend = async (u: User) => {
-    if (await act('/api/friends/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ receiverId: u.id }) }, `Friend request sent to ${u.name}`))
-      setPeople((p) => p.filter((x) => x.id !== u.id))
+    const res = await fetch('/api/friends/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ receiverId: u.id }),
+    })
+
+    if (res.ok) {
+      setPeople((previous) => previous.map((person) => (
+        person.id === u.id ? { ...person, relationship: 'request-sent' } : person
+      )))
+      setToast({ message: `Friend request sent to ${u.name}`, tone: 'success' })
+      return
+    }
+
+    const data = await res.json().catch(() => null)
+    if (res.status === 409 && data?.message === 'Friend request already exists') {
+      setPeople((previous) => previous.map((person) => (
+        person.id === u.id ? { ...person, relationship: 'request-sent' } : person
+      )))
+      setToast({ message: `Friend request to ${u.name} is already pending`, tone: 'info' })
+      return
+    }
+    setToast({ message: data?.message ?? 'Something went wrong — please try again', tone: 'error' })
   }
   const respond = async (r: FriendRequest, accept: boolean) => {
     if (await act(`/api/friends/request/${r._id}/${accept ? 'accept' : 'reject'}`, { method: 'PATCH' }, accept ? `You and ${r.requester.username} are now friends` : 'Request declined')) {
@@ -175,7 +222,11 @@ export function GroupPage() {
                     <Link className={styles.rowLink} to={`/users/${u.id}`}>
                       <Avatar user={u} size={34} /><span className={styles.who}><strong>{u.name}</strong><small>{u.email || 'Not a friend yet'}</small></span>
                     </Link>
-                    <span className={styles.actions}><Button variant="primary" size="sm" icon={<UserPlus size={15} />} onClick={() => addFriend(u)}>Add friend</Button></span>
+                    <span className={styles.actions}>
+                      {u.relationship === 'request-sent'
+                        ? <span className={styles.requestPending} role="status">Request pending</span>
+                        : <Button variant="primary" size="sm" icon={<UserPlus size={15} />} onClick={() => addFriend(u)}>Add friend</Button>}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -255,11 +306,15 @@ export function GroupPage() {
         onCreated={(group) => {
           setGroups((prev) => [group, ...prev])
           setCreating(false)
-          setToast(`Created “${group.name}”`)
+          setToast({ message: `Created “${group.name}”`, tone: 'success' })
           navigate(`/groups/${group.id}`)
         }}
       />
-      <Toast message={toast} />
+      <Toast
+        message={toast?.message ?? null}
+        tone={toast?.tone ?? 'success'}
+        onDismiss={() => setToast(null)}
+      />
     </div>
   )
 }

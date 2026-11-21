@@ -16,6 +16,7 @@ import { GroupDetailPage } from './pages/GroupDetail'
 import { NotificationsPage } from './pages/Notifications'
 import { AdminPanelPage } from './pages/AdminPanel'
 import { NotFoundPage } from './pages/NotFound'
+import { LegalPlaceholderPage } from './pages/LegalPlaceholder'
 
 export function App() {
   return (
@@ -24,6 +25,8 @@ export function App() {
         <Route path="/" element={<Landing/>}/>
         <Route path="/login" element={<Login/>}/>
         <Route path="/signup" element={<Signup/>}/>
+        <Route path="/terms" element={<LegalPlaceholderPage title="Terms of Service"/>}/>
+        <Route path="/privacy" element={<LegalPlaceholderPage title="Privacy Policy"/>}/>
         <Route path="/dashboard" element={<Dashboard/>}/>
         <Route path="/groups" element={<GroupPage/>}/>
         <Route path="/chat" element={<ChatPage/>}/>
