@@ -5,7 +5,7 @@ async function getUserSearch(req, res, next) {
     try {
         const slice = (req.query.q || '').trim();
         if (!slice) return res.json([]);
-        const currentUserId = String(req.user.id);
+        const currentUserId = String(req.session.userId);
         const searchResults = await UserSchema.find({
             _id: { $ne: currentUserId },
             username: { $regex: slice, $options: 'i' }
