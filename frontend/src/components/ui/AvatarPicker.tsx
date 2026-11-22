@@ -1,6 +1,8 @@
-import { useRef } from 'react'
+import { useRef, useState, type DragEvent } from 'react'
 import { Check, Upload } from 'lucide-react'
 import { DEFAULT_AVATARS, defaultAvatarUrl } from '../../lib/avatars'
+import { formatBytes, type UploadProgress } from '../../lib/upload'
+import { UploadProgressBar } from './UploadProgressBar'
 import styles from './AvatarPicker.module.css'
 
 interface Props {
@@ -11,15 +13,51 @@ interface Props {
   preview?: string | null
   onFile: (file: File) => void
   onClearPhoto?: () => void
+  /** Name and size of the picked photo, shown next to the preview. */
+  fileInfo?: { name: string; size: number } | null
+  /** Set while the photo is uploading. */
+  progress?: UploadProgress | null
+  onCancelUpload?: () => void
   disabled?: boolean
   label?: string
 }
 
-export function AvatarPicker({ value, onChange, preview, onFile, onClearPhoto, disabled, label = 'Avatar' }: Props) {
+export function AvatarPicker({
+  value,
+  onChange,
+  preview,
+  onFile,
+  onClearPhoto,
+  fileInfo,
+  progress,
+  onCancelUpload,
+  disabled,
+  label = 'Avatar',
+}: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const [dragging, setDragging] = useState(false)
+
+  const onDragOver = (event: DragEvent) => {
+    if (disabled || !event.dataTransfer.types.includes('Files')) return
+    event.preventDefault()
+    setDragging(true)
+  }
+  const onDrop = (event: DragEvent) => {
+    event.preventDefault()
+    setDragging(false)
+    const file = event.dataTransfer.files[0]
+    if (file && !disabled) onFile(file)
+  }
 
   return (
-    <div className={styles.wrap}>
+    <div
+      className={`${styles.wrap} ${dragging ? styles.dragging : ''}`}
+      onDragOver={onDragOver}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false)
+      }}
+      onDrop={onDrop}
+    >
       <div className={styles.head}>
         <span className={styles.label}>{label}</span>
         <button
@@ -46,14 +84,24 @@ export function AvatarPicker({ value, onChange, preview, onFile, onClearPhoto, d
         />
       </div>
 
+      {dragging && <p className={styles.dropHint} aria-hidden>Drop your photo to preview it</p>}
+
       {preview && (
-        <div className={styles.previewRow}>
-          <img src={preview} alt="Your uploaded photo" className={styles.preview} />
+        <div className={styles.previewRow} data-uploading={progress ? true : undefined}>
+          <img src={preview} alt="Preview of your new photo" className={styles.preview} />
           <div className={styles.previewText}>
-            <strong>Your photo</strong>
-            <span>It will replace the avatar below.</span>
+            {progress ? (
+              <UploadProgressBar progress={progress} onCancel={onCancelUpload} />
+            ) : (
+              <>
+                <strong title={fileInfo?.name}>{fileInfo?.name ?? 'Your photo'}</strong>
+                <span>
+                  {fileInfo ? `${formatBytes(fileInfo.size)} · ` : ''}Not saved yet. It will replace your current avatar.
+                </span>
+              </>
+            )}
           </div>
-          {onClearPhoto && (
+          {onClearPhoto && !progress && (
             <button type="button" className={styles.clear} onClick={onClearPhoto} disabled={disabled}>
               Remove
             </button>

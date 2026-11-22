@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
@@ -8,9 +8,13 @@ import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { money } from '../lib/format'
 import { isDefaultAvatar } from '../lib/avatars'
+import { formatBytes, isAbortError, uploadWithProgress, type UploadProgress } from '../lib/upload'
 import type { User } from '../types'
 import pageStyles from './Dashboard.module.css'
 import styles from './Profile.module.css'
+
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024 // matches the backend multer limit
+const PHOTO_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
 
 interface Profile extends User {
   joinedAt: string
@@ -34,12 +38,17 @@ export function ProfilePage() {
   const [avatarSaving, setAvatarSaving] = useState(false)
   const [avatarMessage, setAvatarMessage] = useState('')
   const [avatarError, setAvatarError] = useState('')
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
+  const uploadAbort = useRef<AbortController | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
     if (!avatarPreview) return
     return () => URL.revokeObjectURL(avatarPreview)
   }, [avatarPreview])
+
+  // Don't leave an upload running after leaving the page.
+  useEffect(() => () => uploadAbort.current?.abort(), [])
 
   useEffect(() => {
     async function loadProfile() {
@@ -88,10 +97,18 @@ export function ProfilePage() {
   }
 
   function pickPhoto(file: File) {
+    setAvatarMessage('')
+    if (!PHOTO_TYPES.includes(file.type)) {
+      setAvatarError('That file isn’t a supported image. Use a JPG, PNG, WebP or GIF.')
+      return
+    }
+    if (file.size > MAX_PHOTO_SIZE) {
+      setAvatarError(`That photo is ${formatBytes(file.size)}. Please choose one under 5 MB.`)
+      return
+    }
+    setAvatarError('')
     setAvatarPreview(URL.createObjectURL(file))
     setAvatarFile(file)
-    setAvatarMessage('')
-    setAvatarError('')
   }
 
   function clearPhoto() {
@@ -109,18 +126,28 @@ export function ProfilePage() {
       else if (avatarId) body.append('avatar', avatarId)
       else throw new Error('Choose an avatar or upload a photo.')
 
-      const response = await fetch('/api/profile/avatar', { method: 'POST', body })
+      const controller = new AbortController()
+      uploadAbort.current = controller
+      if (avatarFile) setUploadProgress({ loaded: 0, total: avatarFile.size, percent: 0, processing: false })
+
+      const response = await uploadWithProgress<{ avatar: string; message?: string }>('/api/profile/avatar', body, {
+        signal: controller.signal,
+        onProgress: avatarFile ? setUploadProgress : undefined,
+      })
       if (response.status === 401) { navigate('/login'); return }
-      const data = await response.json().catch(() => null)
-      if (!response.ok) throw new Error(data?.message ?? 'Could not save your avatar.')
+      const data = response.data
+      if (!response.ok || !data) throw new Error(data?.message ?? 'Could not save your avatar.')
 
       setProfile((current) => current ? { ...current, avatar: data.avatar } : current)
       setAvatarId(isDefaultAvatar(data.avatar) ? data.avatar.replace('/avatars/', '').replace('.svg', '') : null)
       clearPhoto()
       setAvatarMessage('Avatar updated.')
     } catch (saveError) {
-      setAvatarError(saveError instanceof Error ? saveError.message : 'Could not save your avatar.')
+      if (isAbortError(saveError)) setAvatarMessage('Upload cancelled.')
+      else setAvatarError(saveError instanceof Error ? saveError.message : 'Could not save your avatar.')
     } finally {
+      uploadAbort.current = null
+      setUploadProgress(null)
       setAvatarSaving(false)
     }
   }
@@ -163,6 +190,9 @@ export function ProfilePage() {
                   preview={avatarPreview}
                   onFile={pickPhoto}
                   onClearPhoto={clearPhoto}
+                  fileInfo={avatarFile ? { name: avatarFile.name, size: avatarFile.size } : null}
+                  progress={uploadProgress}
+                  onCancelUpload={() => uploadAbort.current?.abort()}
                   disabled={avatarSaving}
                 />
                 <div className={styles.formFooter}>
@@ -173,7 +203,7 @@ export function ProfilePage() {
                     onClick={saveAvatar}
                     disabled={avatarSaving || (!avatarFile && !avatarId)}
                   >
-                    {avatarSaving ? 'Saving...' : 'Save photo'}
+                    {avatarSaving ? (uploadProgress ? 'Uploading…' : 'Saving…') : 'Save photo'}
                   </Button>
                 </div>
               </div>
