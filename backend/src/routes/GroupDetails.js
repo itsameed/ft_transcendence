@@ -3,6 +3,6 @@ const router = express.Router();
 const requireAuth = require('../middleware/requireAuth');
 const getGroupExpenses = require('../controllers/getGroupExpenses');
 
-router.get('/', requireAuth, getGroupExpenses)
+router.get('/', requireAuth, getGroupExpenses);
 
 module.exports = router;

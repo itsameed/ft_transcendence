@@ -1,5 +1,6 @@
 const express = require('express');
 const requireAuth = require('../middleware/requireAuth');
+// const requireVerified = require('../middleware/requireVerification');
 const getAllUserInfos = require('../controllers/getAllUserInfos');
 const router = express.Router();
 const cookieAuth = require('../middleware/cookieAuth');

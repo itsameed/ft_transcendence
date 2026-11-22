@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('../middleware/googleAuth');
+// const requireVerified = require('../middleware/requireVerification');
 
 router.get('/auth/google',
     passport.authenticate('google', { scope: ['profile', 'email'] })

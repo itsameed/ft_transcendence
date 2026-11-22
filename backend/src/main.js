@@ -43,7 +43,12 @@ const userProfileRouter = require('./routes/UserProfile.js');
 const googleAuth = require('./routes/googleAuth');
 const adminRoutes = require("./routes/adminRoutes");
 const searchUser = require('./routes/searchUser.js');
+<<<<<<< Updated upstream
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+=======
+const serviceStatus = require('./routes/serviceStatus.js');
+const mailVerified = require('./routes/mailVerification.js');
+>>>>>>> Stashed changes
 
 app.use(sessionMiddleware);
 
@@ -88,7 +93,11 @@ app.use('/dashboard', dashboardRouter);
 app.use('/my-profile', myProfileRouter);
 app.use('/my-groups/total-expenses', groupTotalExpensesRouter);
 app.use('/my-groups', groupRoutes);
+<<<<<<< Updated upstream
 app.use('/api', AIChat);                                          // [NEW] mounts /api/chat/group/:groupId/stream
+=======
+app.use('/api/verify', mailVerified);
+>>>>>>> Stashed changes
 
 // ===== AI Chat Page (per-group) =====                           // [NEW]
 app.get('/chat/group/:groupId', async (req, res) => {             // [NEW] render groupChat.ejs for a specific group
