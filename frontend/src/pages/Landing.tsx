@@ -15,6 +15,8 @@ import {
   Waypoints,
 } from 'lucide-react'
 import { useTheme } from '../lib/useTheme'
+import { logout } from '../lib/auth'
+import { useAuthStatus } from '../lib/useAuthStatus'
 import { Button } from '../components/ui/Button'
 import { Logo } from '../components/layout/Sidebar'
 import styles from './Landing.module.css'
@@ -321,6 +323,9 @@ function HowDemo() {
 export function Landing() {
   const { dark, toggle } = useTheme()
   const [featuresRef, featuresLive] = useInView<HTMLDivElement>(0.25)
+  const { status, retry } = useAuthStatus()
+  const signedIn = status === 'authenticated'
+  const signedOut = status === 'unauthenticated'
 
   return (
     <div className={styles.landing}>
@@ -337,12 +342,29 @@ export function Landing() {
             {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
           </button>
           <div className={styles.authLinks}>
-            <Link to="/login" className={styles.linkButton}>
-              <Button variant="ghost" size="sm">Sign in</Button>
-            </Link>
-            <Link to="/signup" className={styles.linkButton}>
-              <Button variant="primary" size="sm">Get started</Button>
-            </Link>
+            {signedIn ? (
+              <>
+                <Link to="/dashboard" className={styles.linkButton}>
+                  <Button variant="ghost" size="sm">Go to dashboard</Button>
+                </Link>
+                <Button type="button" variant="primary" size="sm" onClick={() => void logout('/')}>
+                  Log out
+                </Button>
+              </>
+            ) : signedOut ? (
+              <>
+                <Link to="/login" className={styles.linkButton}>
+                  <Button variant="ghost" size="sm">Sign in</Button>
+                </Link>
+                <Link to="/signup" className={styles.linkButton}>
+                  <Button variant="primary" size="sm">Get started</Button>
+                </Link>
+              </>
+            ) : status === 'checking' ? (
+              <span role="status">Checking sign-in…</span>
+            ) : (
+              <Button type="button" variant="ghost" size="sm" onClick={retry}>Retry sign-in check</Button>
+            )}
           </div>
         </div>
       </header>
@@ -362,16 +384,28 @@ export function Landing() {
               what, and settle up with the fewest payments.
             </p>
             <div className={styles.ctaGroup}>
-              <Link to="/signup" className={styles.linkButton}>
-                <Button variant="primary" size="md" icon={<ArrowRight size={18} />} className={styles.primaryCta}>
-                  Start splitting for free
-                </Button>
-              </Link>
-              <Link to="/login" className={styles.linkButton}>
-                <Button variant="secondary" size="md" className={styles.secondaryCta}>
-                  Sign in
-                </Button>
-              </Link>
+              {signedIn ? (
+                <Link to="/dashboard" className={styles.linkButton}>
+                  <Button variant="primary" size="md" icon={<ArrowRight size={18} />} className={styles.primaryCta}>
+                    Go to dashboard
+                  </Button>
+                </Link>
+              ) : signedOut ? (
+                <>
+                  <Link to="/signup" className={styles.linkButton}>
+                    <Button variant="primary" size="md" icon={<ArrowRight size={18} />} className={styles.primaryCta}>
+                      Start splitting for free
+                    </Button>
+                  </Link>
+                  <Link to="/login" className={styles.linkButton}>
+                    <Button variant="secondary" size="md" className={styles.secondaryCta}>
+                      Sign in
+                    </Button>
+                  </Link>
+                </>
+              ) : status === 'error' ? (
+                <Button type="button" variant="secondary" size="md" onClick={retry}>Retry sign-in check</Button>
+              ) : null}
             </div>
             <p className={styles.reassurance}>Free to use. No card needed.</p>
           </div>
@@ -545,11 +579,19 @@ export function Landing() {
             <h2 id="cta-heading" className={styles.ctaTitle}>Make the next split the easy one.</h2>
             <p className={styles.ctaSub}>Create your first group in under a minute.</p>
           </div>
-          <Link to="/signup" className={styles.linkButton}>
-            <Button variant="secondary" size="md" icon={<ArrowRight size={18} />} className={styles.ctaButton}>
-              Get started for free
-            </Button>
-          </Link>
+          {signedIn ? (
+            <Link to="/dashboard" className={styles.linkButton}>
+              <Button variant="secondary" size="md" icon={<ArrowRight size={18} />} className={styles.ctaButton}>
+                Go to dashboard
+              </Button>
+            </Link>
+          ) : signedOut ? (
+            <Link to="/signup" className={styles.linkButton}>
+              <Button variant="secondary" size="md" icon={<ArrowRight size={18} />} className={styles.ctaButton}>
+                Get started for free
+              </Button>
+            </Link>
+          ) : null}
         </section>
       </main>
 

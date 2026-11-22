@@ -18,14 +18,15 @@ import { AdminPanelPage } from './pages/AdminPanel'
 import { NotFoundPage } from './pages/NotFound'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
+import { GuestOnlyRoute } from './components/auth/GuestOnlyRoute'
 
 export function App() {
    return (
       <Router>
          <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<GuestOnlyRoute><Login /></GuestOnlyRoute>} />
+            <Route path="/signup" element={<GuestOnlyRoute><Signup /></GuestOnlyRoute>} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/groups" element={<GroupPage />} />
             <Route path="/chat" element={<ChatPage />} />
