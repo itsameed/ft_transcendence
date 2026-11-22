@@ -12,6 +12,8 @@ const {
     updateGroup,
     deleteGroup
 } = require("../controllers/groupController");
+const getGroupExpensesList = require("../controllers/getGroupExpensesList");
+const getGroupBalances = require("../controllers/getGroupBalances");
 
 router.post("/", apiAuth, createGroup);
 
@@ -20,6 +22,10 @@ router.post("/:groupId/members", apiAuth, addMemberToGroup);
 router.delete("/:groupId/members/:userId", apiAuth, removeMemberFromGroup);
 
 router.get("/me", apiAuth, getUserGroups);
+
+router.get("/:groupId/expenses", apiAuth, getGroupExpensesList);
+
+router.get("/:groupId/balances", apiAuth, getGroupBalances);
 
 router.get("/:groupId", apiAuth, getGroupById);
 

@@ -1,80 +1,134 @@
 const https = require('https');
 
-const TIMEOUT = 30000;
+class embeddingsClient
+{
+    constructor(apiKey, model, baseUrl, path) 
+    {
+        this.enabled = !!(apiKey && apiKey.trim());
+        this.apiKey = apiKey;
+        this.model = model || 'jina-embeddings-v3';
+        this.host = baseUrl || 'api.jina.ai';
+        this.path = path || '/v1/embeddings';
+    }
 
-class embeddingsClient {
-  constructor(apiKey, model, baseUrl, path) 
-  {
-    this.enabled = !!(apiKey && apiKey.trim());
-    this.apiKey = apiKey;
-    this.model = model || 'jina-embeddings-v3';
-    this.host = baseUrl || 'api.jina.ai';
-    this.path = path || '/v1/embeddings';
-    this.cache = {};
-  }
+    isenabled() 
+    {
+        return this.enabled;
+    }
 
-  isEnabled() 
-  {
-    return this.enabled;
-  }
+    request(input) 
+    {
+        const self = this;
+        const body = JSON.stringify({ model: this.model, input: input });
 
-  request(input) 
-  {
-    const self = this;
-    const body = JSON.stringify({ model: this.model, input: input });
-
-    return new Promise(function (resolve, reject) {
-      const req = https.request({
-        hostname: self.host,
-        path: self.path,
-        method: 'POST',
-        timeout: TIMEOUT,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + self.apiKey,
-          'Content-Length': Buffer.byteLength(body)
-        }
-      }, function (res) {
-        let raw = '';
-        res.on('data', function (c) { raw += c; });
-        res.on('end', function () {
-          if (res.statusCode >= 400) {
-            return reject(new Error('[embeddings] HTTP ' + res.statusCode));
-          }
-          try {
-            const json = JSON.parse(raw);
-            if (!json.data || json.data.length !== input.length) 
+        return new Promise(function (resolve, reject) 
+        {
+            const req = https.request({
+                hostname: self.host,
+                path: self.path,
+                method: 'POST',
+                timeout: 30000,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + self.apiKey,
+                    'Content-Length': Buffer.byteLength(body)
+                }
+            }, function (res) 
             {
-              return reject(new Error('[embeddings] bad response'));
-            }
-            resolve(json.data.map(d => d.embedding));
-          } catch (e) {
-            reject(new Error('[embeddings] invalid JSON'));
-          }
+                let raw = '';
+
+                res.on('data', function (c) 
+                {
+                    raw += c;
+                });
+
+                res.on('end', function () 
+                {
+                    if (res.statusCode >= 400) 
+                    {
+                        return reject(new Error('[embeddings] HTTP ' + res.statusCode + ': ' + raw.slice(0, 200)));
+                    }
+
+                    try 
+                    {
+                        const json = JSON.parse(raw);
+
+                        if (!json.data || json.data.length !== input.length) 
+                        {
+                            return reject(new Error('[embeddings] bad response'));
+                        }
+
+                        const vectors = json.data.map(function (d) 
+                        {
+                            if (!d || !d.embedding) 
+                                throw new Error('[embeddings] missing embedding');
+
+                            return d.embedding;
+                        });
+
+                        resolve(vectors);
+                    } 
+                    catch (e) 
+                    {
+                        reject(new Error('[embeddings] ' + e.message));
+                    }
+                });
+
+                res.on('error', function (e) 
+                {
+                    reject(new Error('[embeddings] stream error: ' + e.message));
+                });
+            });
+
+            req.on('timeout', function () 
+            {
+                req.destroy();
+                reject(new Error('[embeddings] timeout'));
+            });
+
+            req.on('error', function (e) 
+            {
+                reject(new Error('[embeddings] connection: ' + e.message));
+            });
+
+            req.write(body);
+            req.end();
         });
-      });
+    }
 
-      req.on('timeout', function () { req.destroy(); reject(new Error('timeout')); });
-      req.on('error', function (e) { reject(new Error(e.message)); });
-      req.write(body);
-      req.end();
-    });
-  }
+    async embed(text) 
+    {
+        if (!this.enabled) 
+            return null;
 
-  embed(text) {
-    if (!this.enabled) return Promise.resolve(null);
-    if (this.cache[text]) return Promise.resolve(this.cache[text]);
+        const data = await this.request([text]);
 
-    return this.request([text]).then(data => {
-      this.cache[text] = data[0];
-      return data[0];
-    });
-  }
+        return data[0];
+    }
 
-  embedBatch(texts) {
-    if (!this.enabled) return Promise.resolve(null);
-    return this.request(texts);
-  }
+    async embedbatch(texts) 
+    {
+        if (!this.enabled) 
+            return null;
+
+        if (!texts || texts.length === 0) 
+            return [];
+
+        const allvectors = [];
+
+        for (let i = 0; i < texts.length; i += 20) 
+        {
+            const batch = texts.slice(i, i + 20);
+            const vectors = await this.request(batch);
+
+            for (let j = 0; j < vectors.length; j++) 
+            {
+                allvectors.push(vectors[j]);
+            }
+        }
+
+        return allvectors;
+    }
 }
 
 module.exports = embeddingsClient;

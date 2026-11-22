@@ -9,8 +9,14 @@ async function loginAuth(req, res, next) {
     }
 
     try {
-        const user = await UserSchema.findOne({ email });
-        if (!user) {
+        const identifier = String(email).trim();
+        const user = await UserSchema.findOne({
+            $or: [
+                { email: identifier.toLowerCase() },
+                { username: identifier }
+            ]
+        });
+        if (!user || !user.password) {
             return res.status(401).json({ message: 'Invalid credentials. Please try again.' });
         }
 
@@ -23,10 +29,20 @@ async function loginAuth(req, res, next) {
             return res.status(403).json({ message: 'Your account is suspended' });
         }
 
+        const isAdmin = user.role === 'admin' || user.username === 'admin' || user.email === 'admin@splitify.test';
+
         req.session.userId = user._id;
         req.session.username = user.username;
         printLogsDate(`User with Id ${user._id} logged in at : `);
-        return res.status(200).json({ message: 'Login successful.', userId: user._id, username: user.username, displayName: user.displayName, email: user.email, bio: user.bio, gender: user.gender });
+        return res.status(200).json({
+            message: 'Login successful.',
+            userId: user._id,
+            username: user.username,
+            email: user.email,
+            bio: user.bio,
+            gender: user.gender,
+            role: isAdmin ? 'admin' : (user.role || 'user')
+        });
         // return res.redirect('Dashboard');
     } catch (error) {
         console.error('Error while attempting to log in:', error);

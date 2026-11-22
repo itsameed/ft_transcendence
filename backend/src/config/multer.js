@@ -1,32 +1,19 @@
 const multer = require('multer');
-const path = require('path');
 
-const storage = multer.diskStorage({
-    destination: (req, res, cb) => {
-        cb(null, 'uploads/avatars')
+// Memory storage: sharp re-encodes the buffer and writes the only copy, so a
+// rejected or failed upload never leaves an orphan file on disk.
+const upload = multer({
+    storage: multer.memoryStorage(),
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype && file.mimetype.startsWith('image/')) {
+            return cb(null, true);
+        }
+        return cb(new Error('Only image files are allowed'));
     },
-    filename: (req, res, cb) => {
-        const uniqueName = `${Date.now()}-${file.originalname}`;
-        cb(null, uniqueName)
-    }
-})
-
-const fileFilter = (req, res, cb) => {
-    if (file.mimetype.startswith('image/')) {
-        cb(null, true);
-    }
-    else {
-        cb(new Error('Only image files are allowed'), false);
-    }
-};
-
-const upload = multer ({
-    storage: storage,
-    fileFilter: fileFilter,
-    limits : {
+    limits: {
         fileSize: 5 * 1024 * 1024,
         files: 1,
-    }
-})
+    },
+});
 
 module.exports = upload;

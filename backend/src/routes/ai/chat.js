@@ -1,63 +1,58 @@
+
 const express = require('express');
+const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const auth = require('../../middleware/requireAuth');
 const datasource = require('../../services/ai/dataSource');
-const contextbuilder = require('../../services/ai/contextBuilder');
-const ragengine = require('../../services/ai/ragEngine');
+const RagEngine = require('../../services/ai/ragEngine');
 
 const router = express.Router();
 
-router.post('/chat/group/:groupId/stream', auth, async function (req, res)
+const chatlimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests. Please wait a minute.' },
+    keyGenerator: function (req) 
+    {
+        if (req.session && req.session.userId) 
+        {
+            return req.session.userId;
+        }
+
+        return ipKeyGenerator(req.ip);
+    }
+});
+
+router.post('/chat/group/:groupId/stream', auth, chatlimiter, async function (req, res) 
 {
-    const question = (req.body.question || '').trim();
-    const groupid = req.params.groupId;
+    const question = req.body?.question?.trim();
+    const groupId = req.params.groupId;
+    const userId = req.session.userId;
 
-    if (!question)
-    {
+    if (!question) 
         return res.status(400).json({ error: 'Question required' });
-    }
 
-    if (!groupid)
-    {
-        return res.status(400).json({ error: 'Group ID required' });
-    }
+    if (question.length > 2000) 
+        return res.status(400).json({ error: 'Question too long' });
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
-    function send(name, data)
+    function send(event, data) 
     {
-        res.write('event: ' + name + '\n');
-        res.write('data: ' + JSON.stringify(data) + '\n\n');
+        if (!res.writableEnded) 
+        {
+            res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+        }
     }
 
-    try
+    try 
     {
-        const userid = req.session.userId;
-
-        const usercontext = await datasource.loadUserContext(userid, groupid);
-
-        if (!usercontext)
-        {
-            send('token', { text: 'Unable to load your information.' });
-            send('done', {});
-            return res.end();
-        }
-
-        const result = await datasource.loadGroupDocuments(userid, groupid);
-
-        if (!result)
-        {
-            send('token', { text: 'You do not have permission to access this group.' });
-            send('done', {});
-            return res.end();
-        }
-
-        const userdocs = contextbuilder.buildUserDocs(usercontext);
-        const alldocs = userdocs.concat(result.docs);
-
-        const rag = new ragengine(
+        const rag = new RagEngine(
             process.env.GROQ_API_KEY,
             process.env.EMBEDDINGS_API_KEY,
             process.env.EMBEDDINGS_BASE_URL,
@@ -65,24 +60,36 @@ router.post('/chat/group/:groupId/stream', auth, async function (req, res)
             process.env.EMBEDDINGS_PATH
         );
 
-        const enrichedquestion = contextbuilder.buildEnrichedQuestion(usercontext, question);
+        const success = await rag.ensure(groupId, function () {return datasource.loadGroupDocuments(userId, groupId);});
 
-        await rag.ingest(alldocs);
-
-        const ragresult = await rag.ask(enrichedquestion, function (token)
+        if (!success) 
         {
-            send('token', { text: token });
-        });
+            send('error', { message: 'Unable to load group.' });
+            return res.end();
+        }
 
-        send('sources', { sources: ragresult.sources });
+        const result = await rag.ask(question, function (token) {send('token', { text: token });});
+
+        send('sources', { sources: result.sources });
         send('done', {});
         res.end();
-    }
-    catch (error)
+    } 
+    catch (error) 
     {
-        console.log('[ai-chat/group] error:', error.message);
-        send('error', { message: 'An error occurred.' });
-        res.end();
+        console.log('[ai-chat] Error:', error.message);
+
+        if (!res.writableEnded && error.message !== 'Aborted') 
+        {
+            let msg = 'An error occurred.';
+
+            if (error.message.includes('429') || error.message.includes('All models failed')) 
+                msg = 'Server is busy (rate limit reached). Please try again in a minute.';
+            else if (error.message.includes('Timeout')) 
+                msg = 'Request timed out. Please try again.';
+
+            send('error', { message: msg });
+            res.end();
+        }
     }
 });
 

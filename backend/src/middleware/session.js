@@ -9,8 +9,10 @@ const sessionMiddleware = (session({
     mongoUrl: process.env.MONGO_URL,
   }),
   cookie: {
-    secure: false,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+  secure: process.env.COOKIE_SECURE === 'true',
+  httpOnly: true,
+  sameSite: 'lax',
+  maxAge: 24 * 60 * 60 * 1000
   }
 }));
 

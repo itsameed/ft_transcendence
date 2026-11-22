@@ -1,114 +1,188 @@
-const chunker = require('./chunker');
-const retriever = require('./retriever');
-const prompt = require('./promptBuilder');
-const llm = require('./llmClient');
-const embed = require('./embeddingsClient');
 
-class ragEngine 
+const Chunker = require('./chunker');
+const Retriever = require('./retriever');
+const PromptBuilder = require('./promptBuilder');
+const LlmClient = require('./llmClient');
+const EmbeddingsClient = require('./embeddingsClient');
+const CacheManager = require('./cacheManager');
+
+class RagEngine 
 {
-  constructor(llmkey, embkey, url, model, path) 
-  {
-    this.chunker = new chunker(300, 50);
-    this.prompt = new prompt();
-    this.llm = new llm(llmkey);
-    this.embed = new embed(embkey, model, url, path);
-    this.retriever = null;
-  }
-
-  async ingest(docs) 
-  {
-    this.chunks = [];
-
-    for (let i = 0; i < docs.length; i++) 
+    constructor(llmKey, embKey, embUrl, embModel, embPath) 
     {
-      const parts = this.chunker.split(docs[i]);
+        this.chunker = new Chunker(200, 50);
+        this.prompt = new PromptBuilder();
+        this.llm = new LlmClient(llmKey);
+        this.embed = new EmbeddingsClient(embKey, embModel, embUrl, embPath);
 
-      for (let j = 0; j < parts.length; j++)
-      {
-        if (parts[j].length > 0) 
+        this.chunks = [];
+        this.retriever = null;
+        this.semantic = false;
+        this.currentUser = "";
+    }
+
+    async ensure(groupId, loaderFn) 
+    {
+        const result = await loaderFn();
+
+        if (!result || !Array.isArray(result.docs))
+            return false;
+
+        this.currentUser = "";
+
+        for (const doc of result.docs) 
         {
-          this.chunks.push(parts[j]);
+            if (doc.id && doc.id.startsWith('user:')) 
+            {
+                this.currentUser = doc.text;
+                break;
+            }
         }
-      }
+
+        const oldChunks = CacheManager.readCache(CacheManager.getCachePath(groupId, 'chunks'));
+        const oldVectors = CacheManager.readCache(CacheManager.getCachePath(groupId, 'vectors'));
+
+        const chunks = {};
+        const vectors = {};
+
+        for (const doc of result.docs) 
+        {
+            if (!doc.id || typeof doc.text !== 'string')
+                continue;
+
+            if (doc.id.startsWith('user:'))
+                continue;
+
+            const currentHash = doc.hash || CacheManager.hash(doc.text);
+            const old = oldChunks[doc.id];
+
+            if (old && old.hash === currentHash) 
+            {
+                chunks[doc.id] = old;
+
+                if (oldVectors[doc.id])
+                    vectors[doc.id] = oldVectors[doc.id];
+                else
+                    vectors[doc.id] = { vectors: [] };
+            } 
+            else 
+            {
+                const parts = this.chunker.split(doc.text);
+                const clean = [];
+
+                for (const part of parts) 
+                {
+                    if (part.length > 0)
+                        clean.push(part);
+                }
+
+                let embedded = [];
+
+                if (this.embed.isenabled() && clean.length > 0) 
+                {
+                    try 
+                    {
+                        const embResult = await this.embed.embedbatch(clean);
+
+                        if (Array.isArray(embResult) && embResult.length === clean.length)
+                            embedded = embResult;
+                    } 
+                    catch (e) 
+                    {
+                        console.error('[ragEngine] embedding:', e.message);
+                    }
+                }
+
+                chunks[doc.id] = { hash: currentHash, chunks: clean };
+                vectors[doc.id] = { vectors: embedded };
+            }
+        }
+
+        const allChunks = [];
+        const allVectors = [];
+
+        for (const id in chunks) 
+        {
+            const docChunks = chunks[id];
+            const docVectors = vectors[id] || { vectors: [] };
+
+            for (let i = 0; i < docChunks.chunks.length; i++) 
+            {
+                allChunks.push(docChunks.chunks[i]);
+
+                if (docVectors.vectors[i] !== undefined)
+                    allVectors.push(docVectors.vectors[i]);
+                else
+                    allVectors.push(null);
+            }
+        }
+
+        this.chunks = allChunks;
+
+        const retChunks = [];
+        const retVectors = [];
+
+        for (let i = 0; i < allChunks.length; i++) 
+        {
+            if (allVectors[i] !== null) 
+            {
+                retChunks.push(allChunks[i]);
+                retVectors.push(allVectors[i]);
+            }
+        }
+
+        this.semantic = retVectors.length > 0;
+        this.retriever = new Retriever({ chunks: retChunks, vectors: retVectors });
+
+        CacheManager.writeCache(CacheManager.getCachePath(groupId, 'chunks'), chunks);
+        CacheManager.writeCache(CacheManager.getCachePath(groupId, 'vectors'), vectors);
+
+        return true;
     }
 
-    let vectors = [];
-
-    if (this.embed.isEnabled())
+    async ask(question, onToken) 
     {
-      try
-      {
-        vectors = await this.embed.embedBatch(this.chunks);
-      } 
-      catch (err)
-      {
-        console.log('[RAG] embeddings failed: ' + err.message);
-      }
+        if (!this.retriever)
+            throw new Error('ensure() must be called before ask().');
+
+        let queryVector = null;
+
+        if (this.semantic) 
+        {
+            try 
+            {
+                queryVector = await this.embed.embed(question);
+            } 
+            catch (e) {}
+        }
+
+        let docs = this.retriever.retrieve(queryVector, 15);
+
+        if (!docs)
+            docs = [];
+
+        if (docs.length === 0) 
+        {
+            for (let i = 0; i < this.chunks.length && i < 15; i++)
+                docs.push({ text: this.chunks[i] });
+        }
+
+        docs = docs.filter(function (d) 
+        {
+            return d && typeof d.text === 'string' && d.text.length > 0;
+        });
+
+        const prompt = this.prompt.build(question, docs, this.currentUser);
+
+        let tokenCallback = onToken;
+
+        if (!tokenCallback)
+            tokenCallback = function () {};
+
+        const answer = await this.llm.generatestream(prompt, tokenCallback);
+
+        return { answer: answer, sources: docs };
     }
-
-    let semantic = false;
-
-    if (vectors.length > 0)
-    {
-      semantic = true;
-    }
-
-    this.retriever = new retriever(
-      {
-        vectors: vectors,
-        chunks: this.chunks
-      }
-    );
-
-    this.semantic = semantic;
-
-    if (semantic)
-    {
-      console.log( '[RAG] ingested ' + this.chunks.length + ' chunks (Embeddings only).');
-    }
-    else 
-    {
-      console.log('[RAG] ingested ' + this.chunks.length + ' chunks (Embeddings unavailable).');
-    }
-  }
-
-  async ask(q, onToken)
-    {
-    if (!this.retriever) 
-    {
-      throw new Error('ingest() must be called before ask().');
-    }
-
-    if (!onToken) 
-    {
-      onToken = function () {};
-    }
-
-    let qv = null;
-
-    if (this.semantic)
-    {
-      try
-      {
-        qv = await this.embed.embed(q);
-      } 
-      catch (err) 
-      {
-        qv = null;
-      }
-    }
-    
-    const docs = this.retriever.retrieve(qv, 15);
-    const p = this.prompt.build(q, docs);
-
-    const answer = await this.llm.generateStream(p, onToken);
-    return {
-      answer: answer,
-      sources: docs
-    };
-  }
 }
 
-module.exports = ragEngine;
-
-
+module.exports = RagEngine;
