@@ -13,6 +13,19 @@ function round2(value) {
     return Math.round(value * 100) / 100;
 }
 
+/** Split an amount into exact cents, assigning remainder cents in participant order. */
+function equalShares(expense) {
+    const participants = (expense.participants ?? []).map(String);
+    if (participants.length === 0) return [];
+    const cents = Math.round(Number(expense.amount) * 100);
+    const base = Math.floor(cents / participants.length);
+    const remainder = cents - base * participants.length;
+    return participants.map((userId, index) => ({
+        userId,
+        amount: (base + (index < remainder ? 1 : 0)) / 100,
+    }));
+}
+
 /** What `userId` owes for a single expense (their share). */
 function shareOf(expense, userId) {
     const target = String(userId);
@@ -20,9 +33,7 @@ function shareOf(expense, userId) {
         const entry = expense.customSplit.find((s) => String(s.user) === target);
         return entry ? Number(entry.amount) : 0;
     }
-    const participants = (expense.participants ?? []).map(String);
-    if (!participants.includes(target)) return 0;
-    return Number(expense.amount) / participants.length;
+    return equalShares(expense).find((share) => share.userId === target)?.amount ?? 0;
 }
 
 /**
@@ -47,11 +58,11 @@ function computeGroupBalances(expenses, settlements, memberIds) {
             continue;
         }
 
-        if (participants.length === 0) continue;
-        const each = Number(expense.amount) / participants.length;
-        for (const userId of participants) {
-            if (net[payer] !== undefined) net[payer] += each;
-            if (net[userId] !== undefined) net[userId] -= each;
+        const shares = equalShares(expense);
+        if (shares.length === 0) continue;
+        for (const share of shares) {
+            if (net[payer] !== undefined) net[payer] += share.amount;
+            if (net[share.userId] !== undefined) net[share.userId] -= share.amount;
         }
     }
 

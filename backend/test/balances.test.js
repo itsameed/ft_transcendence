@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { computePairwiseDebts } = require('../src/services/balances');
+const { computeGroupBalances, computePairwiseDebts } = require('../src/services/balances');
 
 test('net opposite-direction debts instead of showing one person in both lists', () => {
     const me = 'me';
@@ -41,4 +41,29 @@ test('use customSplit when the current user paid', () => {
 
     assert.deepEqual(youOwe, []);
     assert.deepEqual(oweYou, [{ userId: anas, amount: 60 }]);
+});
+
+test('three-way equal split settles exactly after two 33.33 payments', () => {
+    const me = 'me';
+    const anas = 'anas';
+    const omar = 'omar';
+    const expense = {
+        payer: me,
+        splitMethod: 'equal',
+        participants: [me, anas, omar],
+        amount: 100,
+    };
+    const settlements = [
+        { fromUser: anas, toUser: me, amount: 33.33 },
+        { fromUser: omar, toUser: me, amount: 33.33 },
+    ];
+
+    const net = computeGroupBalances([expense], settlements, [me, anas, omar]);
+    const pairwise = computePairwiseDebts([expense], settlements, me);
+
+    assert.equal(net[me], 0);
+    assert.equal(net[anas], 0);
+    assert.equal(net[omar], 0);
+    assert.deepEqual(pairwise.youOwe, []);
+    assert.deepEqual(pairwise.oweYou, []);
 });
