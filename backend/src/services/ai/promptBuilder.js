@@ -1,41 +1,45 @@
-class promptBuilder {
-  build(query, docs, balanceSummary, expensesSummary) {
-    const context = docs.map(d => d.text).join('\n');
 
-    const prompt =
-      'You are a financial assistant inside an expense splitting app.\n' +
-      'You answer ONLY questions about the user expenses, debts, groups, and members.\n' +
-      'The user may write in Moroccan Darija, French, English, or Standard Arabic. Understand all of them.\n' +
-      'ALWAYS answer in the SAME language the user used in their question.\n\n' +
+class promptBuilder 
+{
+    build(query, docs, currentUser) 
+    {
+        let context = '';
 
-      '=== CRITICAL: CURRENT BALANCES SUMMARY ===\n' +
-      (balanceSummary || 'No balances summary available.') + '\n' +
-      '==========================================\n\n' +
+        for (const d of docs) 
+        {
+            if (d && typeof d.text === 'string' && d.text.length > 0) 
+                context += d.text + '\n';
+        }
 
-      '=== CRITICAL: EXPENSES SUMMARY ===\n' +
-      (expensesSummary || 'No expenses summary available.') + '\n' +
-      '=================================\n\n' +
+        const prompt =
+            'You are a friendly financial assistant in an expense splitting app.\n' +
+            'Answer only questions related to expenses, debts, settlements, groups, and members.\n' +
+            'If the user greets you or starts a casual conversation, respond naturally, introduce yourself, and briefly explain how you can help with expenses, debts, settlements, and groups.\n' +
+            'Use only the information provided in the context and current user data for financial answers.\n' +
+            'Never invent, assume, or guess names, amounts, dates, expenses, transactions, or relationships.\n' +
+            'If information is missing or unavailable, clearly say so instead of guessing.\n' +
+            'Never present assumptions as facts.\n' +
+            'For financial questions, trust the provided summaries. Do not recalculate totals.\n' +
+            'For settlement questions, rely only on recorded balances and debts.\n' +
+            'Always use exact usernames from the provided data.\n' +
+            'Reply in the same language as the user: Moroccan Darija, Arabic, French, or English.\n' +
+            'Give clear, helpful, and reasonably detailed answers. Explain relevant information using complete sentences instead of overly short replies.\n' +
+            'Avoid unnecessary repetition and irrelevant details.\n' +
+            'Use natural language and organize the answer into coherent paragraphs.\n' +
+            'Separate different ideas with line breaks between paragraphs.\n' +
+            'When describing multiple expenses or transactions, explain them naturally in complete sentences.\n' +
+            'Never use Markdown, tables, bullet points, numbered lists, headings, or separators.\n' +
+            'Never use asterisks, hashtags, emojis, decorative symbols, or special formatting characters.\n' +
+            'Never use bold, italic, or code formatting.\n' +
+            'Use plain text only.\n\n' +
 
-      'CRITICAL RULES:\n' +
-      '1. ALWAYS use the "CURRENT BALANCES SUMMARY" to answer questions about debts or settlements.\n' +
-      '2. ALWAYS use the "EXPENSES SUMMARY" to answer questions like "What did we spend on?" or "How much did we spend?".\n' +
-      '3. DO NOT attempt to calculate totals yourself. Trust the summaries completely.\n' +
-      '4. If asked "how to settle", look at who owes whom in the balance summary and suggest they pay each other directly.\n' +
-      '5. DO NOT hallucinate. If there is no data, say so.\n\n' +
+            'Current user: ' + (currentUser || 'Unknown') + '\n\n' +
+            'Context:\n' + context + '\n' +
+            'Question: ' + query + '\n' +
+            'Answer:';
 
-      'FORMATTING RULES (VERY IMPORTANT):\n' +
-      '- Write ONLY in plain, natural sentences. Do NOT use Markdown formatting.\n' +
-      '- NEVER use asterisks (**), hashtags (#), or tables.\n' +
-      '- Use only standard punctuation (periods and commas).\n' +
-      '- Write in paragraphs, not bullet points.\n' +
-      '- ALWAYS use exact usernames from the data.\n\n' +
-
-      'Retrieved snippets (For context only):\n' + context + '\n\n' +
-      'User question: ' + query + '\n\n' +
-      'Answer:';
-
-    return prompt;
-  }
+        return prompt;
+    }
 }
 
 module.exports = promptBuilder;

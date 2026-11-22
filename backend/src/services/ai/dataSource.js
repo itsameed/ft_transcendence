@@ -4,7 +4,8 @@ const Expense = require('../../models/Schemas/Expenses');
 const Settlement = require('../../models/Schemas/Settlement');
 const User = require('../../models/Schemas/User');
 
-function makeDoc(id, text) {
+function makeDoc(id, text) 
+{
     return {
         id: String(id),
         text: text,
@@ -12,63 +13,107 @@ function makeDoc(id, text) {
     };
 }
 
-function calculateBalances(expenses, settlements, members) {
+function fmtDate(d) 
+{
+    if (!d) 
+        return 'Unknown';
+
+    try 
+    {
+        const date = new Date(d);
+
+        if (isNaN(date.getTime())) 
+            return String(d);
+
+        return date.toISOString().slice(0, 10);
+    } 
+    catch (e) 
+    {
+        return String(d);
+    }
+}
+
+function calculateBalances(expenses, settlements, members) 
+{
     const balances = {};
-    
-    members.forEach(m => {
-        if (m && m.userId && m.userId.username) {
-            balances[m.userId.username] = 0;
-        }
+
+    (members || []).forEach(function (m) 
+    {
+        const name = m && m.userId && m.userId.username;
+
+        if (name) 
+            balances[name] = 0;
     });
 
-    expenses.forEach(exp => {
-        const payer = exp.payer?.username;
+    (expenses || []).forEach(function (exp) 
+    {
+        const payer = exp.payer && exp.payer.username;
         const amount = exp.amount;
-        
-        if (!payer) return;
 
-        if (balances[payer] !== undefined) {
+        if (!payer || typeof amount !== 'number') 
+            return;
+
+        if (balances[payer] !== undefined) 
             balances[payer] += amount;
-        }
 
-        if (exp.splitMethod === 'custom' && exp.customSplit && exp.customSplit.length > 0) {
-            exp.customSplit.forEach(split => {
-                const username = split.user?.username;
-                if (username && balances[username] !== undefined) {
+        const customSplit = exp.customSplit;
+
+        if (
+            exp.splitMethod === 'custom' &&
+            Array.isArray(customSplit) &&
+            customSplit.length > 0
+        ) 
+        {
+            customSplit.forEach(function (split) 
+            {
+                const username = split && split.user && split.user.username;
+
+                if (username && balances[username] !== undefined) 
                     balances[username] -= split.amount;
-                }
             });
-        } else {
-            const participants = exp.participants.map(p => p.username).filter(Boolean);
-            if (participants.length > 0) {
+        } 
+        else 
+        {
+            const participants = (exp.participants || [])
+                .map(function (p) 
+                {
+                    return p && p.username;
+                })
+                .filter(Boolean);
+
+            if (participants.length > 0) 
+            {
                 const share = amount / participants.length;
-                participants.forEach(p => {
-                    if (balances[p] !== undefined) {
+
+                participants.forEach(function (p) 
+                {
+                    if (balances[p] !== undefined) 
                         balances[p] -= share;
-                    }
                 });
             }
         }
     });
 
-    settlements.forEach(s => {
-        const from = s.fromUser?.username;
-        const to = s.toUser?.username;
+    (settlements || []).forEach(function (s) 
+    {
+        const from = s.fromUser && s.fromUser.username;
+        const to = s.toUser && s.toUser.username;
         const amount = s.amount;
-        
-        if (from && balances[from] !== undefined) {
+
+        if (from && balances[from] !== undefined) 
             balances[from] += amount;
-        }
-        if (to && balances[to] !== undefined) {
+
+        if (to && balances[to] !== undefined) 
             balances[to] -= amount;
-        }
     });
 
     return balances;
 }
 
-async function loadGroupDocuments(userId, groupId) {
-    try {
+async function loadGroupDocuments(userId, groupId) 
+{
+    try 
+    {
         const group = await Group.findOne({
             _id: groupId,
             $or: [
@@ -80,10 +125,13 @@ async function loadGroupDocuments(userId, groupId) {
             .populate('createdBy', 'username')
             .lean();
 
-        if (!group) return null;
+        if (!group) 
+            return null;
 
         const user = await User.findById(userId).select('username').lean();
-        if (!user) return null;
+
+        if (!user) 
+            return null;
 
         const expenses = await Expense.find({ group: groupId })
             .sort({ date: -1 })
@@ -104,85 +152,162 @@ async function loadGroupDocuments(userId, groupId) {
 
         docs.push(makeDoc('user:' + userId, `Current User: ${user.username}`));
 
+        const membersList = group.members || [];
         let members = '';
-        for (let i = 0; i < group.members.length; i++) {
-            const name = group.members[i].userId?.username;
-            if (name) {
-                if (members !== '') members += ', ';
+
+        for (let i = 0; i < membersList.length; i++) 
+        {
+            const name = membersList[i] &&
+                membersList[i].userId &&
+                membersList[i].userId.username;
+
+            if (name) 
+            {
+                if (members !== '') 
+                    members += ', ';
+
                 members += name;
             }
         }
 
+        const ownerName = group.createdBy && group.createdBy.username
+            ? group.createdBy.username
+            : 'Unknown';
+
         docs.push(makeDoc(
             'group:' + groupId,
-            `Group: ${group.name}. Description: ${group.description || 'None'}. Owner: ${group.createdBy?.username || 'Unknown'}. Members: ${members}.`
+            `Group: ${group.name}. Description: ${group.description || 'None'}. Owner: ${ownerName}. Members: ${members}.`
         ));
 
-        const balances = calculateBalances(expenses, settlements, group.members);
+        const balances = calculateBalances(expenses, settlements, membersList);
+
         let balanceText = "Current Balances Summary:\n";
-        for (const [name, amount] of Object.entries(balances)) {
+
+        for (const [name, amount] of Object.entries(balances)) 
+        {
             const rounded = Math.round(amount * 100) / 100;
-            if (rounded > 0) balanceText += `${name} is owed ${rounded} MAD. `;
-            else if (rounded < 0) balanceText += `${name} owes ${Math.abs(rounded)} MAD. `;
-            else balanceText += `${name} is settled (owes 0). `;
+
+            if (rounded > 0) 
+                balanceText += `${name} is owed ${rounded} MAD. `;
+            else if (rounded < 0) 
+                balanceText += `${name} owes ${Math.abs(rounded)} MAD. `;
+            else 
+                balanceText += `${name} is settled (owes 0). `;
         }
+
         docs.push(makeDoc('balances:summary', balanceText));
 
         let totalSpent = 0;
         let expenseSummaryText = "Expenses Summary:\n";
-        expenses.forEach(exp => {
-            totalSpent += exp.amount;
-            expenseSummaryText += `- ${exp.description}: ${exp.amount} MAD (Paid by ${exp.payer?.username || 'Unknown'}).\n`;
+
+        (expenses || []).forEach(function (exp) 
+        {
+            totalSpent += exp.amount || 0;
+
+            const payerName = exp.payer && exp.payer.username
+                ? exp.payer.username
+                : 'Unknown';
+
+            expenseSummaryText += `- ${exp.description}: ${exp.amount} MAD (Paid by ${payerName}).\n`;
         });
+
+        totalSpent = Math.round(totalSpent * 100) / 100;
+
         expenseSummaryText += `Total group spending: ${totalSpent} MAD.`;
+
         docs.push(makeDoc('expenses:summary', expenseSummaryText));
 
-        for (let i = 0; i < expenses.length; i++) {
+        for (let i = 0; i < (expenses || []).length; i++) 
+        {
             const expense = expenses[i];
             let participants = '';
-            for (let j = 0; j < expense.participants.length; j++) {
-                const name = expense.participants[j]?.username;
-                if (name) {
-                    if (participants !== '') participants += ', ';
+
+            const parts = expense.participants || [];
+
+            for (let j = 0; j < parts.length; j++) 
+            {
+                const name = parts[j] && parts[j].username;
+
+                if (name) 
+                {
+                    if (participants !== '') 
+                        participants += ', ';
+
                     participants += name;
                 }
             }
 
-            let text = `Expense: ${expense.description}. Amount: ${expense.amount} MAD. Paid by: ${expense.payer?.username || 'Unknown'}. Date: ${expense.date}. Split method: ${expense.splitMethod}. Participants: ${participants || 'Not specified'}.`;
+            const payerName = expense.payer && expense.payer.username
+                ? expense.payer.username
+                : 'Unknown';
 
-            if (expense.splitMethod === 'custom') {
+            let text = `Expense: ${expense.description}. Amount: ${expense.amount} MAD. Paid by: ${payerName}. Date: ${fmtDate(expense.date)}. Split method: ${expense.splitMethod}. Participants: ${participants || 'Not specified'}.`;
+
+            if (
+                expense.splitMethod === 'custom' &&
+                Array.isArray(expense.customSplit)
+            ) 
+            {
                 let shares = '';
-                for (let j = 0; j < expense.customSplit.length; j++) {
+
+                for (let j = 0; j < expense.customSplit.length; j++) 
+                {
                     const split = expense.customSplit[j];
-                    if (shares !== '') shares += ', ';
-                    shares += `${split.user?.username || 'Unknown'}: ${split.amount} MAD`;
+                    const uname = split && split.user && split.user.username
+                        ? split.user.username
+                        : 'Unknown';
+
+                    if (shares !== '') 
+                        shares += ', ';
+
+                    shares += `${uname}: ${split.amount} MAD`;
                 }
+
                 text += ` Custom shares: ${shares}.`;
             }
+
             docs.push(makeDoc('expense:' + expense._id, text));
         }
 
-        for (let i = 0; i < settlements.length; i++) {
+        for (let i = 0; i < (settlements || []).length; i++) 
+        {
             const s = settlements[i];
+
+            const fromName = s.fromUser && s.fromUser.username
+                ? s.fromUser.username
+                : 'Unknown';
+
+            const toName = s.toUser && s.toUser.username
+                ? s.toUser.username
+                : 'Unknown';
+
             docs.push(makeDoc(
                 'settlement:' + s._id,
-                `Settlement: ${s.fromUser?.username || 'Unknown'} paid ${s.toUser?.username || 'Unknown'} ${s.amount} MAD. Status: ${s.status}. Date: ${s.date}.`
+                `Settlement: ${fromName} paid ${toName} ${s.amount} MAD. Status: ${s.status}. Date: ${fmtDate(s.date)}.`
             ));
         }
 
         return { docs: docs, groupName: group.name };
-
-    } catch (err) {
+    } 
+    catch (err) 
+    {
         console.error('[dataSource] Error:', err.message);
         return null;
     }
 }
 
-async function getGroupName(groupId) {
-    try {
+async function getGroupName(groupId) 
+{
+    try 
+    {
         const group = await Group.findById(groupId).select('name').lean();
-        return group ? group.name : 'group';
-    } catch (err) 
+
+        if (group && group.name) 
+            return group.name;
+
+        return 'group';
+    } 
+    catch (err) 
     {
         return 'group';
     }
