@@ -329,8 +329,8 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error, uploadP
     e.preventDefault()
     setDragActive(false)
     const file = e.dataTransfer.files[0]
-    if (file) handleFileSelect(file)
-  }, [handleFileSelect])
+    if (file && !loading) handleFileSelect(file)
+  }, [handleFileSelect, loading])
 
   // ── Shuffle ────────────────────────────────────────
   const handleShuffle = useCallback(() => {
@@ -458,6 +458,7 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error, uploadP
             type="button"
             className={`${styles.uploadBtn} ${mode === 'photo' ? styles.uploadBtnSelected : ''} ${dragActive ? styles.uploadBtnActive : ''}`}
             onClick={() => fileRef.current?.click()}
+            disabled={loading}
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
             onDrop={onDrop}
@@ -470,6 +471,7 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error, uploadP
             <button
               type="button"
               className={styles.removePhotoBtn}
+              disabled={loading}
               onClick={() => {
                 setMode('initials')
                 setPhotoFile(null)
@@ -487,6 +489,7 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error, uploadP
           type="button"
           className={styles.shuffleBtn}
           onClick={handleShuffle}
+          disabled={loading}
           aria-label="Shuffle avatar style"
         >
           <Shuffle size={14} aria-hidden />
