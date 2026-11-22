@@ -11,7 +11,7 @@ import { Toast, type ToastTone } from '../components/ui/Toast'
 // import { NOW, friendBalances, groups, recentActivity, users } from '../data/mock'
 import { firstName } from '../lib/format'
 import { sendReminder } from '../lib/remind'
-import { FriendBalance, Group, type User } from '../types'
+import type { FriendBalance, Group, User } from '../types'
 import styles from './Dashboard.module.css'
 
 export function Dashboard() {
