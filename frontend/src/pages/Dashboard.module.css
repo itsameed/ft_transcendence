@@ -15,8 +15,8 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: 44px;
-  max-width: 1120px;
+  gap: 36px;
+  max-width: 1160px;
   margin: 0 auto;
 }
 
@@ -26,5 +26,25 @@
   }
   .content {
     gap: 32px;
+  }
+}
+
+/* Balance hero beside the month's spending; activity beside groups. */
+.overview,
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.split {
+  align-items: start;
+}
+
+@container (max-width: 900px) {
+  .overview,
+  .split {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

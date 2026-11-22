@@ -1,0 +1,167 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 26px 22px;
+}
+
+.label {
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.total {
+  margin-top: 6px;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.delta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+/* Spending isn't money direction, so the badge stays in ink. */
+.deltaBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 7px 1px 5px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Eight thin weekly bars, rounded at the data end, anchored to the baseline. */
+.chart {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  align-items: end;
+  gap: 2px;
+  height: 84px;
+  margin-top: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.col {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  border-radius: 6px 6px 0 0;
+  outline-offset: 0;
+  cursor: default;
+}
+
+.col:hover,
+.col:focus-visible {
+  background: var(--hover-wash);
+}
+
+.barFill {
+  display: block;
+  width: min(14px, 70%);
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+  background: color-mix(in srgb, var(--text) 26%, var(--surface));
+  transition: background 0.15s ease;
+}
+.barFill[data-current] {
+  background: var(--text);
+}
+.barFill[data-zero] {
+  background: var(--surface-3);
+}
+.col:hover .barFill:not([data-zero]),
+.col:focus-visible .barFill:not([data-zero]) {
+  background: var(--text);
+}
+
+/* Per-bar tooltip. */
+.col::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  z-index: 2;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 3px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.col:first-child::after { left: 0; transform: translate(0, 3px); }
+.col:last-child::after { left: auto; right: 0; transform: translate(0, 3px); }
+.col:hover::after,
+.col:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.col:first-child:hover::after,
+.col:first-child:focus-visible::after,
+.col:last-child:hover::after,
+.col:last-child:focus-visible::after {
+  transform: none;
+}
+
+.axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--border);
+  list-style: none;
+}
+
+.groups li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  font-size: 13px;
+}
+
+.groups li > :first-child {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+}
+
+.groupName {
+  overflow: hidden;
+  color: var(--text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.groupAmount {
+  font-weight: 600;
+}

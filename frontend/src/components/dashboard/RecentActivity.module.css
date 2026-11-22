@@ -6,10 +6,14 @@
 
 .row {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) minmax(0, 200px) 96px 132px;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 18px;
-  padding: 16px 28px;
+  gap: 14px;
+  padding: 13px 22px;
+  transition: background 0.15s ease;
+}
+.row:hover {
+  background: var(--hover-wash);
 }
 
 .row + .row {
@@ -19,9 +23,17 @@
 .icon {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 12px;
+}
+
+/* Payments get the money-direction colors, not a category tint. */
+.icon[data-tint='settle-in'] {
+  background: var(--accent-soft);
+  color: var(--owed);
+}
+.icon[data-tint='settle-out'] {
   background: var(--surface-2);
   color: var(--text-2);
 }
@@ -34,59 +46,52 @@
 }
 
 .main strong,
-.main span,
-.group {
+.meta {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .main strong {
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 500;
 }
 
-.main span {
+.meta {
   color: var(--text-3);
-  font-size: 13px;
+  font-size: 12.5px;
 }
 
-.main .compactMeta {
-  display: none;
-}
-
-.group {
+.groupLink {
   color: var(--text-2);
-  font-size: 13.5px;
+  text-decoration: none;
 }
-
-.day {
-  color: var(--text-3);
-  font-size: 13.5px;
+.groupLink:hover {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .effect {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
+  gap: 1px;
+  white-space: nowrap;
 }
 
 .effect span {
   color: var(--text-3);
-  font-size: 12.5px;
+  font-size: 12px;
 }
 
 .effect strong {
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 600;
 }
-.effect strong[data-tone='owed'] {
-  color: var(--owed);
-}
-.effect strong[data-tone='owe'] {
-  color: var(--owe);
-}
+.effect strong[data-tone='owed'] { color: var(--owed); }
+.effect strong[data-tone='owe'] { color: var(--owe); }
+.effect .none { color: var(--text-3); font-weight: 400; }
 
 .empty {
   padding: 40px 28px;
@@ -94,17 +99,25 @@
   text-align: center;
 }
 
-@container (max-width: 820px) {
+/* Loading skeleton. */
+.skeleton,
+.skeletonLine {
+  background: var(--surface-2);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+.skeletonLine {
+  display: block;
+  height: 10px;
+  margin: 3px 0;
+  border-radius: 999px;
+}
+@keyframes pulse {
+  50% { opacity: 0.55; }
+}
+
+@container (max-width: 480px) {
   .row {
-    grid-template-columns: 40px minmax(0, 1fr) auto;
-    gap: 14px;
-    padding: 16px 20px;
-  }
-  .group,
-  .day {
-    display: none;
-  }
-  .main .compactMeta {
-    display: block;
+    gap: 12px;
+    padding: 12px 16px;
   }
 }
