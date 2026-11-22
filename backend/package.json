@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/main.js",
     "dev": "nodemon src/main.js",
-    "devStart": "nodemon src/main.js"
+    "devStart": "nodemon src/main.js",
+    "test": "node --test"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

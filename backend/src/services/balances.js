@@ -79,11 +79,21 @@ function computePairwiseDebts(expenses, settlements, userId) {
     for (const expense of expenses) {
         const payer = String(expense.payer);
         if (payer === me) {
-            for (const participant of (expense.participants ?? []).map(String)) {
-                if (participant === me) continue;
-                const share = shareOf(expense, participant);
-                if (share <= 0) continue;
-                oweYou.set(participant, (oweYou.get(participant) ?? 0) + share);
+            if (expense.splitMethod === 'custom' && Array.isArray(expense.customSplit) && expense.customSplit.length) {
+                for (const split of expense.customSplit) {
+                    const participant = String(split.user);
+                    if (participant === me) continue;
+                    const share = Number(split.amount);
+                    if (share <= 0) continue;
+                    oweYou.set(participant, (oweYou.get(participant) ?? 0) + share);
+                }
+            } else {
+                for (const participant of (expense.participants ?? []).map(String)) {
+                    if (participant === me) continue;
+                    const share = shareOf(expense, participant);
+                    if (share <= 0) continue;
+                    oweYou.set(participant, (oweYou.get(participant) ?? 0) + share);
+                }
             }
         } else {
             const share = shareOf(expense, me);
@@ -103,11 +113,25 @@ function computePairwiseDebts(expenses, settlements, userId) {
         }
     }
 
-    const toList = (map) => [...map.entries()]
-        .map(([id, amount]) => ({ userId: id, amount: round2(amount) }))
-        .filter((entry) => entry.amount > EPSILON);
+    const netByPerson = new Map();
+    for (const [id, amount] of youOwe) {
+        netByPerson.set(id, (netByPerson.get(id) ?? 0) - amount);
+    }
+    for (const [id, amount] of oweYou) {
+        netByPerson.set(id, (netByPerson.get(id) ?? 0) + amount);
+    }
 
-    return { youOwe: toList(youOwe), oweYou: toList(oweYou) };
+    const result = { youOwe: [], oweYou: [] };
+    for (const [id, amount] of netByPerson) {
+        const rounded = round2(amount);
+        if (rounded > EPSILON) {
+            result.oweYou.push({ userId: id, amount: rounded });
+        } else if (rounded < -EPSILON) {
+            result.youOwe.push({ userId: id, amount: round2(-rounded) });
+        }
+    }
+
+    return result;
 }
 
 module.exports = { computeGroupBalances, computePairwiseDebts, shareOf, round2, EPSILON };
