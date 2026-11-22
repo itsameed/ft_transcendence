@@ -258,18 +258,20 @@ textarea:focus-visible {
   }
 }
 
-/* Category / group-kind tint: set data-tint on any icon chip. */
+/* Category / group-kind tint. data-tint sets --tint on any element;
+   .tint turns it into a soft icon chip. */
+.tint,
+[data-tint] { --tint: var(--tint-other); }
+[data-tint='food'] { --tint: var(--tint-food); }
+[data-tint='transport'] { --tint: var(--tint-transport); }
+[data-tint='lodging'] { --tint: var(--tint-lodging); }
+[data-tint='groceries'] { --tint: var(--tint-groceries); }
+[data-tint='activities'] { --tint: var(--tint-activities); }
+[data-tint='utilities'] { --tint: var(--tint-utilities); }
 .tint {
-  --tint: var(--tint-other);
   background: color-mix(in srgb, var(--tint) 14%, var(--surface));
   color: var(--tint);
 }
-.tint[data-tint='food'] { --tint: var(--tint-food); }
-.tint[data-tint='transport'] { --tint: var(--tint-transport); }
-.tint[data-tint='lodging'] { --tint: var(--tint-lodging); }
-.tint[data-tint='groceries'] { --tint: var(--tint-groceries); }
-.tint[data-tint='activities'] { --tint: var(--tint-activities); }
-.tint[data-tint='utilities'] { --tint: var(--tint-utilities); }
 
 /* Zellige ornament layer: drop inside a position:relative box. */
 .zellige-layer {
