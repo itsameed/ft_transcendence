@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Group = require("../models/Schemas/Group");
 const Expense = require("../models/Schemas/Expenses.js");
+const { equalShares } = require("../services/balances");
 
 /**
  * GET /api/groups/:groupId/expenses
@@ -44,9 +45,8 @@ async function getGroupExpensesList(req, res, next) {
         }));
         myShare = shares.find((s) => s.userId === String(currentUserId))?.amount ?? null;
       } else if (participants.length) {
-        const each = Math.round((Number(e.amount) / participants.length) * 100) / 100;
-        shares = participants.map((userId) => ({ userId, amount: each }));
-        myShare = participants.includes(String(currentUserId)) ? each : null;
+        shares = equalShares(e).map((share) => ({ userId: share.userId, amount: share.amount }));
+        myShare = shares.find((share) => share.userId === String(currentUserId))?.amount ?? null;
       }
       return {
         _id: e._id,

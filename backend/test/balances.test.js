@@ -67,3 +67,18 @@ test('three-way equal split settles exactly after two 33.33 payments', () => {
     assert.deepEqual(pairwise.youOwe, []);
     assert.deepEqual(pairwise.oweYou, []);
 });
+
+test('equal split allocates the remainder cent to the first participant', () => {
+    const { equalShares } = require('../src/services/balances');
+    const expense = {
+        splitMethod: 'equal',
+        participants: ['me', 'anas', 'omar'],
+        amount: 100,
+    };
+
+    assert.deepEqual(equalShares(expense), [
+        { userId: 'me', amount: 33.34 },
+        { userId: 'anas', amount: 33.33 },
+        { userId: 'omar', amount: 33.33 },
+    ]);
+});

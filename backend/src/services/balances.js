@@ -145,4 +145,4 @@ function computePairwiseDebts(expenses, settlements, userId) {
     return result;
 }
 
-module.exports = { computeGroupBalances, computePairwiseDebts, shareOf, round2, EPSILON };
+module.exports = { computeGroupBalances, computePairwiseDebts, shareOf, equalShares, round2, EPSILON };
