@@ -47,6 +47,55 @@
   opacity: 0;
 }
 
+/* Upload ring: sits just outside the 96px preview. */
+.ring {
+  position: absolute;
+  inset: -6px;
+  width: 108px;
+  height: 108px;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.ringTrack,
+.ringFill {
+  fill: none;
+  stroke-width: 3;
+}
+
+.ringTrack {
+  stroke: var(--surface-3);
+}
+
+.ringFill {
+  stroke: var(--owed);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.2s ease;
+}
+
+.ring[data-processing] {
+  animation: ringSpin 1.2s linear infinite;
+}
+
+.ring[data-processing] .ringFill {
+  stroke-dashoffset: 230;
+}
+
+.previewWrap[data-uploading] .previewImg {
+  opacity: 0.75;
+}
+
+@keyframes ringSpin {
+  from { transform: rotate(-90deg); }
+  to { transform: rotate(270deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring[data-processing] {
+    animation: none;
+  }
+}
+
 /* ── Context mock (balance row) ────────────────────────────────────── */
 .contextMock {
   display: flex;
@@ -286,6 +335,10 @@
 }
 
 /* ── Actions ───────────────────────────────────────────────────────── */
+.progress {
+  width: 100%;
+}
+
 .actions {
   display: flex;
   flex-direction: column;

@@ -14,7 +14,9 @@ import {
   generateInitialsAvatar,
   getInitials,
 } from '../../lib/avatars'
+import type { UploadProgress } from '../../lib/upload'
 import { Button } from './Button'
+import { UploadProgressBar } from './UploadProgressBar'
 import styles from './AvatarStep.module.css'
 
 /* ── Types ────────────────────────────────────────────────────────── */
@@ -30,6 +32,9 @@ interface Props {
   onSkip: () => void
   loading: boolean
   error: string | null
+  /** Set while a photo is uploading with the signup request. */
+  uploadProgress?: UploadProgress | null
+  onCancelUpload?: () => void
 }
 
 /* ── Constants ────────────────────────────────────────────────────── */
@@ -209,9 +214,35 @@ function CropModal({
   )
 }
 
+/* ── Upload ring around the preview ───────────────────────────────── */
+
+function ProgressRing({ progress }: { progress: UploadProgress }) {
+  const r = 50
+  const circumference = 2 * Math.PI * r
+  const pct = progress.processing ? 100 : progress.percent ?? 0
+  return (
+    <svg
+      className={styles.ring}
+      data-processing={progress.processing || undefined}
+      viewBox="0 0 108 108"
+      aria-hidden
+    >
+      <circle className={styles.ringTrack} cx="54" cy="54" r={r} />
+      <circle
+        className={styles.ringFill}
+        cx="54"
+        cy="54"
+        r={r}
+        strokeDasharray={circumference}
+        strokeDashoffset={circumference * (1 - pct / 100)}
+      />
+    </svg>
+  )
+}
+
 /* ── Main component ───────────────────────────────────────────────── */
 
-export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props) {
+export function AvatarStep({ username, onSubmit, onSkip, loading, error, uploadProgress, onCancelUpload }: Props) {
   const [mode, setMode] = useState<'initials' | 'preset' | 'photo'>('initials')
   const [colorId, setColorId] = useState<string>(AVATAR_COLORS[0].id)
   const [presetId, setPresetId] = useState<string>(DEFAULT_AVATARS[0].id)
@@ -340,12 +371,13 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props
       </div>
 
       {/* Live preview */}
-      <div className={styles.previewWrap}>
+      <div className={styles.previewWrap} data-uploading={uploadProgress ? true : undefined}>
         <img
           src={previewSrc}
           alt={`Avatar preview for ${username || 'you'}`}
           className={`${styles.previewImg} ${fading ? styles.previewFading : ''}`}
         />
+        {uploadProgress && <ProgressRing progress={uploadProgress} />}
       </div>
 
       {/* Context mock */}
@@ -353,7 +385,7 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props
         <img src={previewSrc} alt="" className={styles.contextAvatar} />
         <div className={styles.contextText}>
           <span className={styles.contextName}>{username || 'You'}</span>
-          <span className={styles.contextBalance}>you owe Sam $12.50</span>
+          <span className={styles.contextBalance}>you owe Sam 12.50 MAD</span>
         </div>
       </div>
 
@@ -480,6 +512,11 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props
 
       {/* Actions */}
       <form className={styles.actions} onSubmit={handleFormSubmit}>
+        {uploadProgress && (
+          <div className={styles.progress}>
+            <UploadProgressBar progress={uploadProgress} onCancel={onCancelUpload} />
+          </div>
+        )}
         <Button
           type="submit"
           variant="primary"
@@ -487,7 +524,7 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error }: Props
           aria-busy={loading}
           style={{ width: '100%', height: 44, borderRadius: 'var(--radius-sm)', fontSize: 14 }}
         >
-          {loading ? 'Creating account…' : 'Create account'}
+          {loading ? (uploadProgress && !uploadProgress.processing ? 'Uploading photo…' : 'Creating account…') : 'Create account'}
         </Button>
         <button
           type="button"

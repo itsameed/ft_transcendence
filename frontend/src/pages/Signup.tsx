@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff, Moon, Split, Sun } from 'lucide-react'
 import { useTheme } from '../lib/useTheme'
@@ -7,6 +7,7 @@ import { Button } from '../components/ui/Button'
 import { GoogleButton, OrDivider } from '../components/auth/GoogleButton'
 import { Logo } from '../components/layout/Sidebar'
 import { AVATAR_COLORS, getInitials, renderInitialsToFile } from '../lib/avatars'
+import { isAbortError, uploadWithProgress, type UploadProgress } from '../lib/upload'
 import styles from './Signup.module.css'
 
 type Step = 1 | 2
@@ -26,6 +27,10 @@ export function Signup() {
    const [passwordVisible, setPasswordVisible] = useState(false)
    const [error, setError] = useState<string | null>(null)
    const [loading, setLoading] = useState(false)
+   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
+   const uploadAbort = useRef<AbortController | null>(null)
+
+   useEffect(() => () => uploadAbort.current?.abort(), [])
 
    // Refs for native validation
    const credentialsFormRef = useRef<HTMLFormElement>(null)
@@ -48,9 +53,13 @@ export function Signup() {
    }, [])
 
    // ── Submit ───────────────────────────────────────
-   const submitAccount = useCallback(async (avatarPayload: { file?: File; id?: string }) => {
+   const submitAccount = useCallback(async (avatarPayload: { file?: File; id?: string; showProgress?: boolean }) => {
       setError(null)
       setLoading(true)
+      const controller = new AbortController()
+      uploadAbort.current = controller
+      const trackUpload = Boolean(avatarPayload.file && avatarPayload.showProgress)
+      if (trackUpload) setUploadProgress({ loaded: 0, total: avatarPayload.file!.size, percent: 0, processing: false })
 
       try {
          const body = new FormData()
@@ -60,28 +69,35 @@ export function Signup() {
          if (avatarPayload.file) body.append('avatar', avatarPayload.file)
          else if (avatarPayload.id) body.append('avatar', avatarPayload.id)
 
-         const response = await fetch('/auth/signup', { method: 'POST', body })
-         const data = await response.json()
+         // XHR rather than fetch so a photo upload can report progress.
+         const response = await uploadWithProgress<{ message?: string }>('/auth/signup', body, {
+            signal: controller.signal,
+            onProgress: trackUpload ? setUploadProgress : undefined,
+         })
          if (!response.ok) {
-            setError(data.message || 'Signup failed')
+            setError(response.data?.message || 'Signup failed')
          } else {
             navigate('/dashboard')
          }
       } catch (err) {
-         console.error('Signup error:', err)
-         if (err instanceof Error) {
+         if (isAbortError(err)) {
+            setError('Upload cancelled. Your account was not created yet.')
+         } else if (err instanceof Error) {
+            console.error('Signup error:', err)
             setError(`An error occurred: ${err.message}`)
          } else {
             setError('An unexpected error occurred while signing up.')
          }
       } finally {
+         uploadAbort.current = null
+         setUploadProgress(null)
          setLoading(false)
       }
    }, [username, email, password, navigate])
 
    const handleAvatarSubmit = useCallback(async (avatar: AvatarResult) => {
       if (avatar.type === 'photo') {
-         submitAccount({ file: avatar.file })
+         submitAccount({ file: avatar.file, showProgress: true })
       } else if (avatar.type === 'preset') {
          submitAccount({ id: avatar.id })
       } else {
@@ -256,6 +272,8 @@ export function Signup() {
                         onSkip={handleSkip}
                         loading={loading}
                         error={error}
+                        uploadProgress={uploadProgress}
+                        onCancelUpload={() => uploadAbort.current?.abort()}
                      />
                   </div>
                )}
