@@ -106,6 +106,8 @@ app.use('/auth/logout', logoutRouter);
 
 app.use('/api/dashboard', dashboardRouter);
 app.use('/status-api', serviceStatus);
+// Always 200, so checking "am I signed in?" doesn't log a 401 in the console.
+app.get('/api/session', (req, res) => res.json({ authenticated: Boolean(req.session?.userId) }));
 app.use('/api/my-profile', myProfileRouter);
 app.use('/api/profile/edit', editProfile);
 app.use('/api/profile/avatar', avatarRouter);
