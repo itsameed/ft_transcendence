@@ -1,11 +1,10 @@
 const UserSchema = require('../models/Schemas/User.js');
 const bcrypt = require('bcrypt');
-const crypto = require('crypto');
 const printLogsDate = require('./printLogs.js');
 const { saveAvatar } = require('../config/sharp');
 const { resolveDefaultAvatar, pickDefaultAvatar } = require('../config/avatars');
 const { MAX_USERNAME_LENGTH } = require('../config/userLimits');
-const transporter = require('../config/mailer');
+const { createVerificationToken, sendVerificationEmailInBackground } = require('../services/verificationEmail');
 
 async function loadNewUser(req, res, next) {
     let { username, email, password, bio, gender, avatar } = req.body;
@@ -26,8 +25,7 @@ async function loadNewUser(req, res, next) {
     }
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        const verificationToken = crypto.randomBytes(32).toString('hex');
-        const verificationTokenExpires = Date.now() + (24 * 60 * 60 * 1000);
+        const verification = createVerificationToken();
 
         // A chosen default wins; otherwise an uploaded photo; otherwise a
         // deterministic default so no account is ever left without an avatar.
@@ -51,48 +49,17 @@ async function loadNewUser(req, res, next) {
             gender,
             avatar: avatarPath,
             isVerified: false,
-            verificationToken,
-            verificationTokenExpires,
+            verificationToken: verification.hash,
+            verificationTokenExpires: verification.expires,
         });
 
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-        const verifyUrl = `${frontendUrl}/verify?token=${verificationToken}`;
-        console.error("here is the new user mail", newUser.email);
-        try {
-            await transporter.sendMail({
-                from: `"Splitify" <${process.env.GMAIL_USER}>`,
-                to: newUser.email,
-                subject: 'Verify Your Email Address',
-                html: `
-                    <h2>Welcome, ${newUser.username}!</h2>
-                    <p>Please verify your email address by clicking the link below:</p>
-                    <a href="${verifyUrl}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
-                    <p>This link will expire in 24 hours.</p>
-                `
-            });
-            console.log(`✅ Verification email sent to ${newUser.email}`);
-        } catch (emailError) {
-            console.error('❌ Failed to send verification email:', emailError);
-        }
-        req.session.regenerate((sessionError) => {
-            if (sessionError) return next(sessionError);
+        sendVerificationEmailInBackground(newUser, verification.token);
 
-            req.session.userId = String(newUser._id);
-            req.session.username = newUser.username;
-            req.session.save((saveError) => {
-                if (saveError) return next(saveError);
-
-                printLogsDate(`User with Id ${newUser._id} signed up at : `);
-                return res.status(201).json({
-                    message: 'User created successfully.',
-                    userId: newUser._id,
-                    username: newUser.username,
-                    email: newUser.email,
-                    bio: newUser.bio,
-                    gender: newUser.gender,
-                    avatar: newUser.avatar,
-                });
-            });
+        // No session yet: the account can't sign in until the email is verified.
+        printLogsDate(`User with Id ${newUser._id} signed up at : `);
+        return res.status(201).json({
+            message: 'Account created. Check your email to verify it.',
+            email: newUser.email,
         });
     } catch (error) {
         if (error.code === 11000) {
