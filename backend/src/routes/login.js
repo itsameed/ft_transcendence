@@ -1,7 +1,8 @@
 const express = require('express');
 const loginAuth = require('../controllers/LoginAuth');
 const router = express.Router();
-const {loginLimiter} = require('../middleware/rateLimiter.js');
+const { loginLimiter, twoFactorLimiter } = require('../middleware/rateLimiter.js');
+const { verifyLoginCode, cancelChallenge, challengeStatus } = require('../controllers/loginTwoFactor');
 
 router.get('/', (req, res) => {
    //  res.render('signup');
@@ -9,5 +10,8 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', loginLimiter, loginAuth);
+router.get('/2fa', challengeStatus);
+router.post('/2fa', twoFactorLimiter, verifyLoginCode);
+router.post('/2fa/cancel', cancelChallenge);
 
 module.exports = router;

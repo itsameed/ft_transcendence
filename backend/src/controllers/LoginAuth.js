@@ -1,6 +1,7 @@
 const UserSchema = require('../models/Schemas/User');
 const bcrypt = require('bcrypt');
 const printLogsDate = require('../controllers/printLogs');
+const { startChallenge } = require('./loginTwoFactor');
 
 async function loginAuth(req, res, next) {
     const { email, password } = req.body;
@@ -27,6 +28,12 @@ async function loginAuth(req, res, next) {
 
         if (user.status === 'suspended') {
             return res.status(403).json({ message: 'Your account is suspended' });
+        }
+
+        // Password was right, but the account wants a code too.
+        if (user.twoFactorEnabled) {
+            await startChallenge(req, user, 'password');
+            return res.status(200).json({ requires2fa: true, message: 'Enter the code from your authenticator app.' });
         }
 
         const isAdmin = user.role === 'admin' || user.username === 'admin' || user.email === 'admin@splitify.test';
