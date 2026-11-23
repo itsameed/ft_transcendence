@@ -144,7 +144,7 @@ export function Signup() {
                      {/* Header */}
                      <div className={styles.header}>
                         <span className={styles.brandMark} aria-hidden="true">
-                           <Split size={18} strokeWidth={2.2} />
+                           <Split size={18} strokeWidth={2.2} aria-hidden />
                         </span>
                         <h1 className={styles.title}>Create an account</h1>
                         <p className={styles.subtitle}>Get started tracking and settling group balances</p>

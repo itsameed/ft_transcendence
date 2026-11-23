@@ -92,7 +92,7 @@ export function UserProfilePage() {
                   </>
                 )}
                 {relation === 'none' && (
-                  <Button variant="primary" size="sm" icon={<UserPlus size={15} />} onClick={() => act('/api/friends/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ receiverId: person.id }) }, 'request-sent')}>Add friend</Button>
+                  <Button variant="primary" size="sm" icon={<UserPlus size={15} aria-hidden />} onClick={() => act('/api/friends/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ receiverId: person.id }) }, 'request-sent')}>Add friend</Button>
                 )}
                 {relation === 'request-sent' && <span className={styles.badge}>Request sent</span>}
                 {relation === 'request-received' && (
