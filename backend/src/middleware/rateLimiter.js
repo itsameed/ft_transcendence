@@ -34,4 +34,15 @@ const twoFactorLimiter = rateLimit({
     },
 });
 
-module.exports = { loginLimiter, generalLimiter, twoFactorLimiter };
+// Every request sends an email from our account, so keep this tight.
+const verificationEmailLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        message: 'Too many verification emails requested. Try again in 15 minutes.'
+    },
+});
+
+module.exports = { loginLimiter, generalLimiter, twoFactorLimiter, verificationEmailLimiter };
