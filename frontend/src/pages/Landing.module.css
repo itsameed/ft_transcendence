@@ -1091,20 +1091,32 @@
 }
 
 .ctaBand {
+   --zellige: var(--zellige-on-dark);
+   position: relative;
+   overflow: hidden;
+   isolation: isolate;
    display: flex;
    align-items: center;
    justify-content: space-between;
    gap: 28px;
    margin-top: 86px;
-   padding: 44px 46px;
+   padding: 52px 50px;
+   border: 1px solid var(--hero-border);
    border-radius: var(--radius-lg);
-   background: var(--primary);
-   color: var(--on-primary);
+   background:
+      radial-gradient(120% 140% at 0% 100%, var(--hero-bg-2), transparent 60%),
+      var(--hero-bg);
+   color: var(--hero-text);
+}
+
+.ctaBand > :global(.zellige-layer) {
+   z-index: -1;
+   background-size: 56px 56px;
 }
 
 .ctaTitle {
    max-width: 620px;
-   color: var(--on-primary);
+   color: var(--hero-text);
    font-size: clamp(26px, 4vw, 42px);
    font-weight: 600;
    letter-spacing: -0.055em;
@@ -1113,9 +1125,8 @@
 
 .ctaSub {
    margin-top: 10px;
-   color: var(--on-primary);
+   color: var(--hero-text-2);
    font-size: 16px;
-   opacity: 0.75;
 }
 
 .ctaButton {
@@ -1262,37 +1273,6 @@
    color: var(--text-2);
    font-size: 13px;
    line-height: 1.65;
-}
-
-.ctaBand {
-   display: flex;
-   align-items: center;
-   justify-content: space-between;
-   gap: 28px;
-   margin-top: 86px;
-   padding: 38px 42px;
-   border: 1px solid var(--border);
-   border-radius: var(--radius-lg);
-   background: var(--stone-gradient);
-}
-
-.ctaKicker {
-   margin-bottom: 8px;
-   color: var(--owed);
-}
-
-.ctaTitle {
-   max-width: 620px;
-   color: var(--stone-text);
-   font-size: clamp(26px, 4vw, 42px);
-   font-weight: 600;
-   letter-spacing: -0.055em;
-   line-height: 1.08;
-}
-
-.ctaButton {
-   height: 46px;
-   padding: 0 19px;
 }
 
 .footer {
@@ -1934,5 +1914,110 @@
    .typing,
    .before {
       display: none;
+   }
+}
+/* ------------------------------------------------------------------
+   Hero ornament and "made for" strip
+------------------------------------------------------------------- */
+.sceneZellige {
+   z-index: -2;
+   background-size: 52px 52px;
+   -webkit-mask-image: radial-gradient(closest-side, #000 0%, transparent 100%);
+   mask-image: radial-gradient(closest-side, #000 0%, transparent 100%);
+}
+
+.useCases {
+   margin: -30px 0 96px;
+}
+
+.useCasesLabel {
+   margin: 0 0 16px;
+   color: var(--text-3);
+   font-size: 12px;
+   font-weight: 600;
+   letter-spacing: 0.08em;
+   text-transform: uppercase;
+}
+
+.useCaseList {
+   display: grid;
+   grid-template-columns: repeat(4, minmax(0, 1fr));
+   gap: 14px;
+   margin: 0;
+   padding: 0;
+   list-style: none;
+}
+
+.useCase {
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+   min-width: 0;
+   padding: 18px 18px 16px;
+   border: 1px solid var(--border);
+   border-radius: var(--radius-lg);
+   background: var(--surface);
+   box-shadow: var(--shadow-card);
+   animation: copy-arrive 600ms calc(var(--d, 0ms) + 300ms) cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+   transition: transform 0.2s var(--ease), box-shadow 0.2s ease;
+}
+
+.useCase:hover {
+   transform: translateY(-2px);
+   box-shadow: var(--shadow-pop);
+}
+
+.useCaseIcon {
+   display: grid;
+   place-items: center;
+   width: 38px;
+   height: 38px;
+   margin-bottom: 6px;
+   border-radius: 12px;
+}
+
+.useCase strong {
+   font-size: 15px;
+   font-weight: 600;
+   letter-spacing: -0.01em;
+}
+
+.useCase p {
+   color: var(--text-2);
+   font-size: 13px;
+   line-height: 1.5;
+}
+
+.useCaseMath {
+   display: flex;
+   align-items: baseline;
+   justify-content: space-between;
+   gap: 8px;
+   margin-top: auto;
+   padding-top: 12px;
+   border-top: 1px dashed var(--border-strong);
+   color: var(--text-3);
+   font-size: 12px;
+   font-variant-numeric: tabular-nums;
+}
+
+.useCaseMath b {
+   color: var(--text);
+   font-weight: 600;
+   white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+   .useCases {
+      margin: 0 0 72px;
+   }
+   .useCaseList {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+   }
+}
+
+@media (max-width: 460px) {
+   .useCaseList {
+      grid-template-columns: minmax(0, 1fr);
    }
 }

@@ -6,7 +6,11 @@ import {
   ArrowUpRight,
   Bot,
   Check,
+  Home,
   MessagesSquare,
+  Plane,
+  Trophy,
+  UtensilsCrossed,
   Moon,
   Pause,
   Play,
@@ -131,6 +135,14 @@ function Typed({ text, delay = 0, speed = 55, run }: { text: string; delay?: num
 }
 
 const delayStyle = (ms: number) => ({ '--d': `${ms}ms` }) as CSSProperties
+
+/* Who it's for: real situations with real-looking numbers. */
+const USE_CASES = [
+  { icon: Home, tint: 'lodging', title: 'Roommates', text: 'Rent, groceries and the Wi-Fi bill.', math: '299 MAD ÷ 3', each: '99.67 each' },
+  { icon: Plane, tint: 'transport', title: 'Trips', text: 'Riads, grand taxis and the ferry.', math: '1,200 MAD ÷ 4', each: '300 each' },
+  { icon: Trophy, tint: 'activities', title: 'Friday football', text: 'The pitch, every week, without chasing.', math: '700 MAD ÷ 14', each: '50 each' },
+  { icon: UtensilsCrossed, tint: 'food', title: 'Dinners', text: 'One bill, many plates, custom splits.', math: '120 / 90 / 60', each: 'by what you ate' },
+]
 
 /* ------------------------------------------------------------------
    "How it works": a looping, self-playing walkthrough of the real flow
@@ -415,6 +427,7 @@ export function Landing() {
             role="img"
             aria-label="A preview of the Chefchaouen trip: Hiba paid the riad deposit of 1,200 MAD and your share is 300 MAD"
           >
+            <span className={`zellige-layer ${styles.sceneZellige}`} aria-hidden="true" />
             <div className={styles.sceneGlow} />
             <div className={`${styles.receipt} ${styles.receiptBack}`} aria-hidden="true">
               <span className={styles.receiptMark} />
@@ -450,6 +463,25 @@ export function Landing() {
               <ArrowUpRight size={16} />
             </div>
           </div>
+        </section>
+
+        <section className={styles.useCases} aria-labelledby="use-cases-heading">
+          <h2 id="use-cases-heading" className={styles.useCasesLabel}>Made for every shared tab</h2>
+          <ul className={styles.useCaseList}>
+            {USE_CASES.map(({ icon: Icon, tint, title, text, math, each }, i) => (
+              <li key={title} className={styles.useCase} style={delayStyle(i * 70)}>
+                <span className={`${styles.useCaseIcon} tint`} data-tint={tint} aria-hidden="true">
+                  <Icon size={19} strokeWidth={1.8} />
+                </span>
+                <strong>{title}</strong>
+                <p>{text}</p>
+                <span className={styles.useCaseMath}>
+                  <span>{math}</span>
+                  <b>{each}</b>
+                </span>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section className={styles.featuresSection} aria-labelledby="features-heading">
@@ -575,6 +607,7 @@ export function Landing() {
         </section>
 
         <section className={styles.ctaBand} aria-labelledby="cta-heading">
+          <span className="zellige-layer" aria-hidden="true" />
           <div>
             <h2 id="cta-heading" className={styles.ctaTitle}>Make the next split the easy one.</h2>
             <p className={styles.ctaSub}>Create your first group in under a minute.</p>

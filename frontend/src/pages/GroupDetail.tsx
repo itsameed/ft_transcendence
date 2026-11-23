@@ -11,6 +11,7 @@ import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
 import { iconForKind } from '../lib/GroupKinds'
 import { categoryIcon } from '../lib/categories'
+import { inferCategory, kindTint } from '../lib/activity'
 import { money, relativeDay } from '../lib/format'
 import type { Category, Group, User } from '../types'
 import pageStyles from './Dashboard.module.css'
@@ -114,7 +115,7 @@ export function GroupDetailPage() {
         setExpenses(rows.map((e): GroupExpense => ({
           id: String(e._id ?? e.id ?? `${e.description}-${e.date}`),
           title: e.description ?? e.title ?? 'Expense',
-          category: (e.category ?? 'other') as Category,
+          category: inferCategory(String(e.description ?? e.title ?? ''), e.category),
           amount: Number(e.amount ?? 0),
           paidBy: mapUser(e.payer ?? e.paidBy),
           date: e.date ?? e.createdAt ?? new Date().toISOString(),
@@ -213,6 +214,15 @@ export function GroupDetailPage() {
   const currentUser = me
   const currentGroup = group
   const Icon = iconForKind(currentGroup.kind)
+  const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0)
+  const yourShareTotal = expenses.reduce((sum, e) => sum + Math.abs(e.myShare ?? 0), 0)
+  const paidBy = new Map<string, { id: string; name: string; total: number }>()
+  for (const e of expenses) {
+    const cur = paidBy.get(e.paidBy.id) ?? { id: e.paidBy.id, name: e.paidBy.name, total: 0 }
+    cur.total += e.amount
+    paidBy.set(e.paidBy.id, cur)
+  }
+  const topPayer = [...paidBy.values()].sort((a, b) => b.total - a.total)[0]
   const created = new Date(currentGroup.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   const isOwner = currentGroup.members.some((m) => m.user.id === currentUser.id && m.role === 'owner')
 
@@ -291,7 +301,7 @@ export function GroupDetailPage() {
 
           <header className={styles.groupHero}>
             <div className={styles.groupIdentity}>
-              <span className={styles.groupBadge}><Icon size={26} strokeWidth={1.6} aria-hidden /></span>
+              <span className={`${styles.groupBadge} tint`} data-tint={kindTint(currentGroup.kind)}><Icon size={26} strokeWidth={1.6} aria-hidden /></span>
               <div className={styles.groupTitle}>
                 <p className={styles.eyebrow}>Shared group</p>
                 <h1 title={group.name}>{group.name}</h1>
@@ -315,6 +325,25 @@ export function GroupDetailPage() {
             </div>
           </header>
 
+          <dl className={styles.stats}>
+            <div>
+              <dt>Total spent</dt>
+              <dd className="tabular">{money(totalSpent)}</dd>
+            </div>
+            <div>
+              <dt>Your share</dt>
+              <dd className="tabular">{money(yourShareTotal)}</dd>
+            </div>
+            <div>
+              <dt>Expenses</dt>
+              <dd className="tabular">{expenses.length}</dd>
+            </div>
+            <div>
+              <dt>Biggest payer</dt>
+              <dd className={styles.statName}>{topPayer ? (topPayer.id === me.id ? 'You' : topPayer.name) : '—'}</dd>
+            </div>
+          </dl>
+
           <section className={styles.balanceSection} aria-labelledby="group-balances">
             <div className={styles.sectionHeading}>
               <div>
@@ -322,6 +351,7 @@ export function GroupDetailPage() {
                 <p>Your share of the group’s expenses after recorded payments.</p>
               </div>
             </div>
+            <div className={styles.balanceBody}>
             <div className={[
               styles.balanceSummary,
               balances && balances.myBalance > 0 ? styles.balanceOwed : '',
@@ -385,13 +415,14 @@ export function GroupDetailPage() {
                 {balances ? 'No open balances. Everyone is settled up.' : 'Balance details will appear here.'}
               </p>
             )}
+            </div>
           </section>
 
           <section className={styles.section} aria-labelledby="group-expenses">
             <div className={styles.sectionHeading}>
               <div>
                 <h2 id="group-expenses">Expenses <span className={styles.count}>{expenses.length}</span></h2>
-                <p>{expenses.length > 0 ? `The group has spent ${money(expenses.reduce((sum, expense) => sum + expense.amount, 0))} in total.` : 'Shared costs, all in one place.'}</p>
+                <p>{expenses.length > 0 ? 'Newest first. Your portion is what you used, whoever paid.' : 'Shared costs, all in one place.'}</p>
               </div>
             </div>
             {expenses.length === 0 ? (
@@ -403,7 +434,7 @@ export function GroupDetailPage() {
                   const mine = expense.paidBy.id === me.id
                   return (
                     <li key={expense.id} className={styles.listRow}>
-                      <span className={styles.expenseIcon}><ExpenseIcon size={18} strokeWidth={1.7} aria-hidden /></span>
+                      <span className={`${styles.expenseIcon} tint`} data-tint={expense.category}><ExpenseIcon size={18} strokeWidth={1.7} aria-hidden /></span>
                       <span className={styles.expenseMain}>
                         <strong>{expense.title}</strong>
                         <small>{mine ? 'You' : expense.paidBy.name} paid · {relativeDay(expense.date, new Date())}</small>

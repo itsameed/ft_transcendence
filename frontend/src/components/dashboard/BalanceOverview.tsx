@@ -1,3 +1,4 @@
+import { Waypoints } from 'lucide-react'
 import type { FriendBalance, User } from '../../types'
 import { summarize } from '../../lib/balances'
 import { money } from '../../lib/format'
@@ -6,59 +7,91 @@ import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import styles from './BalanceOverview.module.css'
 
-interface Props {
+const amountOnly = (value: number) => money(value).replace(/\s*MAD$/, '')
+
+/**
+ * The one thing people open the app for: where do I stand overall.
+ * An inverted slab so the headline number is the first thing the eye
+ * lands on, with both directions spelled out underneath.
+ */
+export function BalanceHero({ balances, groupCount }: { balances: FriendBalance[]; groupCount: number }) {
+  const { net, owedToYou, youOwe, peopleOwingYou, peopleYouOwe } = summarize(balances)
+  const total = owedToYou + youOwe
+  const owedPct = total > 0 ? (owedToYou / total) * 100 : 0
+  const tone = net > 0 ? 'owed' : net < 0 ? 'owe' : 'settled'
+
+  return (
+    <section className={styles.hero} aria-labelledby="balance-hero-label">
+      <span className="zellige-layer" aria-hidden />
+      <div className={styles.heroInner}>
+        <p id="balance-hero-label" className={styles.heroLabel}>
+          {tone === 'owed' ? 'Overall, you’re owed' : tone === 'owe' ? 'Overall, you owe' : 'You’re all settled up'}
+        </p>
+        <p className={`${styles.heroNet} tabular`} data-tone={tone}>
+          {amountOnly(net)}
+          <span className={styles.heroCurrency}>MAD</span>
+        </p>
+
+        <div className={styles.heroBody}>
+        {total > 0 ? (
+          <div
+            className={styles.bar}
+            role="img"
+            aria-label={`Owed to you ${money(owedToYou)}, you owe ${money(youOwe)}`}
+          >
+            {owedToYou > 0 && <span className={styles.barOwed} style={{ flexGrow: owedPct }} />}
+            {youOwe > 0 && <span className={styles.barOwe} style={{ flexGrow: 100 - owedPct }} />}
+          </div>
+        ) : (
+          <div className={styles.bar} aria-hidden><span className={styles.barEmpty} /></div>
+        )}
+
+        <dl className={styles.heroStats}>
+          <div>
+            <dt><span className={styles.dot} data-tone="owed" aria-hidden /> Owed to you</dt>
+            <dd className="tabular">{money(owedToYou)}</dd>
+            <dd className={styles.heroSub}>{peopleOwingYou === 0 ? 'Nobody' : `${peopleOwingYou} ${peopleOwingYou === 1 ? 'person' : 'people'}`}</dd>
+          </div>
+          <div>
+            <dt><span className={styles.dot} data-tone="owe" aria-hidden /> You owe</dt>
+            <dd className="tabular">{money(youOwe)}</dd>
+            <dd className={styles.heroSub}>{peopleYouOwe === 0 ? 'Nobody' : `${peopleYouOwe} ${peopleYouOwe === 1 ? 'person' : 'people'}`}</dd>
+          </div>
+          <div>
+            <dt>Groups</dt>
+            <dd className="tabular">{groupCount}</dd>
+            <dd className={styles.heroSub}>{groupCount === 1 ? 'Active group' : 'Active groups'}</dd>
+          </div>
+        </dl>
+        </div>
+
+        <p className={styles.heroNote}>
+          <Waypoints size={16} strokeWidth={1.8} aria-hidden />
+          {groupCount > 0
+            ? `Debts are combined across your ${groupCount} ${groupCount === 1 ? 'group' : 'groups'}, so everyone makes as few payments as possible.`
+            : 'Create a group and debts are combined so everyone makes as few payments as possible.'}
+        </p>
+      </div>
+    </section>
+  )
+}
+
+interface ColumnsProps {
   balances: FriendBalance[]
   users: Record<string, User>
-  groupCount: number
   onSettle: (user: User, amount: number) => void
   onRemind: (user: User, amount: number) => void
 }
 
-/**
- * The one thing people open the app for: where do I stand, and with whom.
- * The net figure on top, then two plain lists. The column headings carry
- * the meaning, so the amounts themselves can stay neutral.
- */
-export function BalanceOverview({ balances, users, groupCount, onSettle, onRemind }: Props) {
+/** Two plain lists: who you owe, who owes you. The headings carry the meaning. */
+export function BalanceColumns({ balances, users, onSettle, onRemind }: ColumnsProps) {
   const rows = Array.isArray(balances) ? balances : []
-  const { net, owedToYou, youOwe, peopleOwingYou, peopleYouOwe } = summarize(rows)
-  const total = owedToYou + youOwe
-  const owedPct = total > 0 ? (owedToYou / total) * 100 : 0
+  const { owedToYou, youOwe } = summarize(rows)
   const owing = rows.filter((b) => b.amount < 0).sort((a, b) => a.amount - b.amount)
   const owed = rows.filter((b) => b.amount > 0).sort((a, b) => b.amount - a.amount)
 
   return (
     <Card padded={false}>
-      <div className={styles.summary}>
-        <p className={styles.label}>
-          {net > 0 ? 'Overall, you’re owed' : net < 0 ? 'Overall, you owe' : 'You’re all settled up'}
-        </p>
-        <p className={styles.net} data-tone={net > 0 ? 'owed' : net < 0 ? 'owe' : 'settled'}>{money(net)}</p>
-        {total > 0 && (
-          <div className={styles.balanceBar}>
-            <div
-              className={styles.bar}
-              role="img"
-              aria-label={`Owed to you ${money(owedToYou)}, you owe ${money(youOwe)}`}
-            >
-              <span className={styles.barOwed} style={{ width: `${owedPct}%` }} />
-              <span className={styles.barOwe} style={{ width: `${100 - owedPct}%` }} />
-            </div>
-            <p className={styles.barLegend}>
-              <span>
-                {peopleOwingYou} {peopleOwingYou === 1 ? 'person owes' : 'people owe'} you {money(owedToYou)}
-              </span>
-              <span>
-                You owe {peopleYouOwe} {peopleYouOwe === 1 ? 'person' : 'people'} {money(youOwe)}
-              </span>
-            </p>
-          </div>
-        )}
-        <p className={styles.meta}>
-          Debts are simplified across your {groupCount} {groupCount === 1 ? 'group' : 'groups'}, so everyone makes as few payments as possible.
-        </p>
-      </div>
-
       <div className={styles.columns}>
         <Column
           title="You owe"
@@ -117,12 +150,18 @@ function Column({ title, tone, total, rows, users, empty, action, actionLabel, o
           {rows.map(({ userId, amount }) => {
             const user = users[userId] ?? { id: userId, name: 'Unknown member', email: '' }
             const [first, ...rest] = user.name.split(' ')
+            const share = total > 0 ? Math.abs(amount) / total : 0
             return (
               <li key={userId} className={styles.row}>
                 <Avatar user={user} size={34} />
-                <span className={styles.name}>
-                  {first}
-                  {rest.length > 0 && <span className={styles.lastName}> {rest.join(' ')}</span>}
+                <span className={styles.who}>
+                  <span className={styles.name}>
+                    {first}
+                    {rest.length > 0 && <span className={styles.lastName}> {rest.join(' ')}</span>}
+                  </span>
+                  <span className={styles.meter} aria-hidden>
+                    <span data-tone={tone} style={{ width: `${Math.max(share * 100, 4)}%` }} />
+                  </span>
                 </span>
                 <span className={`${styles.amount} tabular`}>{money(amount)}</span>
                 <Button size="sm" variant="secondary" className={styles.action} onClick={() => onAction(user, Math.abs(amount))} aria-label={actionLabel(user)}>

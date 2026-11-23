@@ -49,6 +49,7 @@ export function GroupPage() {
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
   const NOW = new Date()
+  const [memberUsers, setMemberUsers] = useState<Record<string, User>>({})
 
   useEffect(() => {
     async function load() {
@@ -61,6 +62,14 @@ export function GroupPage() {
         const data = await groupsRes.json()
         const profile = profileRes.ok ? await profileRes.json() : null
         if (profile?.user) setMe(profile.user)
+        const people: Record<string, User> = {}
+        for (const g of (data.groups ?? []) as ApiGroup[]) {
+          for (const m of g.members ?? []) {
+            const u = m.userId as any
+            if (u?._id && u.username) people[u._id] = { id: u._id, name: u.username, email: u.email ?? '', avatar: u.avatar ?? null }
+          }
+        }
+        setMemberUsers(people)
         setGroups((data.groups ?? []).map((g: ApiGroup) => ({
           id: g._id, name: g.name, emoji: '', kind: (g.kind || 'other') as Group['kind'],
           memberIds: (g.members ?? []).map((m) => m.userId._id), totalSpent: 0, yourBalance: 0,
@@ -256,7 +265,7 @@ export function GroupPage() {
           {showGroups && (
             <section aria-label="Your groups">
               <h2 className={styles.sectionTitle}>Your groups ({visibleGroups.length})</h2>
-              {visibleGroups.length === 0 ? <p className={styles.empty}>No groups match.</p> : <GroupsGrid groups={visibleGroups.map((g) => ({ ...g, yourBalance: groupBalances[g.id] ?? g.yourBalance }))} now={NOW} onCreate={() => setCreating(true)} />}
+              {visibleGroups.length === 0 ? <p className={styles.empty}>No groups match.</p> : <GroupsGrid groups={visibleGroups.map((g) => ({ ...g, yourBalance: groupBalances[g.id] ?? g.yourBalance }))} users={memberUsers} now={NOW} onCreate={() => setCreating(true)} />}
               <p className={styles.hint}>Select a group to see its members and details, or create a new group with your friends.</p>
             </section>
           )}

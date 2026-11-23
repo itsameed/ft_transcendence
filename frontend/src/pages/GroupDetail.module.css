@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  max-width: 920px;
+  max-width: 1040px;
   margin: 0 auto;
 }
 
@@ -45,8 +45,6 @@
   flex: 0 0 auto;
   place-items: center;
   border-radius: 17px;
-  background: var(--accent-soft);
-  color: var(--owed);
 }
 
 .groupTitle {
@@ -178,19 +176,84 @@
   vertical-align: 2px;
 }
 
+.balanceBody {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr);
+  gap: 18px;
+  align-items: start;
+}
+
+/* The group's headline number, on the same inverted slab as the dashboard. */
 .balanceSummary {
+  --zellige: var(--zellige-on-dark);
+  position: relative;
+  overflow: hidden;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
-  padding: 20px;
+  min-height: 168px;
+  padding: 22px;
+  border: 1px solid var(--hero-border);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(140% 120% at 0% 100%, var(--hero-bg-2), transparent 60%),
+    var(--hero-bg);
+  color: var(--hero-text);
+  isolation: isolate;
+}
+.balanceSummary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--zellige);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(120% 100% at 100% 0%, #000, transparent 70%);
+  mask-image: radial-gradient(120% 100% at 100% 0%, #000, transparent 70%);
+}
+
+/* Stat strip under the group header. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+.stats > div {
+  min-width: 0;
+  padding: 14px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--surface-2);
+  background: var(--surface);
+}
+.stats dt {
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 500;
+}
+.stats dd {
+  margin: 4px 0 0;
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .balanceBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .balanceLabel {
-  color: var(--text-3);
+  color: var(--hero-text-2);
   font-size: 12px;
   font-weight: 600;
 }
@@ -198,7 +261,7 @@
 .balanceValue {
   display: block;
   margin-top: 5px;
-  color: var(--text);
+  color: var(--hero-text);
   font-size: clamp(28px, 4vw, 36px);
   font-weight: 650;
   font-variant-numeric: tabular-nums;
@@ -206,25 +269,23 @@
   line-height: 1.1;
 }
 
-.balanceOwed .balanceValue,
-.balanceOwed .balanceStatus {
-  color: var(--owed);
+.balanceOwed .balanceValue {
+  color: var(--hero-owed);
 }
 
-.balanceOwing .balanceValue,
-.balanceOwing .balanceStatus {
-  color: var(--owe);
+.balanceOwing .balanceValue {
+  color: var(--hero-owe);
 }
 
 .balanceStatus {
   margin-top: 5px;
-  color: var(--text-2);
+  color: var(--hero-text-2);
   font-size: 13px;
 }
 
 .balanceDetails {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -302,8 +363,6 @@
   flex: 0 0 auto;
   place-items: center;
   border-radius: 12px;
-  background: var(--surface-2);
-  color: var(--text-2);
 }
 
 .expenseMain {
@@ -752,4 +811,14 @@
   .deleteGroupButton {
     transition: none;
   }
+}
+
+/* Primary buttons are ink-on-paper; invert them on the dark balance slab. */
+.balanceSummary button {
+  border-color: transparent;
+  background: var(--hero-text);
+  color: var(--hero-bg);
+}
+.balanceSummary button:hover {
+  background: #ffffff;
 }

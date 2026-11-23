@@ -1,22 +1,26 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AddExpenseModal } from '../components/dashboard/AddExpenseModal'
-import { BalanceOverview } from '../components/dashboard/BalanceOverview'
-import { GroupsGrid } from '../components/dashboard/GroupsGrid'
+import { BalanceColumns, BalanceHero } from '../components/dashboard/BalanceOverview'
+import { GroupsList } from '../components/dashboard/GroupsList'
+import { RecentActivity } from '../components/dashboard/RecentActivity'
+import { SpendingCard } from '../components/dashboard/SpendingCard'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Topbar } from '../components/layout/Topbar'
 import { Section, SectionLink } from '../components/ui/Section'
 import { Toast, type ToastTone } from '../components/ui/Toast'
-// import { NOW, friendBalances, groups, recentActivity, users } from '../data/mock'
+import { inferCategory, loadActivity } from '../lib/activity'
 import { firstName } from '../lib/format'
 import { sendReminder } from '../lib/remind'
-import type { FriendBalance, Group, User } from '../types'
+import type { Activity, FriendBalance, Group, User } from '../types'
 import styles from './Dashboard.module.css'
 
 export function Dashboard() {
    const [me, setMe] = useState<User | null>(null)
-   // const [activity, setActivity] = useState<Activity[]>(recentActivity)
+   const [activity, setActivity] = useState<Activity[]>([])
+   const [activityLoading, setActivityLoading] = useState(true)
+   const [groupCount, setGroupCount] = useState(0)
    const [adding, setAdding] = useState(false)
    const [toast, setToast] = useState<{ message: string; tone: ToastTone } | null>(null)
    const navigate = useNavigate();
@@ -53,12 +57,16 @@ export function Dashboard() {
             }
             const DashboardData = await res1.json()
             const profileData = await res2.json()
+            const groupsData = groupsRes.ok ? await groupsRes.json().catch(() => null) : null
+            const allGroups: any[] = groupsData?.groups ?? []
+            const kindById = new Map(allGroups.map((g) => [String(g._id), g.kind]))
+            setGroupCount(allGroups.length || (DashboardData.groups?.userRecentGroups ?? []).length)
 
             setGroupList((DashboardData.groups?.userRecentGroups || []).map((group: any)=>({
                   id: group.groupId,
                   name: group.name,
                   emoji: '',
-                  kind: group.kind ?? 'other',
+                  kind: group.kind ?? kindById.get(String(group.groupId)) ?? 'other',
                   memberIds: group.memberIds,
                   totalSpent: 0,
                   yourBalance: group.balance,
@@ -93,18 +101,25 @@ export function Dashboard() {
                .filter((b) => b.amount !== 0)
             // Group members you have no balance with aren't in the debts lists
             // above; resolve their real names so the expense modal can use them.
-            if (groupsRes.ok) {
-               const groupsData = await groupsRes.json().catch(() => null)
-               for (const g of groupsData?.groups ?? []) {
-                  for (const m of g.members ?? []) {
-                     const u = m.userId
-                     const id = String(u?._id ?? u ?? '')
-                     if (id && u?.username) userMap[id] = { id, name: u.username, email: u.email ?? '', avatar: u.avatar ?? null }
-                  }
+            for (const g of allGroups) {
+               for (const m of g.members ?? []) {
+                  const u = m.userId
+                  const id = String(u?._id ?? u ?? '')
+                  if (id && u?.username) userMap[id] = { id, name: u.username, email: u.email ?? '', avatar: u.avatar ?? null }
                }
             }
             setUsers(userMap)
             setDebt(balanceList)
+
+            // The feed and spending card load after first paint; the
+            // balances above are what people come for.
+            loadActivity(allGroups.map((g) => String(g._id)))
+               .then((feed) => {
+                  setActivity(feed.items)
+                  setUsers((prev) => ({ ...feed.users, ...prev }))
+               })
+               .catch((err) => console.log('Failed to load activity: ', err))
+               .finally(() => setActivityLoading(false))
 
          } catch (err) { console.log('Failed to load dashboard: ', err) }
          return;
@@ -136,32 +151,41 @@ export function Dashboard() {
             <div className={styles.content}>
                <Topbar firstName={firstName(me.name)} today={NOW} onAdd={requestAddExpense} />
 
-               <BalanceOverview
-                  balances={debts}
-                  users={users}
-                  groupCount={groups.length}
-                  onSettle={(u) => {
-                     // A settlement belongs to a group, so send the user to a
-                     // shared group where the debt can be recorded properly.
-                     const shared = groups.find((g) => g.memberIds.includes(u.id))
-                     if (shared) navigate(`/groups/${shared.id}`)
-                     else notify(`You don't share a group with ${firstName(u.name)} yet.`)
-                  }}
-                  onRemind={async (u) => { const r = await sendReminder(u.id, firstName(u.name)); notify(r.message, r.ok ? 'success' : 'error') }}
-               />
+               <div className={styles.overview}>
+                  <BalanceHero balances={debts} groupCount={groupCount} />
+                  <SpendingCard items={activity} groups={groups} me={me.id} now={NOW} loading={activityLoading} />
+               </div>
 
-               <Section title="Groups" action={<SectionLink href="/groups">All groups</SectionLink>}>
-                  <GroupsGrid groups={groups} users={users} now={NOW} />
+               <Section title="Who owes what">
+                  <BalanceColumns
+                     balances={debts}
+                     users={users}
+                     onSettle={(u) => {
+                        // A settlement belongs to a group, so send the user to a
+                        // shared group where the debt can be recorded properly.
+                        const shared = groups.find((g) => g.memberIds.includes(u.id))
+                        if (shared) navigate(`/groups/${shared.id}`)
+                        else notify(`You don't share a group with ${firstName(u.name)} yet.`)
+                     }}
+                     onRemind={async (u) => { const r = await sendReminder(u.id, firstName(u.name)); notify(r.message, r.ok ? 'success' : 'error') }}
+                  />
                </Section>
 
-               {/* <Section title="Recent activity" action={<SectionLink>View all</SectionLink>}>
-                  <RecentActivity items={groups.length > 0 ? activity.slice(0, ACTIVITY_PREVIEW) : []}
-                     users={users}
-                     groups={groups}
-                     me={me.id}
-                     now={NOW}
-                  />
-               </Section> */}
+               <div className={styles.split}>
+                  <Section title="Recent activity">
+                     <RecentActivity
+                        items={activity.slice(0, 7)}
+                        users={users}
+                        groups={groups}
+                        me={me.id}
+                        now={NOW}
+                        loading={activityLoading}
+                     />
+                  </Section>
+                  <Section title="Groups" action={<SectionLink href="/groups">All groups</SectionLink>}>
+                     <GroupsList groups={groups} users={users} items={activity} now={NOW} />
+                  </Section>
+               </div>
             </div>
          </main>
 
@@ -171,7 +195,7 @@ export function Dashboard() {
                open={adding}
                onClose={closeModal}
                onSave={(expense, group) => {
-                  // setActivity((prev) => [expense, ...prev])
+                  setActivity((prev) => [{ ...expense, category: inferCategory(expense.title, expense.category) }, ...prev])
                   setAdding(false)
                   notify(`Added “${expense.title}” to ${group.name}`, 'success')
                }}
