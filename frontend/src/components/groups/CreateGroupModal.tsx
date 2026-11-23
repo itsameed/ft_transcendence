@@ -1,7 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { X } from 'lucide-react'
 import type { Group, GroupKind, User } from '../../types'
 import { GROUP_KINDS, groupKindLabel, iconForKind } from '../../lib/GroupKinds'
+import { useDialog } from '../../lib/a11y'
 import { Avatar } from '../ui/Avatar'
 import { Button } from '../ui/Button'
 import styles from './CreateGroupModal.module.css'
@@ -31,12 +32,8 @@ export function CreateGroupModal({ open, friends, onClose, onCreated }: Props) {
     setSaving(false)
   }, [open ])
 
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  const dialogRef = useDialog(open, onClose)
+  const nameRef = useRef<HTMLInputElement>(null)
 
   if (!open) return null
 
@@ -46,7 +43,11 @@ export function CreateGroupModal({ open, friends, onClose, onCreated }: Props) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
-    if (!name.trim()) { setError('Give your group a name.'); return }
+    if (!name.trim()) {
+      setError('Give your group a name, e.g. “Lisbon trip”.')
+      nameRef.current?.focus()
+      return
+    }
     setSaving(true)
     try {
       const res = await fetch('/api/groups', {
@@ -76,30 +77,59 @@ export function CreateGroupModal({ open, friends, onClose, onCreated }: Props) {
     }
   }
 
+  // Arrow keys move through the category radios; only the checked one is a Tab stop.
+  function onKindKey(event: KeyboardEvent<HTMLDivElement>) {
+    const delta = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 0
+    if (!delta) return
+    event.preventDefault()
+    const index = (GROUP_KINDS.indexOf(kind) + delta + GROUP_KINDS.length) % GROUP_KINDS.length
+    setKind(GROUP_KINDS[index])
+    event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]')[index]?.focus()
+  }
+
   return (
     <div className={styles.backdrop} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="create-group-title">
+      <div ref={dialogRef} className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="create-group-title">
         <header className={styles.header}>
           <h2 id="create-group-title">New group</h2>
           <button type="button" className={styles.close} onClick={onClose} aria-label="Close">
-            <X size={18} />
+            <X size={18} aria-hidden />
           </button>
         </header>
 
-        <form className={styles.body} onSubmit={submit}>
+        <form className={styles.body} onSubmit={submit} noValidate>
           <label className={styles.field}>
             <span>Group name</span>
-            <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Lisbon trip" required maxLength={60} />
+            <input
+              ref={nameRef}
+              data-autofocus
+              name="group-name"
+              autoComplete="off"
+              value={name}
+              onChange={(e) => { setName(e.target.value); if (error) setError('') }}
+              placeholder="e.g. Lisbon trip…"
+              required
+              maxLength={60}
+              aria-invalid={error && !name.trim() ? true : undefined}
+              aria-describedby={error ? 'create-group-error' : undefined}
+            />
           </label>
 
           <label className={styles.field}>
             <span>Description <em>(optional)</em></span>
-            <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What is this group for?" maxLength={140} />
+            <input
+              name="group-description"
+              autoComplete="off"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g. Rent and bills for the flat…"
+              maxLength={140}
+            />
           </label>
 
           <fieldset className={styles.friends}>
             <legend>Category</legend>
-            <div className={styles.kindGrid} role="radiogroup" aria-label="Group category">
+            <div className={styles.kindGrid} role="radiogroup" aria-label="Group category" onKeyDown={onKindKey}>
               {GROUP_KINDS.map((k) => {
                 const Icon = iconForKind(k)
                 return (
@@ -108,6 +138,7 @@ export function CreateGroupModal({ open, friends, onClose, onCreated }: Props) {
                     type="button"
                     role="radio"
                     aria-checked={kind === k}
+                    tabIndex={kind === k ? 0 : -1}
                     className={`${styles.kindOption} ${kind === k ? styles.kindOn : ''}`}
                     onClick={() => setKind(k)}
                   >
@@ -140,10 +171,10 @@ export function CreateGroupModal({ open, friends, onClose, onCreated }: Props) {
           </fieldset>
 
           <div className={styles.footer}>
-            <span className={styles.error} role="alert">{error}</span>
+            <span id="create-group-error" className={styles.error} role="alert">{error}</span>
             <span className={styles.footerActions}>
               <Button type="button" onClick={onClose}>Cancel</Button>
-              <Button type="submit" variant="primary" disabled={saving || !name.trim()}>{saving ? 'Creating…' : 'Create group'}</Button>
+              <Button type="submit" variant="primary" disabled={saving} aria-busy={saving}>{saving ? 'Creating…' : 'Create group'}</Button>
             </span>
           </div>
         </form>
