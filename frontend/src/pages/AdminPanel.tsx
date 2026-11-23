@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Button } from '../components/ui/Button'
 import { Section } from '../components/ui/Section'
+import { useConfirm } from '../components/ui/ConfirmDialog'
 import { Toast } from '../components/ui/Toast'
 import type { User } from '../types'
 import styles from './AdminPanel.module.css'
@@ -53,6 +54,7 @@ export function AdminPanelPage() {
   const [groups, setGroups] = useState<AdminGroup[]>([])
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [confirm, confirmDialog] = useConfirm()
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null)
 
   useEffect(() => {
@@ -109,7 +111,12 @@ export function AdminPanelPage() {
   const handleStatusChange = async (userId: string, targetStatus: 'active' | 'suspended') => {
     if (targetStatus === 'suspended') {
       const name = users.find((user) => user._id === userId)?.username ?? 'this user'
-      if (!window.confirm(`Suspend ${name}? They won't be able to use Splitify until you reactivate them.`)) return
+      const ok = await confirm({
+        title: `Suspend ${name}?`,
+        description: 'They won’t be able to use Splitify until you reactivate them. Their data is kept.',
+        confirmLabel: 'Suspend user',
+      })
+      if (!ok) return
     }
     setBusyId(userId)
     try {
@@ -271,6 +278,7 @@ export function AdminPanelPage() {
           </div>
         </div>
       </main>
+      {confirmDialog}
       <Toast
         message={toast?.message ?? null}
         tone={toast?.tone ?? 'success'}
