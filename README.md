@@ -205,7 +205,7 @@ The following list describes the main features represented in the current projec
 
 ## Modules
 
-The selected modules and their point values are listed below. The total is **21 points**.
+The selected modules and their point values are listed below. The total is **23 points**.
 
 | Module | Type | Points | Implementation | Main contributor(s) |
 |---|---|---:|---|---|
@@ -221,16 +221,16 @@ The selected modules and their point values are listed below. The total is **21 
 | LLM interface | Major | 2 | Integration with the Groq chat-completions API, streamed model output, cancellation handling, and SSE events for tokens, sources, completion, and errors. | `moelgham` |
 | Advanced chat | Minor | 1 | Persistent group conversations and messages, Socket.IO user/conversation rooms, authenticated connections, and real-time message delivery. | `mohel-kh`, `zdidah` |
 | Two-Factor Authentication (2FA) | Minor | 1 | TOTP (RFC 6238) via authenticator apps, enrolled by QR code. Secrets are AES-256-GCM encrypted at rest; ten single-use bcrypt-hashed recovery codes; ±1 time-step drift window with replay protection; a 5-minute, 5-attempt login challenge that grants no session until passed; session regeneration after success; strict rate limiting; applies to password and Google sign-ins. | `zdidah` |
-| Accessibility (WCAG 2.1 AA) | Minor | 1 | Keyboard navigation (skip link, focus trapping and restoration in every dialog, Escape to close, arrow-key pickers, `N` shortcut exposed with `aria-keyshortcuts`), screen reader support (`lang`, per-route titles, one `h1` per page, labelled controls, `aria-live`/`role="alert"` error announcements, `aria-pressed` toggles, decorative icons hidden), raised text contrast, visible focus ring, inline field errors, `autocomplete` hints, and `prefers-reduced-motion` support. | `zdidah` |
+| Accessibility (WCAG 2.1 AA) | Major | 2 | Keyboard navigation (skip link, focus trapping and restoration in every dialog, Escape to close, arrow-key pickers, `N` shortcut exposed with `aria-keyshortcuts`), screen reader support (`lang`, per-route titles, one `h1` per page, labelled controls, `aria-live`/`role="alert"` error announcements, `aria-pressed` toggles, decorative icons hidden), raised text contrast, visible focus ring, inline field errors, `autocomplete` hints, and `prefers-reduced-motion` support. | `zdidah` |
 | Secure Avatar Image Processing | Minor (Custom) | 1 | Image upload validation and processing using Multer and Sharp, including resizing, orientation correction, JPEG conversion, metadata removal, file-size restrictions, and rate limiting. | `moel-aid`, `zdidah` |
-| **Total** | **7 Major + 7 Minor (including 1 Custom Minor)** | **21** | | |
+| **Total** | **8 Major + 6 Minor (including 1 Custom Minor)** | **23** | | |
 
 ### Module Point Calculation
 
-- Major modules: 7 × 2 = 14 points.
+- Major modules: 8 × 2 = 16 points.
 - Standard Minor modules: 6 × 1 = 6 points.
 - Custom Minor module: 1 × 1 = 1 point.
-- **Total: 14 + 6 + 1 = 21 points.**
+- **Total: 16 + 6 + 1 = 23 points.**
 
 ## Installation and Instructions
 
