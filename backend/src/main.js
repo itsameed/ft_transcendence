@@ -38,8 +38,7 @@ app.get('/health', (req, res) => {
 app.get('/metrics', metricsEndpoint);
 app.use(metricsMiddleware);
 
-const FRONTEND_URL =
-    process.env.FRONTEND_URL || 'http://localhost:5175';
+const { FRONTEND_URL } = require('./config/urls');
 
 const PORT = process.env.PORT || 6664;
 
