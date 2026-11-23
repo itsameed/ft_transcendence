@@ -5,7 +5,7 @@ function Auth(req, res, next) {
     // console.log(currentTime);
     // // console.log("ggg");
     // console.log(req.session.userId);
-    if (!req.session?.userId)
+    if (!req.session.userId)
     {
         console.log("user has no session");
         console.log("new user");
