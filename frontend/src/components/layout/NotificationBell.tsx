@@ -49,7 +49,7 @@ export function NotificationBell({ userId }: { userId: string }) {
       onClick={() => setUnread(0)}
     >
       <span className={styles.bellWrap}>
-        <Bell size={18} strokeWidth={1.75} />
+        <Bell size={18} strokeWidth={1.75} aria-hidden />
         {unread > 0 && <span className={styles.badge}>{unread > 99 ? '99+' : unread}</span>}
       </span>
       Notifications

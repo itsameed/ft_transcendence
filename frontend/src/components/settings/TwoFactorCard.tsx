@@ -124,7 +124,7 @@ export function TwoFactorCard({ email }: { email: string }) {
     <Card className={styles.card}>
       <div className={styles.summary}>
         <span className={styles.icon} data-on={status.enabled || undefined} aria-hidden>
-          {status.enabled ? <ShieldCheck size={20} /> : <ShieldOff size={20} />}
+          {status.enabled ? <ShieldCheck size={20} aria-hidden /> : <ShieldOff size={20} aria-hidden />}
         </span>
         <div className={styles.summaryText}>
           <strong>
@@ -206,7 +206,7 @@ export function TwoFactorCard({ email }: { email: string }) {
             <Button
               type="button"
               size="sm"
-              icon={<Download size={14} />}
+              icon={<Download size={14} aria-hidden />}
               onClick={() => download(view.codes, email)}
             >
               Download
@@ -292,7 +292,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
     <Button
       type="button"
       size="sm"
-      icon={copied ? <Check size={14} /> : <Copy size={14} />}
+      icon={copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(text)

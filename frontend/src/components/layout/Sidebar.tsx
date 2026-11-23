@@ -29,7 +29,7 @@ export function Logo() {
   return (
     <span className={styles.logo}>
       <span className={styles.mark} aria-hidden>
-        <Split size={15} strokeWidth={2.2} />
+        <Split size={15} strokeWidth={2.2} aria-hidden />
       </span>
       Splitify
     </span>
