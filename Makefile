@@ -1,6 +1,6 @@
 COMPOSE := docker compose
 
-.PHONY: help up start down reset restart build rebuild pull logs ps config backup restore
+.PHONY: help up start dev down reset restart build rebuild pull logs ps config backup restore seed seed-advanced seed-clean
 
 help:
 	@echo "Available targets:"
@@ -17,6 +17,9 @@ help:
 	@echo "  make config                Validate the Compose configuration"
 	@echo "  make backup                Create a database backup"
 	@echo "  make restore FILE=<path>   Restore a database backup"
+	@echo "  make seed                  Wipe the database and load the basic seed"
+	@echo "  make seed-advanced         Wipe the database and load the advanced seed"
+	@echo "  make seed-clean            Wipe the database without seeding"
 
 start:
 	$(COMPOSE) up -d --build
@@ -65,3 +68,16 @@ backup:
 restore:
 	@test -n "$(FILE)" || (echo "Usage: make restore FILE=database-backups/<backup-file>" && exit 1)
 	./scripts/restore-db.sh "$(FILE)"
+
+# Seeds run inside the backend container so they use its MONGO_URL.
+# The scripts are copied in first, so a stale image still gets the latest seed.
+SEED_RUN = $(COMPOSE) cp backend/scripts/. backend:/app/scripts/ && $(COMPOSE) exec backend node
+
+seed:
+	$(SEED_RUN) scripts/seed.js
+
+seed-advanced:
+	$(SEED_RUN) scripts/seed-advanced.js
+
+seed-clean:
+	$(SEED_RUN) scripts/seed.js --clean
