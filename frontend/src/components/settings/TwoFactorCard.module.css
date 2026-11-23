@@ -1,0 +1,228 @@
+.card {
+  display: grid;
+  gap: 18px;
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+
+.icon[data-on] {
+  background: var(--accent-soft);
+  color: var(--owed);
+}
+
+.summaryText {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+
+.summaryText strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.summaryText > span {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.pill[data-on] {
+  background: var(--accent-soft);
+  color: var(--owed);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.danger:hover:not(:disabled),
+.danger[type='submit'] {
+  border-color: var(--owe);
+  color: var(--owe);
+}
+
+.panel {
+  display: grid;
+  gap: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.panelTitle {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.steps {
+  display: grid;
+  gap: 20px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.steps li::marker {
+  color: var(--text-3);
+  font-weight: 600;
+}
+
+.steps strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.qrRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  margin-top: 12px;
+}
+
+.qr {
+  flex-shrink: 0;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  /* QR codes need a light quiet zone to scan, even in dark mode. */
+  background: #fff;
+  image-rendering: pixelated;
+}
+
+.manual {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  min-width: 0;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.secret {
+  max-width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13.5px;
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  max-width: 360px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.field input {
+  width: 100%;
+  min-height: var(--field-height);
+  padding: 9px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.field input.codeInput {
+  max-width: 200px;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+}
+
+.codes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, max-content));
+  gap: 8px 28px;
+  margin: 0;
+  padding: 16px 20px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  list-style: none;
+}
+
+.codes code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14.5px;
+  letter-spacing: 0.06em;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.footerButtons {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.error,
+.notice {
+  min-width: 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.error {
+  color: var(--owe);
+}
+
+.notice {
+  color: var(--owed);
+}
+
+@media (max-width: 520px) {
+  .summary {
+    flex-wrap: wrap;
+  }
+  .codes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

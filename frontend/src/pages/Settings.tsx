@@ -6,6 +6,7 @@ import { Sidebar } from '../components/layout/Sidebar'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
+import { TwoFactorCard } from '../components/settings/TwoFactorCard'
 import { logout } from '../lib/auth'
 import { useTheme } from '../lib/useTheme'
 import type { User } from '../types'
@@ -153,6 +154,14 @@ export function SettingsPage() {
                 </div>
               </form>
             </Card>
+          </section>
+
+          <section className={styles.section} aria-labelledby="twofa-heading">
+            <div className={styles.sectionHeading}>
+              <h2 id="twofa-heading">Two-step verification</h2>
+              <p>Protect your account even if someone learns your password.</p>
+            </div>
+            <TwoFactorCard email={me.email} />
           </section>
 
           <section className={styles.section} aria-labelledby="session-heading">
