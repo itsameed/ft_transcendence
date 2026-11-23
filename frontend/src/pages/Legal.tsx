@@ -43,7 +43,7 @@ export function LegalLayout({ title, intro, summary, sections, other }: Props) {
           <Logo />
         </Link>
         <Link to="/" className={styles.back}>
-          <ArrowLeft size={16} /> Back to home
+          <ArrowLeft size={16} aria-hidden /> Back to home
         </Link>
       </header>
 

@@ -17,13 +17,13 @@ export function LegalPlaceholderPage({ title }: { title: string }) {
           onClick={toggle}
           aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
+          {dark ? <Sun size={18} strokeWidth={1.75} aria-hidden /> : <Moon size={18} strokeWidth={1.75} aria-hidden />}
         </button>
       </header>
       <main className={styles.content}>
         <article className={styles.card}>
           <span className={styles.brandMark} aria-hidden="true">
-            <Split size={18} strokeWidth={2.2} />
+            <Split size={18} strokeWidth={2.2} aria-hidden />
           </span>
           <h1 className={styles.title}>{title}</h1>
           <p className={styles.subtitle}>This document has not been published yet.</p>

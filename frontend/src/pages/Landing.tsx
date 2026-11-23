@@ -225,7 +225,7 @@ function SceneSettle({ run }: { run: boolean }) {
           <span className={styles.rowBtn}>Settle up</span>
         </div>
         <div className={styles.after}>
-          <span className={styles.paidCheck}><Check size={14} strokeWidth={2.5} /></span>
+          <span className={styles.paidCheck}><Check size={14} strokeWidth={2.5} aria-hidden /></span>
           <span>Paid salma</span>
           <b className={`${styles.settleAmount} ${styles.struck}`}>160 MAD</b>
         </div>
@@ -312,7 +312,7 @@ function HowDemo() {
                 onClick={() => setUserPaused((p) => !p)}
                 aria-label={userPaused ? 'Play demo' : 'Pause demo'}
               >
-                {userPaused ? <Play size={13} /> : <Pause size={13} />}
+                {userPaused ? <Play size={13} aria-hidden /> : <Pause size={13} aria-hidden />}
               </button>
             )}
           </div>
@@ -351,7 +351,7 @@ export function Landing() {
             aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
             aria-pressed={dark}
           >
-            {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
+            {dark ? <Sun size={18} strokeWidth={1.75} aria-hidden /> : <Moon size={18} strokeWidth={1.75} aria-hidden />}
           </button>
           <div className={styles.authLinks}>
             {signedIn ? (
@@ -398,14 +398,14 @@ export function Landing() {
             <div className={styles.ctaGroup}>
               {signedIn ? (
                 <Link to="/dashboard" className={styles.linkButton}>
-                  <Button variant="primary" size="md" icon={<ArrowRight size={18} />} className={styles.primaryCta}>
+                  <Button variant="primary" size="md" icon={<ArrowRight size={18} aria-hidden />} className={styles.primaryCta}>
                     Go to dashboard
                   </Button>
                 </Link>
               ) : signedOut ? (
                 <>
                   <Link to="/signup" className={styles.linkButton}>
-                    <Button variant="primary" size="md" icon={<ArrowRight size={18} />} className={styles.primaryCta}>
+                    <Button variant="primary" size="md" icon={<ArrowRight size={18} aria-hidden />} className={styles.primaryCta}>
                       Start splitting for free
                     </Button>
                   </Link>
@@ -437,7 +437,7 @@ export function Landing() {
             </div>
             <div className={`${styles.receipt} ${styles.receiptFront}`} aria-hidden="true">
               <div className={styles.receiptTop}>
-                <span className={styles.receiptIcon}><Split size={17} /></span>
+                <span className={styles.receiptIcon}><Split size={17} aria-hidden /></span>
                 <span>Chefchaouen trip</span>
                 <span className={styles.receiptPeople}>4 people</span>
               </div>
@@ -454,13 +454,13 @@ export function Landing() {
               </div>
               <div className={styles.receiptBottom}>
                 <span>Your balance</span>
-                <strong><ArrowDownLeft size={15} /> <CountUp to={300} delay={1500} duration={900} /> MAD</strong>
+                <strong><ArrowDownLeft size={15} aria-hidden /> <CountUp to={300} delay={1500} duration={900} /> MAD</strong>
               </div>
             </div>
             <div className={styles.settledSlip} aria-hidden="true">
-              <span className={styles.settledCheck}><Check size={13} strokeWidth={2.5} /></span>
+              <span className={styles.settledCheck}><Check size={13} strokeWidth={2.5} aria-hidden /></span>
               <span><strong>All square</strong><small>Friday football</small></span>
-              <ArrowUpRight size={16} />
+              <ArrowUpRight size={16} aria-hidden />
             </div>
           </div>
         </section>
@@ -471,7 +471,7 @@ export function Landing() {
             {USE_CASES.map(({ icon: Icon, tint, title, text, math, each }, i) => (
               <li key={title} className={styles.useCase} style={delayStyle(i * 70)}>
                 <span className={`${styles.useCaseIcon} tint`} data-tint={tint} aria-hidden="true">
-                  <Icon size={19} strokeWidth={1.8} />
+                  <Icon size={19} strokeWidth={1.8} aria-hidden />
                 </span>
                 <strong>{title}</strong>
                 <p>{text}</p>
@@ -494,13 +494,13 @@ export function Landing() {
               <div className={styles.featureVisual} aria-hidden="true">
                 <div className={styles.flow}>
                   <span className={styles.flowBefore}>5 payments</span>
-                  <ArrowRight size={16} className={styles.flowArrow} />
+                  <ArrowRight size={16} className={styles.flowArrow} aria-hidden />
                   <span className={styles.flowAfter}>2 payments</span>
                 </div>
               </div>
               <div className={styles.featureText}>
                 <div className={styles.featureHead}>
-                  <span className={styles.featureIcon}><Waypoints size={20} strokeWidth={1.8} /></span>
+                  <span className={styles.featureIcon}><Waypoints size={20} strokeWidth={1.8} aria-hidden /></span>
                   <h3 className={styles.featureName}>Fewer payments to settle</h3>
                 </div>
                 <p className={styles.featureDesc}>
@@ -522,7 +522,7 @@ export function Landing() {
               </div>
               <div className={styles.featureText}>
                 <div className={styles.featureHead}>
-                  <span className={styles.featureIcon}><MessagesSquare size={20} strokeWidth={1.8} /></span>
+                  <span className={styles.featureIcon}><MessagesSquare size={20} strokeWidth={1.8} aria-hidden /></span>
                   <h3 className={styles.featureName}>Chat where the money is</h3>
                 </div>
                 <p className={styles.featureDesc}>
@@ -544,7 +544,7 @@ export function Landing() {
               </div>
               <div className={styles.featureText}>
                 <div className={styles.featureHead}>
-                  <span className={styles.featureIcon}><Bot size={20} strokeWidth={1.8} /></span>
+                  <span className={styles.featureIcon}><Bot size={20} strokeWidth={1.8} aria-hidden /></span>
                   <h3 className={styles.featureName}>Ask Splitify AI</h3>
                 </div>
                 <p className={styles.featureDesc}>
@@ -568,7 +568,7 @@ export function Landing() {
               </div>
               <div className={styles.featureText}>
                 <div className={styles.featureHead}>
-                  <span className={styles.featureIcon}><Split size={20} strokeWidth={1.8} /></span>
+                  <span className={styles.featureIcon}><Split size={20} strokeWidth={1.8} aria-hidden /></span>
                   <h3 className={styles.featureName}>Split it your way</h3>
                 </div>
                 <p className={styles.featureDesc}>
@@ -614,13 +614,13 @@ export function Landing() {
           </div>
           {signedIn ? (
             <Link to="/dashboard" className={styles.linkButton}>
-              <Button variant="secondary" size="md" icon={<ArrowRight size={18} />} className={styles.ctaButton}>
+              <Button variant="secondary" size="md" icon={<ArrowRight size={18} aria-hidden />} className={styles.ctaButton}>
                 Go to dashboard
               </Button>
             </Link>
           ) : signedOut ? (
             <Link to="/signup" className={styles.linkButton}>
-              <Button variant="secondary" size="md" icon={<ArrowRight size={18} />} className={styles.ctaButton}>
+              <Button variant="secondary" size="md" icon={<ArrowRight size={18} aria-hidden />} className={styles.ctaButton}>
                 Get started for free
               </Button>
             </Link>
