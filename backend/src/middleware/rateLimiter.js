@@ -22,4 +22,16 @@ const loginLimiter = rateLimit({
     },
 });
 
-module.exports = { loginLimiter, generalLimiter };
+// A 6-digit code has a million values; keep guessing far out of reach.
+const twoFactorLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    skipSuccessfulRequests: true,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        message: 'Too many verification attempts. Try again in 15 minutes.'
+    },
+});
+
+module.exports = { loginLimiter, generalLimiter, twoFactorLimiter };

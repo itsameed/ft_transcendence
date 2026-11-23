@@ -99,6 +99,27 @@ async function matchRecoveryCode(code, hashes) {
     return -1;
 }
 
+/**
+ * Checks a second factor against a user loaded with SECRET_FIELDS, and
+ * records its use on the document (caller saves). Pass either a 6-digit
+ * `code` or a `recoveryCode`. Returns 'totp', 'recovery' or null.
+ */
+async function verifySecondFactor(user, { code, recoveryCode } = {}) {
+    if (!user?.twoFactorEnabled || !user.twoFactorSecret) return null;
+
+    if (recoveryCode) {
+        const index = await matchRecoveryCode(recoveryCode, user.twoFactorRecoveryCodes);
+        if (index === -1) return null;
+        user.twoFactorRecoveryCodes.splice(index, 1); // one use each
+        return 'recovery';
+    }
+
+    const step = verifyCode(decryptSecret(user.twoFactorSecret), code, user.twoFactorLastStep);
+    if (step === null) return null;
+    user.twoFactorLastStep = step;
+    return 'totp';
+}
+
 const SECRET_FIELDS = '+twoFactorSecret +twoFactorPendingSecret +twoFactorLastStep +twoFactorRecoveryCodes';
 
 module.exports = {
@@ -111,4 +132,5 @@ module.exports = {
     verifyCode,
     generateRecoveryCodes,
     matchRecoveryCode,
+    verifySecondFactor,
 };
