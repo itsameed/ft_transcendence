@@ -111,6 +111,7 @@ const TITLES: [RegExp, string][] = [
   [/^\/$/, 'Split expenses with friends'],
   [/^\/login/, 'Sign in'],
   [/^\/signup/, 'Create account'],
+  [/^\/verify-email/, 'Verify your email'],
   [/^\/dashboard/, 'Dashboard'],
   [/^\/groups\/[^/]+/, 'Group'],
   [/^\/groups/, 'Groups & Friends'],

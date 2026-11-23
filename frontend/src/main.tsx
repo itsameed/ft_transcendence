@@ -4,6 +4,7 @@ import '@fontsource-variable/inter/index.css'
 import './styles/global.css'
 import { Login } from './pages/Login'
 import { Signup } from './pages/Signup'
+import { VerifyEmail } from './pages/VerifyEmail'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { ChatPage } from './pages/ChatPageV2'
 import { Dashboard } from './pages/Dashboard'
@@ -30,6 +31,7 @@ export function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<GuestOnlyRoute><Login /></GuestOnlyRoute>} />
             <Route path="/signup" element={<GuestOnlyRoute><Signup /></GuestOnlyRoute>} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/groups" element={<GroupPage />} />
             <Route path="/chat" element={<ChatPage />} />
