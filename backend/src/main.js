@@ -97,8 +97,11 @@ const adminRoutes = require('./routes/adminRoutes');
 const searchUser = require('./routes/searchUser.js');
 const serviceStatus = require('./routes/serviceStatus.js');
 const twoFactorRouter = require('./routes/twoFactor.js');
+const mailVerify = require('./routes/verifyMail.js');
+
 
 app.use('/', googleAuth);
+app.use('/api/verify', mailVerify);
 app.use('/', dashboardRouter);
 app.use('/auth/login', loginPageRouter);
 app.use('/auth/signup', signupPageRouter);

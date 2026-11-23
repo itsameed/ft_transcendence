@@ -5,6 +5,7 @@ const printLogsDate = require('./printLogs.js');
 const { saveAvatar } = require('../config/sharp');
 const { resolveDefaultAvatar, pickDefaultAvatar } = require('../config/avatars');
 const { MAX_USERNAME_LENGTH } = require('../config/userLimits');
+const transporter = require('../config/mailer');
 
 async function loadNewUser(req, res, next) {
     let { username, email, password, bio, gender, avatar } = req.body;
@@ -54,6 +55,25 @@ async function loadNewUser(req, res, next) {
             verificationTokenExpires,
         });
 
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const verifyUrl = `${frontendUrl}/verify?token=${verificationToken}`;
+        console.error("here is the new user mail", newUser.email);
+        try {
+            await transporter.sendMail({
+                from: `"Splitify" <${process.env.GMAIL_USER}>`,
+                to: newUser.email,
+                subject: 'Verify Your Email Address',
+                html: `
+                    <h2>Welcome, ${newUser.username}!</h2>
+                    <p>Please verify your email address by clicking the link below:</p>
+                    <a href="${verifyUrl}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
+                    <p>This link will expire in 24 hours.</p>
+                `
+            });
+            console.log(`✅ Verification email sent to ${newUser.email}`);
+        } catch (emailError) {
+            console.error('❌ Failed to send verification email:', emailError);
+        }
         req.session.regenerate((sessionError) => {
             if (sessionError) return next(sessionError);
 
