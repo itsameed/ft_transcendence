@@ -24,7 +24,7 @@ export function GroupsList({ groups, users, items, now }: Props) {
     return (
       <Card padded={false}>
         <Link to="/groups" className={styles.emptyCta}>
-          <span className={styles.plus} aria-hidden><Plus size={18} /></span>
+          <span className={styles.plus} aria-hidden><Plus size={18} aria-hidden /></span>
           <span>
             <strong>Create your first group</strong>
             <small>A trip, a flat, a Friday match…</small>
@@ -45,7 +45,7 @@ export function GroupsList({ groups, users, items, now }: Props) {
             <li key={g.id}>
               <Link to={`/groups/${g.id}`} className={styles.row}>
                 <span className={`${styles.icon} tint`} data-tint={kindTint(g.kind)} aria-hidden>
-                  <Icon size={18} strokeWidth={1.7} />
+                  <Icon size={18} strokeWidth={1.7} aria-hidden />
                 </span>
                 <span className={styles.main}>
                   <strong title={g.name}>{g.name}</strong>

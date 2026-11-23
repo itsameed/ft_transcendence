@@ -25,7 +25,7 @@ export function GroupsGrid({ groups, users = {}, onCreate }: { groups: Group[]; 
                <Link key={g.id} to={`/groups/${g.id}`} className={styles.tile} data-tint={kindTint(g.kind)}>
                   <span className={styles.tileTop}>
                      <span className={`${styles.emoji} tint`} data-tint={kindTint(g.kind)} aria-hidden>
-                        <Icon size={22} strokeWidth={1.7} />
+                        <Icon size={22} strokeWidth={1.7} aria-hidden />
                      </span>
                      <span className={styles.stack} aria-hidden>
                         {g.memberIds.slice(0, 4).map((id) => (
@@ -48,7 +48,7 @@ export function GroupsGrid({ groups, users = {}, onCreate }: { groups: Group[]; 
          })}
          {onCreate && (
             <button type="button" className={styles.createTile} onClick={onCreate}>
-               <span className={styles.createIcon} aria-hidden><Plus size={18} /></span>
+               <span className={styles.createIcon} aria-hidden><Plus size={18} aria-hidden /></span>
                <strong>Create new group</strong>
                <span>Trip, home, event…</span>
             </button>

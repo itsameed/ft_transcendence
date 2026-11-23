@@ -85,7 +85,7 @@ export function TwoFactorStep({ method, onSuccess, onRestart }: Props) {
     <>
       <div className={loginStyles.header}>
         <span className={styles.badge} aria-hidden>
-          <ShieldCheck size={20} />
+          <ShieldCheck size={20} aria-hidden />
         </span>
         <h1 className={loginStyles.title}>Two-step verification</h1>
         <p className={loginStyles.subtitle}>
