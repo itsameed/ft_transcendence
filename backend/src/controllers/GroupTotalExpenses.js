@@ -9,13 +9,10 @@ async function GroupTotalExpenses (req, res, next) {
     
     const currentGroup = await GroupSchema.findById(groupId).populate("members.userId");
     const currentUser = await UserSchema.findById(userId);
-    console.log('here is the current user :', currentUser.username);
-    console.log("user id is : ", currentUser._id);
     const Expenses = await ExpenseSchema.find({ group: groupId })
     .populate("participants")
     .populate("customSplit.user")
     .populate("payer");
-    console.log('heres the expenses length :', Expenses.length);
 
 
      const membersBalances = [];

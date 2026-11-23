@@ -7,6 +7,7 @@ import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
+import { useConfirm } from '../components/ui/ConfirmDialog'
 import { Toast } from '../components/ui/Toast'
 import { money } from '../lib/format'
 import type { Group, User } from '../types'
@@ -44,6 +45,7 @@ export function GroupPage() {
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'info' | 'error' } | null>(null)
   const [creating, setCreating] = useState(false)
   const [menuFor, setMenuFor] = useState<string | null>(null)
+  const [confirm, confirmDialog] = useConfirm()
   const [friendBalances, setFriendBalances] = useState<Record<string, number>>({})
   const [groupBalances, setGroupBalances] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
@@ -179,7 +181,13 @@ export function GroupPage() {
     return res.ok
   }
   const removeFriend = async (f: User) => {
-    if (!window.confirm(`Remove ${f.name} from your friends? You can add them again later.`)) return
+    const ok = await confirm({
+      title: `Remove ${f.name} from your friends?`,
+      description: 'They’ll no longer appear in your friends list. You can send them a new friend request any time.',
+      confirmLabel: 'Remove friend',
+      cancelLabel: 'Keep friend',
+    })
+    if (!ok) return
     if (await act('/api/friends', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ friendId: f.id }) }, `Removed ${f.name}`))
       setFriends((p) => p.filter((x) => x.id !== f.id))
   }
@@ -342,6 +350,7 @@ export function GroupPage() {
           navigate(`/groups/${group.id}`)
         }}
       />
+      {confirmDialog}
       <Toast
         message={toast?.message ?? null}
         tone={toast?.tone ?? 'success'}

@@ -48,7 +48,7 @@ export function Login() {
         body: JSON.stringify({ email: handler, password }),
       })
       const rawResponse = await response.text()
-let data: { message?: string; requires2fa?: boolean } = {}
+let data: { message?: string; requires2fa?: boolean; code?: string; email?: string } = {}
 
 try {
   data = rawResponse ? JSON.parse(rawResponse) : {}
@@ -59,7 +59,9 @@ try {
   }
 }
 
-if (!response.ok) {
+if (data.code === 'EMAIL_NOT_VERIFIED') {
+  navigate('/verify-email', { state: { email: data.email } })
+} else if (!response.ok) {
   const fallbackMessage =
     response.status === 429
       ? 'Too many login attempts. Please wait 15 minutes and try again.'

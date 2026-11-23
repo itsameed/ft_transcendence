@@ -70,14 +70,15 @@ export function Signup() {
          else if (avatarPayload.id) body.append('avatar', avatarPayload.id)
 
          // XHR rather than fetch so a photo upload can report progress.
-         const response = await uploadWithProgress<{ message?: string }>('/auth/signup', body, {
+         const response = await uploadWithProgress<{ message?: string; email?: string }>('/auth/signup', body, {
             signal: controller.signal,
             onProgress: trackUpload ? setUploadProgress : undefined,
          })
          if (!response.ok) {
             setError(response.data?.message || 'Signup failed')
          } else {
-            navigate('/dashboard')
+            // The account can't sign in until the emailed link is clicked.
+            navigate('/verify-email', { state: { email: response.data?.email ?? email } })
          }
       } catch (err) {
          if (isAbortError(err)) {

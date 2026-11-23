@@ -30,6 +30,16 @@ async function loginAuth(req, res, next) {
             return res.status(403).json({ message: 'Your account is suspended' });
         }
 
+        // The password already matched, so returning the address leaks nothing
+        // and lets the frontend offer to resend the link.
+        if (!user.isVerified) {
+            return res.status(403).json({
+                code: 'EMAIL_NOT_VERIFIED',
+                message: 'Please verify your email before signing in.',
+                email: user.email,
+            });
+        }
+
         // Password was right, but the account wants a code too.
         if (user.twoFactorEnabled) {
             await startChallenge(req, user, 'password');
@@ -50,7 +60,6 @@ async function loginAuth(req, res, next) {
             gender: user.gender,
             role: isAdmin ? 'admin' : (user.role || 'user')
         });
-        // return res.redirect('Dashboard');
     } catch (error) {
         console.error('Error while attempting to log in:', error);
         return res.status(500).json({ message: 'Unable to log in. Please try again.' });

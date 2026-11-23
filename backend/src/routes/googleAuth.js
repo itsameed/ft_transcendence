@@ -2,8 +2,7 @@ const express = require('express');
 const router = express.Router();
 const passport = require('../middleware/googleAuth');
 const { startChallenge } = require('../controllers/loginTwoFactor');
-
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5175';
+const { FRONTEND_URL } = require('../config/urls');
 
 router.get('/auth/google',
     passport.authenticate('google', { scope: ['profile', 'email'] })

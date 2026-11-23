@@ -1,5 +1,4 @@
 const GroupSchema = require("../models/Schemas/Group");
-const ExpenseSchema = require('../models/Schemas/Expenses');
 
 
 function returnGroups(group) {
@@ -15,11 +14,7 @@ async function getGroupsData(req, res, next)
     try {
     const userId = req.session.userId;
     let GroupsInfos = [];
-    console.log(userId);
     const Groups = await GroupSchema.find({'members.userId': userId}).populate('members');
-    console.log("hello");
-    
-    console.log(Groups.length);
     for (let group of Groups) {
         GroupsInfos.push(returnGroups(group));
     }

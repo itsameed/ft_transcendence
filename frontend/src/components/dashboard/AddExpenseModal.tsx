@@ -6,6 +6,7 @@ import { CURRENCY, categoryLabel, firstName, money } from '../../lib/format'
 import { useDialog } from '../../lib/a11y'
 import { Avatar } from '../ui/Avatar'
 import { Button } from '../ui/Button'
+import { useConfirm } from '../ui/ConfirmDialog'
 import styles from './AddExpenseModal.module.css'
 
 type SplitMode = 'equal' | 'exact' | 'percent'
@@ -62,6 +63,7 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
   const [included, setIncluded] = useState<string[]>(groups[0].memberIds)
   const [custom, setCustom] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
+  const [confirm, confirmDialog] = useConfirm()
   const [saveError, setSaveError] = useState('')
   const [errors, setErrors] = useState<{ amount?: string; title?: string; split?: string }>({})
   const amountRef = useRef<HTMLInputElement>(null)
@@ -90,9 +92,17 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
   // Escape, backdrop click and Cancel all come through here, so a half-typed
   // expense is never thrown away without asking.
   const dirty = amount !== '' || title.trim() !== ''
-  function requestClose() {
+  async function requestClose() {
     if (saving) return
-    if (dirty && !window.confirm('Discard this expense? What you entered will be lost.')) return
+    if (dirty) {
+      const discard = await confirm({
+        title: 'Discard this expense?',
+        description: 'The amount and description you entered will be lost.',
+        confirmLabel: 'Discard',
+        cancelLabel: 'Keep editing',
+      })
+      if (!discard) return
+    }
     onClose()
   }
   const dialogRef = useDialog(open, requestClose)
@@ -396,6 +406,7 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
           </footer>
         </form>
       </div>
+      {confirmDialog}
     </div>
   )
 }

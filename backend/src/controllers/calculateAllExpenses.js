@@ -6,7 +6,6 @@ async function calculateAllExpenses(userId) {
     try {
         let totalExpenses = 0;
         const expenses = await ExpenseSchema.find({payer: userId});
-        // console.log("here is the number os expenses this user paid for : ",expenses.length);
         
         for(let expense of expenses) {
             if(expense.splitMethod === 'equal') {

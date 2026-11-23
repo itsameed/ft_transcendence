@@ -17,7 +17,6 @@ function returnOthersShares(expense, username) {
     }
     else {
         for (let participant of expense.customSplit) {
-            console.log("here is the username : ", participant.user.username);
             if (participant.user.username !== username){
                 users.push({
                     OwesYou: participant.user.username,
@@ -30,7 +29,6 @@ function returnOthersShares(expense, username) {
 }
 
 function returnUserDebts(expense, username) {
-    // console.log("username");
     if (expense.splitMethod === 'equal') {
         const DebtAmount = expense.amount / (expense.participants.length);
         for (let participant of expense.participants) {
@@ -66,10 +64,7 @@ async function getGroupExpenses(req, res, next) {
     .populate("participants")
     .populate("customSplit.user")
     .populate("payer");
-    console.log("here is the expenses length : ", Expenses.length);
-    console.log("here is the current user ID: ", userId);
     const user = await UserSchema.findById(userId).select("username");
-    console.log("here is the current group : ", groupId);
 
     if (!user)
         return ExpenseArray;

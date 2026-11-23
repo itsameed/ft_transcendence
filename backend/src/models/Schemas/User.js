@@ -27,6 +27,8 @@ const User = mongoose.model('User', new mongoose.Schema({
     isVerified: { type: Boolean, default: false },
     verificationToken: String,
     verificationTokenExpires: Date,
+    passwordChangeToken: String,
+    passwordChangeTokenExpires: Date,
     // Two-factor auth (TOTP). Secrets are AES-GCM encrypted and, like the
     // recovery-code hashes, never loaded unless a query asks for them with
     // .select('+field'), so they can't leak through whole-document responses.

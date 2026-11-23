@@ -76,7 +76,7 @@ router.post('/chat/group/:groupId/stream', auth, chatlimiter, async function (re
     } 
     catch (error) 
     {
-        console.log('[ai-chat] Error:', error.message);
+        console.error('[ai-chat] Error:', error.message);
 
         if (!res.writableEnded && error.message !== 'Aborted') 
         {

@@ -20,9 +20,13 @@ export function prefersFinePointer() {
  * - moves focus in on open: the `[data-autofocus]` element (or the first
  *   field) on desktop, the dialog itself on touch so no keyboard pops up
  * - keeps Tab / Shift+Tab inside the dialog
- * - Escape calls `onClose` (unless `onEscape` returns false)
+ * - Escape calls `onClose`
  * - puts focus back on whatever opened it once it closes
+ * Dialogs stack: when one opens on top of another (e.g. "Discard this
+ * expense?"), only the topmost one reacts to Escape and Tab.
  */
+const openDialogs: HTMLElement[] = []
+
 export function useDialog<T extends HTMLElement = HTMLDivElement>(
   open: boolean,
   onClose: () => void,
@@ -45,8 +49,10 @@ export function useDialog<T extends HTMLElement = HTMLDivElement>(
     const firstField = dialog.querySelector<HTMLElement>('input:not([disabled]),select:not([disabled]),textarea:not([disabled])')
     const target = prefersFinePointer() ? preferred ?? firstField ?? focusables()[0] ?? dialog : dialog
     target.focus({ preventScroll: true })
+    openDialogs.push(dialog)
 
     function onKeyDown(event: KeyboardEvent) {
+      if (openDialogs[openDialogs.length - 1] !== dialog) return
       if (event.key === 'Escape') {
         event.stopPropagation()
         closeRef.current()
@@ -80,6 +86,8 @@ export function useDialog<T extends HTMLElement = HTMLDivElement>(
     document.addEventListener('keydown', onKeyDown, true)
     return () => {
       document.removeEventListener('keydown', onKeyDown, true)
+      const index = openDialogs.lastIndexOf(dialog)
+      if (index !== -1) openDialogs.splice(index, 1)
       if (opener && document.contains(opener)) opener.focus({ preventScroll: true })
     }
   }, [open])
@@ -111,6 +119,7 @@ const TITLES: [RegExp, string][] = [
   [/^\/$/, 'Split expenses with friends'],
   [/^\/login/, 'Sign in'],
   [/^\/signup/, 'Create account'],
+  [/^\/verify-email/, 'Verify your email'],
   [/^\/dashboard/, 'Dashboard'],
   [/^\/groups\/[^/]+/, 'Group'],
   [/^\/groups/, 'Groups & Friends'],

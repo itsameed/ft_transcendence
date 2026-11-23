@@ -38,8 +38,7 @@ app.get('/health', (req, res) => {
 app.get('/metrics', metricsEndpoint);
 app.use(metricsMiddleware);
 
-const FRONTEND_URL =
-    process.env.FRONTEND_URL || 'http://localhost:5175';
+const { FRONTEND_URL } = require('./config/urls');
 
 const PORT = process.env.PORT || 6664;
 
@@ -229,13 +228,7 @@ io.use(async (socket, next) => {
 
 io.on('connection', (socket) => {
 
-    console.log('User connected:', socket.userId);
-
     socket.join(`user:${socket.userId}`);
-
-    console.log(
-        `User ${socket.userId} joined their personal room`
-    );
 
     socket.on('joinConversation', async (conversationId) => {
 
@@ -266,10 +259,6 @@ io.on('connection', (socket) => {
 
             socket.join(`conversation:${conversationId}`);
 
-            console.log(
-                `User ${socket.userId} joined conversation:${conversationId}`
-            );
-
         } catch (error) {
 
             console.error('Join conversation error:', error);
@@ -278,14 +267,6 @@ io.on('connection', (socket) => {
                 message: 'Could not join conversation'
             });
         }
-    });
-
-    socket.on('disconnect', (reason) => {
-
-        console.log(
-            `User ${socket.userId} disconnected:`,
-            reason
-        );
     });
 });
 
