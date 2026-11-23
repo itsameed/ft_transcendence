@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '../lib/useTheme'
 import { Button } from '../components/ui/Button'
 import { GoogleButton, OrDivider } from '../components/auth/GoogleButton'
+import { TwoFactorStep } from '../components/auth/TwoFactorStep'
 import { Logo } from '../components/layout/Sidebar'
 import styles from './Login.module.css'
 
@@ -14,7 +15,24 @@ export function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(params.get('error') === 'google' ? 'Google sign-in did not complete. Please try again.' : null)
   const [loading, setLoading] = useState(false)
+  // Set when the first factor passed and the account wants an authenticator code.
+  const [challenge, setChallenge] = useState<'password' | 'google' | null>(null)
   const navigate = useNavigate()
+
+  // Google sign-in lands here with ?step=2fa when the account has 2FA on.
+  useEffect(() => {
+    if (params.get('step') !== '2fa') return
+    let cancelled = false
+    fetch('/auth/login/2fa')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled) return
+        if (data?.pending) setChallenge(data.method === 'google' ? 'google' : 'password')
+        else setError('Your sign-in expired. Please sign in again.')
+      })
+      .catch(() => undefined)
+    return () => { cancelled = true }
+  }, [params])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,7 +48,7 @@ export function Login() {
         body: JSON.stringify({ email: handler, password }),
       })
       const rawResponse = await response.text()
-let data: { message?: string } = {}
+let data: { message?: string; requires2fa?: boolean } = {}
 
 try {
   data = rawResponse ? JSON.parse(rawResponse) : {}
@@ -48,8 +66,10 @@ if (!response.ok) {
       : `Login failed (${response.status}). Please try again.`
 
   setError(data.message || fallbackMessage)
+} else if (data.requires2fa) {
+  setPassword('')
+  setChallenge('password')
 } else {
-  console.log('Login successful:', data)
   navigate('/dashboard')
 }
     } catch (err) {
@@ -80,6 +100,18 @@ if (!response.ok) {
 
       <main className={styles.content}>
         <div className={styles.card}>
+          {challenge ? (
+            <TwoFactorStep
+              key={challenge}
+              method={challenge}
+              onSuccess={() => navigate('/dashboard', { replace: true })}
+              onRestart={(message) => {
+                setChallenge(null)
+                setError(message ?? null)
+              }}
+            />
+          ) : (
+          <>
           <div className={styles.header}>
             <h1 className={styles.title}>Welcome back</h1>
             <p className={styles.subtitle}>Enter your details to sign in to your account</p>
@@ -135,6 +167,8 @@ if (!response.ok) {
               Sign up
             </Link>
           </p>
+          </>
+          )}
         </div>
       </main>
     </div>
