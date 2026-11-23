@@ -118,10 +118,10 @@ export function Dashboard() {
                   setActivity(feed.items)
                   setUsers((prev) => ({ ...feed.users, ...prev }))
                })
-               .catch((err) => console.log('Failed to load activity: ', err))
+               .catch((err) => console.error('Failed to load activity: ', err))
                .finally(() => setActivityLoading(false))
 
-         } catch (err) { console.log('Failed to load dashboard: ', err) }
+         } catch (err) { console.error('Failed to load dashboard: ', err) }
          return;
       }
 

@@ -11,9 +11,6 @@ async function getUserInfos(req, res, next) {
    const Expenses = await ExpenseSchema.find({ participants: userId });
    const TotalExpenses = await calculateAllExpenses(userId);
    const FriendsCount = await getFriendsCount(userId);
-   // console.log(TotalExpenses);
-   // console.log("heres the expenses number : ", Expenses.length);
-   // console.log(Groups.length);
    const formattedDate = new Date(currentUser.joinedAt).toLocaleDateString('en-US', {
       month: 'numeric',
       day: 'numeric',
