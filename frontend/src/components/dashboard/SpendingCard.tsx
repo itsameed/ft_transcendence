@@ -115,7 +115,7 @@ export function SpendingCard({ items, groups, me, now, loading }: Props) {
             return (
               <li key={groupId}>
                 <span className="tint" data-tint={kindTint(g?.kind ?? 'other')} aria-hidden>
-                  <Icon size={14} strokeWidth={1.8} />
+                  <Icon size={14} strokeWidth={1.8} aria-hidden />
                 </span>
                 <span className={styles.groupName}>{g?.name ?? 'Group'}</span>
                 <span className={`${styles.groupAmount} tabular`}>{money(total)}</span>

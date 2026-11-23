@@ -40,7 +40,7 @@ export function RecentActivity({ items, users, groups, me, now, loading }: Props
       const received = a.to === me
       return {
         ...base,
-        icon: <ArrowLeftRight size={16} strokeWidth={1.8} />,
+        icon: <ArrowLeftRight size={16} strokeWidth={1.8} aria-hidden />,
         tint: received ? 'settle-in' : 'settle-out',
         title: `${name(a.from)} paid ${received ? 'you' : name(a.to)}`,
         detail: 'Payment recorded',
@@ -53,7 +53,7 @@ export function RecentActivity({ items, users, groups, me, now, loading }: Props
     const effect = yourEffect(a, me)
     return {
       ...base,
-      icon: <Icon size={16} strokeWidth={1.8} />,
+      icon: <Icon size={16} strokeWidth={1.8} aria-hidden />,
       tint: a.category,
       title: a.title,
       detail: `${name(a.paidBy)} paid ${money(a.amount)}`,
