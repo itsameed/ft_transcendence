@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogOut, Moon, Sun } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
@@ -30,13 +30,27 @@ export function SettingsPage() {
     await logout()
   }
   const navigate = useNavigate()
+  // Which field the current error belongs to, so it can sit (and focus) next to it.
+  const [pwField, setPwField] = useState<'current' | 'new' | 'confirm' | null>(null)
+  const pwRefs = {
+    current: useRef<HTMLInputElement>(null),
+    new: useRef<HTMLInputElement>(null),
+    confirm: useRef<HTMLInputElement>(null),
+  }
+  function failOn(field: 'current' | 'new' | 'confirm', message: string) {
+    setPwField(field)
+    setPwError(message)
+    pwRefs[field].current?.focus()
+  }
 
   async function changePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setPwMessage('')
     setPwError('')
-    if (newPw.length < 8) { setPwError('New password must be at least 8 characters.'); return }
-    if (newPw !== confirmPw) { setPwError('New password and confirmation do not match.'); return }
+    setPwField(null)
+    if (!currentPw) { failOn('current', 'Enter your current password.'); return }
+    if (newPw.length < 8) { failOn('new', 'Use at least 8 characters for the new password.'); return }
+    if (newPw !== confirmPw) { failOn('confirm', 'This doesn’t match the new password. Type it again.'); return }
     setPwSaving(true)
     try {
       const res = await fetch('/api/profile/change-password', {
@@ -46,7 +60,13 @@ export function SettingsPage() {
       })
       if (res.status === 401) { navigate('/login'); return }
       const data = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(data?.message ?? 'Could not update your password.')
+      if (!res.ok) {
+        const message: string = data?.message ?? 'Could not update your password.'
+        if (/current password/i.test(message)) failOn('current', message)
+        else if (/new password/i.test(message)) failOn('new', message)
+        else setPwError(message)
+        return
+      }
       setCurrentPw('')
       setNewPw('')
       setConfirmPw('')
@@ -75,7 +95,7 @@ export function SettingsPage() {
     loadProfile()
   }, [navigate])
 
-  if (loading) return <div className={styles.state}>Loading settings...</div>
+  if (loading) return <div className={styles.state} role="status">Loading settings…</div>
   if (!me) return <div className={styles.state} role="alert">Account settings are unavailable.</div>
 
   return (
@@ -135,22 +155,32 @@ export function SettingsPage() {
               <p>Change the password you use to sign in to Splitify.</p>
             </div>
             <Card>
-              <form className={styles.pwForm} onSubmit={changePassword}>
-                <label>
-                  <span>Current password</span>
-                  <input type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} required autoComplete="current-password" />
-                </label>
-                <label>
-                  <span>New password</span>
-                  <input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} required minLength={8} autoComplete="new-password" />
-                </label>
-                <label>
-                  <span>Confirm new password</span>
-                  <input type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} required autoComplete="new-password" />
-                </label>
+              <form className={styles.pwForm} onSubmit={changePassword} noValidate>
+                {([
+                  ['current', 'Current password', currentPw, setCurrentPw, 'current-password'],
+                  ['new', 'New password', newPw, setNewPw, 'new-password'],
+                  ['confirm', 'Confirm new password', confirmPw, setConfirmPw, 'new-password'],
+                ] as const).map(([field, label, value, setValue, autoComplete]) => (
+                  <label key={field}>
+                    <span>{label}</span>
+                    <input
+                      ref={pwRefs[field]}
+                      type="password"
+                      name={`${field}-password`}
+                      value={value}
+                      onChange={(e) => { setValue(e.target.value); if (pwField === field) { setPwField(null); setPwError('') } }}
+                      required
+                      autoComplete={autoComplete}
+                      aria-invalid={pwField === field ? true : undefined}
+                      aria-describedby={pwField === field ? 'pw-error' : field === 'new' ? 'pw-hint' : undefined}
+                    />
+                    {field === 'new' && pwField !== 'new' && <small id="pw-hint" className={styles.pwHint}>At least 8 characters.</small>}
+                    {pwField === field && <small id="pw-error" className={styles.pwError} role="alert">{pwError}</small>}
+                  </label>
+                ))}
                 <div className={styles.pwFooter}>
-                  <span className={pwError ? styles.pwError : styles.pwMessage} role={pwError ? 'alert' : 'status'}>{pwError || pwMessage}</span>
-                  <Button type="submit" variant="primary" disabled={pwSaving}>{pwSaving ? 'Updating…' : 'Update password'}</Button>
+                  <span className={pwError && !pwField ? styles.pwError : styles.pwMessage} role={pwError && !pwField ? 'alert' : 'status'}>{pwField ? '' : pwError || pwMessage}</span>
+                  <Button type="submit" variant="primary" disabled={pwSaving} aria-busy={pwSaving}>{pwSaving ? 'Updating…' : 'Update password'}</Button>
                 </div>
               </form>
             </Card>

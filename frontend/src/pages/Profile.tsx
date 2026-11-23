@@ -226,15 +226,15 @@ export function ProfilePage() {
               <form className={styles.form} onSubmit={saveProfile}>
                 <label>
                   <span>Username</span>
-                  <input value={username} onChange={(event) => setUsername(event.target.value)} required maxLength={40} autoComplete="username" />
+                  <input name="username" value={username} onChange={(event) => setUsername(event.target.value)} required maxLength={40} autoComplete="username" autoCapitalize="none" spellCheck={false} />
                 </label>
                 <label>
                   <span>Email address</span>
-                  <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="email" />
+                  <input type="email" name="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="email" spellCheck={false} />
                 </label>
                 <div className={styles.formFooter}>
                   <span className={error ? styles.error : styles.message} role={error ? 'alert' : 'status'}>{error || message}</span>
-                  <Button type="submit" variant="primary" disabled={saving}>{saving ? 'Saving...' : 'Save changes'}</Button>
+                  <Button type="submit" variant="primary" disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</Button>
                 </div>
               </form>
             </Card>

@@ -188,6 +188,12 @@
   font-size: 13px;
 }
 
+.pwHint {
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 400;
+}
+
 .pwMessage {
   color: var(--owed);
 }
