@@ -48,6 +48,28 @@ export function GroupPage() {
   const [groupBalances, setGroupBalances] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+
+  // Friend actions popover: focus its first item, close on Escape or a click elsewhere.
+  useEffect(() => {
+    if (!menuFor) return
+    const wrap = document.querySelector<HTMLElement>(`[data-menu-for="${menuFor}"]`)
+    const toggle = wrap?.querySelector<HTMLElement>('[data-menu-toggle]')
+    wrap?.querySelector<HTMLElement>('[data-menu] a, [data-menu] button')?.focus()
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return
+      setMenuFor(null)
+      toggle?.focus()
+    }
+    function onPointer(event: PointerEvent) {
+      if (wrap && !wrap.contains(event.target as Node)) setMenuFor(null)
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('pointerdown', onPointer)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('pointerdown', onPointer)
+    }
+  }, [menuFor])
   const NOW = new Date()
   const [memberUsers, setMemberUsers] = useState<Record<string, User>>({})
 
@@ -157,6 +179,7 @@ export function GroupPage() {
     return res.ok
   }
   const removeFriend = async (f: User) => {
+    if (!window.confirm(`Remove ${f.name} from your friends? You can add them again later.`)) return
     if (await act('/api/friends', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ friendId: f.id }) }, `Removed ${f.name}`))
       setFriends((p) => p.filter((x) => x.id !== f.id))
   }
@@ -288,12 +311,12 @@ export function GroupPage() {
                         </span>
                         <span className={styles.friendActions}>
                           <Link className={styles.chatLink} to="/chat">Chat</Link>
-                          <span className={styles.menuWrap}>
-                            <button type="button" className={styles.menuBtn} aria-label={`More actions for ${f.name}`} aria-expanded={menuFor === f.id} onClick={() => setMenuFor(menuFor === f.id ? null : f.id)}><MoreVertical size={17} /></button>
+                          <span className={styles.menuWrap} data-menu-for={f.id}>
+                            <button type="button" className={styles.menuBtn} data-menu-toggle aria-label={`More actions for ${f.name}`} aria-expanded={menuFor === f.id} aria-controls={`friend-menu-${f.id}`} onClick={() => setMenuFor(menuFor === f.id ? null : f.id)}><MoreVertical size={17} aria-hidden /></button>
                             {menuFor === f.id && (
-                              <span className={styles.menu} role="menu">
-                                <Link to={`/users/${f.id}`} className={styles.menuItem} role="menuitem">View profile</Link>
-                                <button type="button" className={`${styles.menuItem} ${styles.menuDanger}`} role="menuitem" onClick={() => { setMenuFor(null); removeFriend(f) }}>Remove friend</button>
+                              <span className={styles.menu} id={`friend-menu-${f.id}`} data-menu>
+                                <Link to={`/users/${f.id}`} className={styles.menuItem}>View profile</Link>
+                                <button type="button" className={`${styles.menuItem} ${styles.menuDanger}`} onClick={() => { setMenuFor(null); removeFriend(f) }}>Remove friend</button>
                               </span>
                             )}
                           </span>

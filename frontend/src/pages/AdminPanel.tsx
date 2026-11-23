@@ -107,6 +107,10 @@ export function AdminPanelPage() {
   const totalUsers = useMemo(() => stats?.users.total ?? users.length, [stats, users.length])
 
   const handleStatusChange = async (userId: string, targetStatus: 'active' | 'suspended') => {
+    if (targetStatus === 'suspended') {
+      const name = users.find((user) => user._id === userId)?.username ?? 'this user'
+      if (!window.confirm(`Suspend ${name}? They won't be able to use Splitify until you reactivate them.`)) return
+    }
     setBusyId(userId)
     try {
       const previousStatus = users.find((user) => user._id === userId)?.status ?? targetStatus
