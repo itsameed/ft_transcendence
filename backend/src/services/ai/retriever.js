@@ -20,6 +20,8 @@ function cosine(a, b)
     return dot / (Math.sqrt(na) * Math.sqrt(nb));
 }
 
+const MIN_SIMILARITY_SCORE = 0.4; 
+
 class Retriever 
 {
     constructor(sem) 
@@ -40,8 +42,15 @@ class Retriever
         {
             if (!chunks[i]) 
                 continue;
-            results.push({text: chunks[i], score: cosine(qv, vectors[i])});
+
+            const score = cosine(qv, vectors[i]);
+
+            if (score < MIN_SIMILARITY_SCORE) 
+                continue;
+
+            results.push({ text: chunks[i], score: score });
         }
+
         results.sort(function (a, b) { 
             return b.score - a.score; 
         });
