@@ -9,6 +9,7 @@ import { SettleUpModal } from '../components/groups/SettleUpModal'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
+import { useDialog } from '../lib/a11y'
 import { iconForKind } from '../lib/GroupKinds'
 import { categoryIcon } from '../lib/categories'
 import { inferCategory, kindTint } from '../lib/activity'
@@ -91,15 +92,11 @@ export function GroupDetailPage() {
     setToast({ message, tone })
   }
 
-  useEffect(() => {
-    if (!confirmation) return
-    cancelConfirmationRef.current?.focus()
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !confirming) setConfirmation(null)
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [confirmation, confirming])
+  // Focus starts on Cancel (the safe choice), Tab stays inside, and focus
+  // returns to the button that asked for confirmation.
+  const confirmRef = useDialog<HTMLElement>(Boolean(confirmation), () => {
+    if (!confirming) setConfirmation(null)
+  })
 
   useEffect(() => {
     let cancelled = false
@@ -588,10 +585,10 @@ export function GroupDetailPage() {
             if (event.target === event.currentTarget && !confirming) setConfirmation(null)
           }}
         >
-          <section className={styles.confirmDialog} role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description">
+          <section ref={confirmRef} className={styles.confirmDialog} role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description">
             <div className={styles.confirmIcon}><AlertTriangle size={19} aria-hidden /></div>
             <button type="button" className={styles.confirmClose} onClick={() => setConfirmation(null)} disabled={confirming} aria-label="Close dialog">
-              <X size={18} />
+              <X size={18} aria-hidden />
             </button>
             <h2 id="confirm-title">{confirmation.title}</h2>
             <p id="confirm-description">{confirmation.description}</p>
@@ -602,6 +599,7 @@ export function GroupDetailPage() {
                 onClick={() => setConfirmation(null)}
                 disabled={confirming}
                 ref={cancelConfirmationRef}
+                data-autofocus
               >
                 Cancel
               </button>

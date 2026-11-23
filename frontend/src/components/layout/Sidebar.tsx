@@ -1,4 +1,4 @@
-import { LayoutGrid, MessageSquare, Moon, Settings, Split, Sun, UsersRound } from 'lucide-react'
+import { LayoutGrid, MessageSquare, Moon, Settings, ShieldCheck, Split, Sun, UsersRound } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import type { User } from '../../types'
 import { useTheme } from '../../lib/useTheme'
@@ -19,7 +19,7 @@ function AdminLink({ me }: { me: User }) {
 
   return (
     <NavLink to="/admin" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
-      <Settings size={18} strokeWidth={1.75} />
+      <ShieldCheck size={18} strokeWidth={1.75} aria-hidden />
       Admin panel
     </NavLink>
   )
@@ -45,7 +45,7 @@ export function Sidebar({ me }: { me: User }) {
       <nav className={styles.nav} aria-label="Main">
         {NAV.map(({ label, icon: Icon, to }) => (
           <NavLink key={label} to={to} className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
-            <Icon size={18} strokeWidth={1.75} />
+            <Icon size={18} strokeWidth={1.75} aria-hidden />
             {label}
           </NavLink>
         ))}
@@ -54,9 +54,11 @@ export function Sidebar({ me }: { me: User }) {
       </nav>
 
       <div className={styles.footer}>
-        <button type="button" className={styles.themeToggle} onClick={toggle} aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'} aria-pressed={dark}>
-          {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
-          {dark ? 'Light mode' : 'Dark mode'}
+        {/* A toggle keeps one fixed name; aria-pressed says whether it's on. */}
+        <button type="button" className={styles.themeToggle} onClick={toggle} aria-pressed={dark}>
+          {dark ? <Sun size={18} strokeWidth={1.75} aria-hidden /> : <Moon size={18} strokeWidth={1.75} aria-hidden />}
+          <span aria-hidden>{dark ? 'Light mode' : 'Dark mode'}</span>
+          <span className="visually-hidden">Dark mode</span>
         </button>
         <NavLink to="/profile" className={({ isActive }) => `${styles.me} ${isActive ? styles.active : ''}`}>
           <Avatar user={me} size={32} />

@@ -25,7 +25,7 @@ export function Topbar({ firstName, today, onAdd }: Props) {
       </div>
 
       <div className={styles.actions}>
-        <Button variant="primary" icon={<Plus />} onClick={onAdd} className={styles.add} title="Add expense (N)">
+        <Button variant="primary" icon={<Plus aria-hidden />} onClick={onAdd} className={styles.add} title="Add expense (N)" aria-keyshortcuts="n">
           Add expense
         </Button>
       </div>
