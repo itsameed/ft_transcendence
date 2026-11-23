@@ -1574,3 +1574,44 @@
    font-size: 13px;
    margin-bottom: 8px;
 }
+/* New-conversation picker (was inline styles). */
+.pickerBackdrop {
+   position: fixed;
+   inset: 0;
+   z-index: 70;
+   display: grid;
+   place-items: center;
+   padding: 20px;
+   background: var(--scrim);
+   overscroll-behavior: contain;
+}
+
+.pickerDialog {
+   width: min(430px, 100%);
+   max-height: min(640px, calc(100vh - 40px));
+   overflow-y: auto;
+   overscroll-behavior: contain;
+   padding: 22px 22px 18px;
+   border: 1px solid var(--border);
+   border-radius: var(--radius-lg);
+   background: var(--surface);
+   box-shadow: var(--shadow-modal);
+}
+
+.pickerHead {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   margin-bottom: 6px;
+}
+
+.pickerHead h2 {
+   font-size: 17px;
+   font-weight: 600;
+}
+
+a.stripBtn {
+   display: inline-flex;
+   align-items: center;
+   text-decoration: none;
+}

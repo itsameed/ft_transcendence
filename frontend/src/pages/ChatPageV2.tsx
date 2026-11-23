@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { io, type Socket } from 'socket.io-client'
 import {
   ArrowLeft, BellOff, CheckCheck, CirclePlus,
@@ -9,6 +9,7 @@ import {
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Avatar } from '../components/ui/Avatar'
+import { useDialog } from '../lib/a11y'
 import { Toast, type ToastTone } from '../components/ui/Toast'
 import { AddExpenseModal } from '../components/dashboard/AddExpenseModal'
 import { CreateGroupModal } from '../components/groups/CreateGroupModal'
@@ -60,6 +61,8 @@ export function ChatPage() {
   const [emojiOpen, setEmojiOpen] = useState(false)
   const [addingExpense, setAddingExpense] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const pickerRef = useDialog(pickerOpen, () => setPickerOpen(false))
+  const emojiToggleRef = useRef<HTMLButtonElement>(null)
   const [creatingGroup, setCreatingGroup] = useState(false)
   const [friends, setFriends] = useState<User[]>([])
   const [dms, setDms] = useState<DmConv[]>([])
@@ -225,7 +228,10 @@ export function ChatPage() {
     return () => { socket.disconnect(); socketRef.current = null }
   }, [me?.id, activeConvId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [thread.length, mode, selectedId, typingName])
+  useEffect(() => {
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    bottomRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' })
+  }, [thread.length, mode, selectedId, typingName])
   useEffect(() => {
     if (activeConvId) setReadAt((p) => ({ ...p, [activeConvId]: new Date().toISOString() }))
   }, [activeConvId, messages.length])
@@ -338,9 +344,10 @@ export function ChatPage() {
               <div className={styles.listTitle}><h1>Messages</h1>
                 <button className={`${styles.iconBtn} ${styles.primary}`} aria-label="New conversation" onClick={() => setPickerOpen(true)}><CirclePlus size={19} /></button></div>
             </div>
-            <div className={styles.filters} role="tablist" aria-label="Filter conversations">
-              {([['all', 'All'], ['unread', 'Unread'], ['groups', 'Groups'], ['settled', 'Settled']] as [Filter, string][]).map(([id, label]) => (
-                <button key={id} role="tab" aria-selected={filter === id} className={`${styles.chip} ${filter === id ? styles.chipOn : ''}`} onClick={() => setFilter(id)}>{label}</button>
+            <div className={styles.filters} role="group" aria-label="Filter conversations">
+              {/* "Unread" returns once the server tracks read state. */}
+              {([['all', 'All'], ['groups', 'Groups'], ['settled', 'Settled']] as [Filter, string][]).map(([id, label]) => (
+                <button key={id} type="button" aria-pressed={filter === id} className={`${styles.chip} ${filter === id ? styles.chipOn : ''}`} onClick={() => setFilter(id)}>{label}</button>
               ))}
             </div>
             <div className={styles.listScroll}>
@@ -403,9 +410,9 @@ export function ChatPage() {
 
                 <div className={styles.scrollCol}>
                   {!inDm && (
-                    <div className={styles.modeSwitch} role="tablist" aria-label="Chat mode">
-                      <button role="tab" aria-selected={mode === 'group'} className={mode === 'group' ? styles.modeOn : ''} onClick={() => setMode('group')}><MessageSquare size={15} /> Group chat</button>
-                      <button role="tab" aria-selected={mode === 'ai'} className={mode === 'ai' ? styles.modeOn : ''} onClick={() => setMode('ai')}><Sparkles size={15} /> Ask AI</button>
+                    <div className={styles.modeSwitch} role="group" aria-label="Chat mode">
+                      <button type="button" aria-pressed={mode === 'group'} className={mode === 'group' ? styles.modeOn : ''} onClick={() => setMode('group')}><MessageSquare size={15} aria-hidden /> Group chat</button>
+                      <button type="button" aria-pressed={mode === 'ai'} className={mode === 'ai' ? styles.modeOn : ''} onClick={() => setMode('ai')}><Sparkles size={15} aria-hidden /> Ask AI</button>
                     </div>
                   )}
 
@@ -415,8 +422,8 @@ export function ChatPage() {
                       <span className={styles.grow}><strong>{myBalance > 0 ? `You’re owed ${money(myBalance)}` : myBalance < 0 ? `You owe ${money(myBalance)}` : 'You’re all settled up'}</strong>
                         <p>{balanceKnown ? `${money(totalSpent)} spent together · ${expenseCount} expenses` : 'Across your recent groups'}</p></span>
                       {myBalance > 0 && topDebtor && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={async () => { const r = await sendReminder(topDebtor.user.id, firstName(topDebtor.user.name)); notify(r.message, r.ok ? 'success' : 'error') }}>Remind</button>}
-                      {myBalance < 0 && selected && <button className={`${styles.stripBtn} ${styles.stripBtnBrand}`} onClick={() => navigate(`/groups/${selected.id}`)}>Settle up</button>}
-                      {selected && <button className={styles.stripBtn} onClick={() => navigate(`/groups/${selected.id}`)}>Balances</button>}
+                      {myBalance < 0 && selected && <Link className={`${styles.stripBtn} ${styles.stripBtnBrand}`} to={`/groups/${selected.id}`}>Settle up</Link>}
+                      {selected && <Link className={styles.stripBtn} to={`/groups/${selected.id}`}>Balances</Link>}
                     </div>
                   )}
                   {mode === 'group' && pinnedMsg && (
@@ -463,16 +470,19 @@ export function ChatPage() {
                     <div className={styles.suggestions}>{AI_SUGGESTIONS.map((s) => <button key={s} className={styles.suggestion} onClick={() => askAI(s)}><Sparkles size={13} />{s}</button>)}</div>
                   )}
 
-                  <div className={styles.composerZone}>
-                    {emojiOpen && <div className={styles.emojiPop}>{QUICK_EMOJI.map((e) => <button key={e} onClick={() => { setDraft((d) => d + e); inputRef.current?.focus() }}>{e}</button>)}</div>}
+                  <div
+                    className={styles.composerZone}
+                    onKeyDown={(e) => { if (e.key === 'Escape' && emojiOpen) { e.stopPropagation(); setEmojiOpen(false); emojiToggleRef.current?.focus() } }}
+                  >
+                    {emojiOpen && <div id="emoji-picker" className={styles.emojiPop} role="group" aria-label="Insert emoji">{QUICK_EMOJI.map((e) => <button type="button" key={e} aria-label={`Insert ${e}`} onClick={() => { setDraft((d) => d + e); setEmojiOpen(false); inputRef.current?.focus() }}>{e}</button>)}</div>}
                     <form className={styles.composer} onSubmit={(e) => { e.preventDefault(); mode === 'group' ? sendGroup() : askAI() }}>
                       <textarea ref={inputRef} value={draft} rows={1} aria-label="Message"
                         placeholder={mode === 'ai' ? `Ask about ${selected?.name} expenses…` : inDm ? `Message ${dmTarget?.name}…` : `Message ${selected?.name}…`}
                         disabled={mode === 'group' && !activeConvId}
                         onChange={(e) => setDraft(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); mode === 'group' ? sendGroup() : askAI() } }} />
-                      <button type="button" className={styles.composerBtn} aria-label="Emoji" onClick={() => setEmojiOpen(!emojiOpen)}><Smile size={19} /></button>
-                      <button type="submit" className={styles.sendBtn} disabled={streaming || !draft.trim()} aria-label={mode === 'ai' ? 'Ask' : 'Send'}><SendHorizonal size={18} /></button>
+                      <button ref={emojiToggleRef} type="button" className={styles.composerBtn} aria-label="Emoji" aria-expanded={emojiOpen} aria-controls="emoji-picker" onClick={() => setEmojiOpen(!emojiOpen)}><Smile size={19} aria-hidden /></button>
+                      <button type="submit" className={styles.sendBtn} disabled={streaming || !draft.trim()} aria-label={mode === 'ai' ? 'Ask' : 'Send'}><SendHorizonal size={18} aria-hidden /></button>
                     </form>
                     {mode === 'group' && !activeConvId && <p className={styles.composerHint}><span>This conversation is not available yet.</span></p>}
                     <div className={styles.composerHint}><span><kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line</span><span>{mode === 'ai' ? 'AI can make mistakes — verify amounts' : inDm ? dmTarget?.name : selected?.name}</span></div>
@@ -486,10 +496,10 @@ export function ChatPage() {
       </main>
       <MobileNav onAdd={() => setAddingExpense(true)} />
       {pickerOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 70, display: 'grid', placeItems: 'center', padding: 20, background: 'var(--scrim)' }} onMouseDown={(e) => e.target === e.currentTarget && setPickerOpen(false)}>
-          <div role="dialog" aria-modal="true" aria-labelledby="new-conv-title" style={{ width: 'min(430px, 100%)', maxHeight: 'min(640px, calc(100vh - 40px))', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', background: 'var(--surface)', boxShadow: 'var(--shadow-modal)', padding: '22px 22px 18px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <h2 id="new-conv-title" style={{ fontSize: 17, fontWeight: 600 }}>New conversation</h2>
+        <div className={styles.pickerBackdrop} onMouseDown={(e) => e.target === e.currentTarget && setPickerOpen(false)}>
+          <div ref={pickerRef} className={styles.pickerDialog} role="dialog" aria-modal="true" aria-labelledby="new-conv-title">
+            <div className={styles.pickerHead}>
+              <h2 id="new-conv-title">New conversation</h2>
               <button className={styles.iconBtn} onClick={() => setPickerOpen(false)} aria-label="Close"><X size={17} /></button>
             </div>
             <p style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 14 }}>Message a friend directly, or start a new group.</p>
