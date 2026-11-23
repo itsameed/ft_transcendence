@@ -16,20 +16,16 @@ export function useAuthStatus() {
 
     async function checkAuth() {
       try {
-        const response = await fetch('/api/my-profile', {
+        const response = await fetch('/api/session', {
           headers: { Accept: 'application/json' },
           signal: controller.signal,
         })
-
-        if (response.status === 401) {
-          setStatus('unauthenticated')
-          return
-        }
         if (!response.ok) {
           throw new Error(`Session check failed (${response.status}).`)
         }
 
-        setStatus('authenticated')
+        const { authenticated } = await response.json()
+        setStatus(authenticated ? 'authenticated' : 'unauthenticated')
       } catch (error) {
         if (controller.signal.aborted) return
         console.error('Unable to check authentication status:', error)
