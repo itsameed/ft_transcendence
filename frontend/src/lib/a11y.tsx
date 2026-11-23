@@ -61,8 +61,14 @@ export function useDialog<T extends HTMLElement = HTMLDivElement>(
       }
       const first = items[0]
       const last = items[items.length - 1]
-      const active = document.activeElement
-      if (event.shiftKey && (active === first || active === dialog)) {
+      const active = document.activeElement as HTMLElement | null
+      // Focus on the dialog box itself (touch start) or somehow outside it:
+      // step straight to the first or last control instead of leaving.
+      const insideControls = active !== null && items.includes(active)
+      if (!insideControls) {
+        event.preventDefault()
+        ;(event.shiftKey ? last : first).focus()
+      } else if (event.shiftKey && active === first) {
         event.preventDefault()
         last.focus()
       } else if (!event.shiftKey && active === last) {
