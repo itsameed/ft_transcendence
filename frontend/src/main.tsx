@@ -19,10 +19,13 @@ import { NotFoundPage } from './pages/NotFound'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
 import { GuestOnlyRoute } from './components/auth/GuestOnlyRoute'
+import { RouteTitle, SkipLink } from './lib/a11y'
 
 export function App() {
    return (
       <Router>
+         <SkipLink />
+         <RouteTitle />
          <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<GuestOnlyRoute><Login /></GuestOnlyRoute>} />

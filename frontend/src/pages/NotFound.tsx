@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Moon, Receipt, Split, Sun } from 'lucide-react'
 import { useTheme } from '../lib/useTheme'
@@ -6,11 +5,6 @@ import styles from './NotFound.module.css'
 
 export function NotFoundPage() {
   const { dark, toggle } = useTheme()
-
-  useEffect(() => {
-    document.title = 'Page not found | Splitify'
-    return () => { document.title = 'Splitify — Dashboard' }
-  }, [])
 
   return (
     <div className={styles.page}>
