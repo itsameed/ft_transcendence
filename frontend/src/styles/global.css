@@ -18,7 +18,7 @@
 
   --text: #211d16;
   --text-2: #665e4f;
-  --text-3: #8a8071;
+  --text-3: #716858; /* 4.9:1 on --bg, AA for small text */
 
   --primary: #211d16;
   --primary-hover: #3a352b;
@@ -47,7 +47,8 @@
   /* One field height and one focus ring, shared by every input/select
      in the app (auth, profile, settings, modals, search, composer). */
   --field-height: 44px;
-  --focus-ring: 0 0 0 3px var(--surface-3);
+  /* Must reach 3:1 against the field (WCAG 1.4.11); --text-2 is ~5.7:1. */
+  --focus-ring: 0 0 0 2px var(--text-2);
   --accent-soft: rgba(58, 114, 84, 0.12);
   --danger-soft: rgba(162, 86, 59, 0.12);
   --ease: cubic-bezier(0.2, 0.9, 0.3, 1);
@@ -97,7 +98,7 @@
     --border-strong: rgba(255, 255, 255, 0.12);
     --text: #ecebe7;
     --text-2: #a8a79f;
-    --text-3: #8a8982;
+    --text-3: #96958e;
     --primary: #ecebe7;
     --primary-hover: #ffffff;
     --on-primary: #121211;
@@ -138,7 +139,7 @@
   --border-strong: rgba(255, 255, 255, 0.12);
   --text: #ecebe7;
   --text-2: #a8a79f;
-  --text-3: #8a8982;
+  --text-3: #96958e;
   --primary: #ecebe7;
   --primary-hover: #ffffff;
   --on-primary: #121211;
@@ -211,6 +212,44 @@ textarea::placeholder {
 
 button {
   cursor: pointer;
+}
+
+/* No 300ms double-tap-zoom delay on taps; no grey flash on iOS. */
+a,
+button,
+input,
+select,
+textarea,
+label,
+[role='button'] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Skip link: first thing keyboard users reach on every page. */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--text);
+  color: var(--surface);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+main:focus {
+  outline: none;
 }
 
 :focus-visible {
