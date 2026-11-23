@@ -96,6 +96,7 @@ const googleAuth = require('./routes/googleAuth');
 const adminRoutes = require('./routes/adminRoutes');
 const searchUser = require('./routes/searchUser.js');
 const serviceStatus = require('./routes/serviceStatus.js');
+const twoFactorRouter = require('./routes/twoFactor.js');
 
 app.use('/', googleAuth);
 app.use('/', dashboardRouter);
@@ -109,6 +110,7 @@ app.use('/api/my-profile', myProfileRouter);
 app.use('/api/profile/edit', editProfile);
 app.use('/api/profile/avatar', avatarRouter);
 app.use('/api/profile/change-password', changePasswordRouter);
+app.use('/api/2fa', twoFactorRouter);
 app.use('/api/users', userProfileRouter);
 app.use('/api/group-details', groupDetailsRouter);
 app.use('/api/groups/create', groupCreationRouter);
