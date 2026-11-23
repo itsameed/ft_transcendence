@@ -54,3 +54,5 @@ database-backups/*
 
 # Vercel local project settings
 .vercel/
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
