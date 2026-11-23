@@ -29,7 +29,8 @@
 }
 
 .groupHeading h1,
-.groupIdentity .identityText h2 {
+.groupIdentity .identityText h1,
+.identityText h2 {
   overflow: hidden;
   overflow-wrap: anywhere;
   display: -webkit-box;

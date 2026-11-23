@@ -77,7 +77,7 @@ export function UserProfilePage() {
           <Card className={styles.identity}>
             <Avatar user={self} size={64} />
             <div className={styles.identityText}>
-              <h2>{person.name}</h2>
+              <h1>{person.name}</h1>
               <p>{person.email}</p>
               <span>Member since {person.joinedAt}</span>
             </div>
