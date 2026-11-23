@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { AlertTriangle, ArrowLeft, Crown, FolderX, LogOut, MessageSquare, Plus, ShieldAlert, Trash2, UserPlus, X } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Crown, FolderX, LogOut, MessageSquare, Plus, ShieldAlert, Trash2, UserPlus } from 'lucide-react'
 import { MobileNav } from '../components/layout/MobileNav'
 import { Sidebar } from '../components/layout/Sidebar'
 import { AddExpenseModal } from '../components/dashboard/AddExpenseModal'
@@ -8,8 +8,8 @@ import { AddMembersModal } from '../components/groups/AddMembersModal'
 import { SettleUpModal } from '../components/groups/SettleUpModal'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
+import { useConfirm } from '../components/ui/ConfirmDialog'
 import { Toast } from '../components/ui/Toast'
-import { useDialog } from '../lib/a11y'
 import { iconForKind } from '../lib/GroupKinds'
 import { categoryIcon } from '../lib/categories'
 import { inferCategory, kindTint } from '../lib/activity'
@@ -36,13 +36,6 @@ interface GroupDetail {
 }
 
 type ToastTone = 'success' | 'info' | 'error'
-interface Confirmation {
-  title: string
-  description: string
-  confirmLabel: string
-  onConfirm: () => Promise<void>
-}
-
 function mapUser(raw: any): User {
   return { id: String(raw?._id ?? raw?.id ?? ''), name: raw?.username ?? raw?.name ?? 'Unknown', email: raw?.email ?? '', avatar: raw?.avatar ?? null }
 }
@@ -63,11 +56,9 @@ export function GroupDetailPage() {
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
   const [balances, setBalances] = useState<GroupBalances | null>(null)
   const [toast, setToast] = useState<{ message: string; tone: ToastTone } | null>(null)
-  const [confirmation, setConfirmation] = useState<Confirmation | null>(null)
-  const [confirming, setConfirming] = useState(false)
+  const [confirm, confirmDialog] = useConfirm()
   const [error, setError] = useState('')
   const [errorStatus, setErrorStatus] = useState<404 | 403 | null>(null)
-  const cancelConfirmationRef = useRef<HTMLButtonElement>(null)
   const navigate = useNavigate()
   const [today] = useState(() => new Date())
   const expenseGroup = useMemo<Group | null>(() => group ? ({
@@ -91,12 +82,6 @@ export function GroupDetailPage() {
   function showToast(message: string, tone: ToastTone = 'success') {
     setToast({ message, tone })
   }
-
-  // Focus starts on Cancel (the safe choice), Tab stays inside, and focus
-  // returns to the button that asked for confirmation.
-  const confirmRef = useDialog<HTMLElement>(Boolean(confirmation), () => {
-    if (!confirming) setConfirmation(null)
-  })
 
   useEffect(() => {
     let cancelled = false
@@ -278,17 +263,6 @@ export function GroupDetailPage() {
     }
   }
 
-  async function confirmAction() {
-    if (!confirmation || confirming) return
-    setConfirming(true)
-    try {
-      await confirmation.onConfirm()
-      setConfirmation(null)
-    } finally {
-      setConfirming(false)
-    }
-  }
-
   return (
     <div className={pageStyles.app}>
       <Sidebar me={me} />
@@ -463,7 +437,7 @@ export function GroupDetailPage() {
                   <button
                     className={styles.leaveButton}
                     type="button"
-                    onClick={() => setConfirmation({
+                    onClick={() => confirm({
                       title: `Leave ${group.name}?`,
                       description: 'You will lose access to this group. Any open balance must be settled before you can leave.',
                       confirmLabel: 'Leave group',
@@ -492,7 +466,7 @@ export function GroupDetailPage() {
                       type="button"
                       className={styles.removeButton}
                       disabled={removingMemberId !== null}
-                      onClick={() => setConfirmation({
+                      onClick={() => confirm({
                         title: `Remove ${member.user.name}?`,
                         description: `They will no longer be able to view ${group.name}.`,
                         confirmLabel: 'Remove member',
@@ -520,7 +494,7 @@ export function GroupDetailPage() {
               <button
                 type="button"
                 className={styles.deleteGroupButton}
-                onClick={() => setConfirmation({
+                onClick={() => confirm({
                   title: `Delete ${group.name}?`,
                   description: 'This permanently deletes the group, chat, messages, invitations, expenses, and settlements. This can’t be undone.',
                   confirmLabel: 'Delete group',
@@ -578,38 +552,7 @@ export function GroupDetailPage() {
           showToast(addedUsers.length === 1 ? `Added ${addedUsers[0].name} to ${group.name}.` : `Added ${addedUsers.length} people to ${group.name}.`)
         }}
       />
-      {confirmation && (
-        <div
-          className={styles.confirmBackdrop}
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget && !confirming) setConfirmation(null)
-          }}
-        >
-          <section ref={confirmRef} className={styles.confirmDialog} role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description">
-            <div className={styles.confirmIcon}><AlertTriangle size={19} aria-hidden /></div>
-            <button type="button" className={styles.confirmClose} onClick={() => setConfirmation(null)} disabled={confirming} aria-label="Close dialog">
-              <X size={18} aria-hidden />
-            </button>
-            <h2 id="confirm-title">{confirmation.title}</h2>
-            <p id="confirm-description">{confirmation.description}</p>
-            <div className={styles.confirmActions}>
-              <button
-                type="button"
-                className={styles.confirmCancel}
-                onClick={() => setConfirmation(null)}
-                disabled={confirming}
-                ref={cancelConfirmationRef}
-                data-autofocus
-              >
-                Cancel
-              </button>
-              <button type="button" className={styles.confirmDanger} onClick={confirmAction} disabled={confirming}>
-                {confirming ? 'Please wait…' : confirmation.confirmLabel}
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
+      {confirmDialog}
       <Toast
         message={toast?.message ?? null}
         tone={toast?.tone ?? 'success'}

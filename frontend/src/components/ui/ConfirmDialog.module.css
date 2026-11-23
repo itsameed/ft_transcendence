@@ -1,0 +1,149 @@
+.backdrop {
+  position: fixed;
+  z-index: 90; /* above other modals (50–80): it can open on top of one */
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: var(--scrim);
+  backdrop-filter: blur(3px);
+  overscroll-behavior: contain;
+  animation: fade 0.18s ease-out;
+}
+
+.dialog {
+  position: relative;
+  width: min(440px, 100%);
+  padding: 24px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-modal);
+  animation: pop 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+
+.dialog:focus {
+  outline: none;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+.icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 17px;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
+.icon[data-tone='danger'] {
+  background: var(--danger-soft);
+  color: var(--owe);
+}
+
+.close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-3);
+}
+
+.close:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.dialog h2 {
+  padding-right: 32px;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.dialog p {
+  margin-top: 8px;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 24px;
+}
+
+.cancel,
+.danger,
+.primary {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease, filter 0.15s ease;
+}
+
+.cancel:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.danger {
+  border-color: var(--owe);
+  background: var(--owe);
+  color: var(--on-primary);
+}
+
+.primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.danger:hover:not(:disabled),
+.primary:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.cancel:disabled,
+.danger:disabled,
+.primary:disabled,
+.close:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 420px) {
+  .actions > * {
+    flex: 1 1 auto;
+  }
+}
