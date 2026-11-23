@@ -1,4 +1,9 @@
 const express = require('express');
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+const User = require('../models/Schemas/User');
+const transporter = require('../config/mailer');
+const { FRONTEND_URL } = require('../config/urls');
 const Auth = require('../middleware/requireAuth');
 const cookieAuth = require('../middleware/cookieAuth');
 const router = express.Router();
@@ -33,15 +38,17 @@ router.post('/send-verification', Auth, async (req, res) => {
     const user = await User.findById(req.session.userId);
     
     // Generate token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
-    
-    user.verificationToken = verificationToken;
-    user.verificationTokenExpires = verificationTokenExpires;
+    // Kept apart from the email-verification token so the two flows can't
+    // consume or overwrite each other's links.
+    const passwordChangeToken = crypto.randomBytes(32).toString('hex');
+    const passwordChangeTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
+
+    user.passwordChangeToken = passwordChangeToken;
+    user.passwordChangeTokenExpires = passwordChangeTokenExpires;
     await user.save();
     
     // Send email
-    const verificationLink = `http://localhost:3000/auth/verify-password-change?token=${verificationToken}`;
+    const verificationLink = `${FRONTEND_URL}/auth/verify-password-change?token=${passwordChangeToken}`;
     
     await transporter.sendMail({
         from: process.env.GMAIL_USER,
