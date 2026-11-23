@@ -455,7 +455,7 @@ export function GroupDetailPage() {
               </div>
               <div className={styles.memberActions}>
                 {isOwner && (
-                  <Button variant="secondary" size="sm" icon={<UserPlus size={15} />} onClick={() => setAdding(true)}>
+                  <Button variant="secondary" size="sm" icon={<UserPlus size={15} aria-hidden />} onClick={() => setAdding(true)}>
                     Add people
                   </Button>
                 )}

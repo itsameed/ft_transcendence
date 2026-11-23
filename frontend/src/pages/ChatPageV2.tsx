@@ -342,7 +342,7 @@ export function ChatPage() {
           <aside className={styles.list} aria-label="Conversations">
             <div className={styles.listHead}>
               <div className={styles.listTitle}><h1>Messages</h1>
-                <button className={`${styles.iconBtn} ${styles.primary}`} aria-label="New conversation" onClick={() => setPickerOpen(true)}><CirclePlus size={19} /></button></div>
+                <button className={`${styles.iconBtn} ${styles.primary}`} aria-label="New conversation" onClick={() => setPickerOpen(true)}><CirclePlus size={19} aria-hidden /></button></div>
             </div>
             <div className={styles.filters} role="group" aria-label="Filter conversations">
               {/* "Unread" returns once the server tracks read state. */}
@@ -380,7 +380,7 @@ export function ChatPage() {
                 return (
                   <div key={g.id}>
                     <button className={`${styles.conv} ${isSelected && mode === 'group' ? styles.convOn : ''}`} onClick={() => { setSelectedId(g.id); setDmTarget(null); setMode('group'); setMobileThread(true) }} aria-current={isSelected && mode === 'group'}>
-                      <span className={styles.convIcon}><Icon size={19} /></span>
+                      <span className={styles.convIcon}><Icon size={19} aria-hidden /></span>
                       <span className={styles.convBody}>
                         <span className={styles.convTop}><span className={styles.convName}>{g.name}</span></span>
                         <span className={styles.convLast}><span>{isSelected && expenses.length ? `${expenses.length} expenses · ${money(totalSpent)} spent` : `${g.memberIds.length} ${g.memberIds.length === 1 ? 'member' : 'members'} · ${(isSelected ? myBalance : (recentBalances[g.id] ?? 0)) > 0 ? `You are owed ${money(isSelected ? myBalance : recentBalances[g.id])}` : (isSelected ? myBalance : (recentBalances[g.id] ?? 0)) < 0 ? `You owe ${money(isSelected ? myBalance : recentBalances[g.id])}` : 'Settled'}`}</span>
@@ -397,11 +397,11 @@ export function ChatPage() {
             {!selected && !inDm ? <p className={styles.emptyList}>Select a conversation.</p> : (
               <>
                 <header className={styles.threadHead}>
-                  <button className={`${styles.iconBtn} ${styles.backBtn}`} onClick={() => setMobileThread(false)} aria-label="Back to conversations"><ArrowLeft size={18} /></button>
+                  <button className={`${styles.iconBtn} ${styles.backBtn}`} onClick={() => setMobileThread(false)} aria-label="Back to conversations"><ArrowLeft size={18} aria-hidden /></button>
                   <div className={styles.threadId}>
                     {inDm && dmTarget
                       ? <><Avatar user={dmTarget} size={38} /><span style={{ minWidth: 0 }}><span className={styles.threadName}>{dmTarget.name}</span><span className={styles.threadSub}>Direct message</span></span></>
-                      : <><span className={styles.convIcon}>{mode === 'ai' ? <Sparkles size={18} /> : <GroupIcon size={19} />}</span>
+                      : <><span className={styles.convIcon}>{mode === 'ai' ? <Sparkles size={18} aria-hidden /> : <GroupIcon size={19} aria-hidden />}</span>
                         <span style={{ minWidth: 0 }}><span className={styles.threadName}>{mode === 'ai' ? `Ask AI · ${selected!.name}` : selected!.name}</span>
                           <span className={styles.threadSub}>{mode === 'ai' ? 'Knows this group’s expenses and balances' : `${selected!.memberIds.length} ${selected!.memberIds.length === 1 ? 'member' : 'members'}`}</span></span></>}
                   </div>
@@ -428,7 +428,7 @@ export function ChatPage() {
                   )}
                   {mode === 'group' && pinnedMsg && (
                     <div className={styles.pinnedBar}><Pin size={14} style={{ flex: 'none' }} /><span><b>Pinned · </b>{pinnedMsg.content}</span>
-                      <button aria-label="Unpin" onClick={() => togglePin(pinnedMsg)}><X size={14} /></button></div>
+                      <button aria-label="Unpin" onClick={() => togglePin(pinnedMsg)}><X size={14} aria-hidden /></button></div>
                   )}
 
                   <div className={styles.msgs} role="log" aria-label="Messages">
@@ -444,17 +444,17 @@ export function ChatPage() {
                           {showDay && <div className={styles.dayDivider}><span>{day}</span></div>}
                           <div className={`${styles.msgRow} ${mine ? styles.mineRow : ''} ${grouped ? styles.grouped : ''}`}>
                             <span className={styles.avatarSlot}>{!grouped && !mine && (m.ai
-                              ? <span className={`${styles.convIcon} ${styles.aiConvIcon}`} style={{ width: 32, height: 32, borderRadius: '50%' }}><Sparkles size={15} /></span>
+                              ? <span className={`${styles.convIcon} ${styles.aiConvIcon}`} style={{ width: 32, height: 32, borderRadius: '50%' }}><Sparkles size={15} aria-hidden /></span>
                               : <Avatar user={sender} size={32} />)}</span>
                             <div className={styles.bubbleWrap}>
                               <div className={styles.bubble}>
                                 {!grouped && !mine && !m.ai && <span className={styles.who}>{m.senderName}</span>}
                                 {m.content || (m.ai ? '…' : '')}
-                                <span className={styles.meta}>{timeOf(m.createdAt)}{mine && mode === 'group' && <CheckCheck size={13} />}</span>
+                                <span className={styles.meta}>{timeOf(m.createdAt)}{mine && mode === 'group' && <><CheckCheck size={13} aria-hidden /><span className="visually-hidden">Sent</span></>}</span>
                               </div>
                             </div>
                             {!inDm && <span className={styles.msgActions}>
-                              <button className={styles.miniBtn} aria-label={selected && pinned[selected.id] === m.id ? 'Unpin' : 'Pin'} onClick={() => togglePin(m)}><Pin size={15} /></button>
+                              <button className={styles.miniBtn} aria-label={selected && pinned[selected.id] === m.id ? 'Unpin' : 'Pin'} onClick={() => togglePin(m)}><Pin size={15} aria-hidden /></button>
                             </span>}
                           </div>
                         </div>
@@ -467,7 +467,7 @@ export function ChatPage() {
                   {mode === 'group' && typingName && <div className={styles.typingRow}><span className={styles.typingDots}><i /><i /><i /></span>{typingName} sent a message</div>}
                   {mode === 'ai' && streaming && <div className={styles.typingRow}><span className={styles.typingDots}><i /><i /><i /></span>Splitify AI is thinking…</div>}
                   {mode === 'ai' && !streaming && (
-                    <div className={styles.suggestions}>{AI_SUGGESTIONS.map((s) => <button key={s} className={styles.suggestion} onClick={() => askAI(s)}><Sparkles size={13} />{s}</button>)}</div>
+                    <div className={styles.suggestions}>{AI_SUGGESTIONS.map((s) => <button key={s} className={styles.suggestion} onClick={() => askAI(s)}><Sparkles size={13} aria-hidden />{s}</button>)}</div>
                   )}
 
                   <div
@@ -500,11 +500,11 @@ export function ChatPage() {
           <div ref={pickerRef} className={styles.pickerDialog} role="dialog" aria-modal="true" aria-labelledby="new-conv-title">
             <div className={styles.pickerHead}>
               <h2 id="new-conv-title">New conversation</h2>
-              <button className={styles.iconBtn} onClick={() => setPickerOpen(false)} aria-label="Close"><X size={17} /></button>
+              <button className={styles.iconBtn} onClick={() => setPickerOpen(false)} aria-label="Close"><X size={17} aria-hidden /></button>
             </div>
             <p style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 14 }}>Message a friend directly, or start a new group.</p>
             <button className={styles.conv} style={{ border: '1px solid var(--border)', marginBottom: 14 }} onClick={() => { setPickerOpen(false); setCreatingGroup(true) }}>
-              <span className={`${styles.convIcon} ${styles.aiConvIcon}`}><CirclePlus size={19} /></span>
+              <span className={`${styles.convIcon} ${styles.aiConvIcon}`}><CirclePlus size={19} aria-hidden /></span>
               <span className={styles.convBody}><span className={styles.convName}>Create a new group</span><span className={styles.convLast}><span>Trip, home, event…</span></span></span>
             </button>
             <p className={styles.listLabel} style={{ paddingLeft: 2 }}>Friends</p>

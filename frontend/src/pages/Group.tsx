@@ -234,7 +234,7 @@ export function GroupPage() {
               <Search size={17} aria-hidden />
               <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search friends, groups, or people to add…" aria-label="Search" />
             </label>
-            <Button variant="primary" icon={<Plus size={16} />} onClick={() => setCreating(true)}>New group</Button>
+            <Button variant="primary" icon={<Plus size={16} aria-hidden />} onClick={() => setCreating(true)}>New group</Button>
           </div>
 
           <div className={styles.chips} role="tablist" aria-label="Filter">
@@ -257,7 +257,7 @@ export function GroupPage() {
                     <span className={styles.actions}>
                       {u.relationship === 'request-sent'
                         ? <span className={styles.requestPending} role="status">Request pending</span>
-                        : <Button variant="primary" size="sm" icon={<UserPlus size={15} />} onClick={() => addFriend(u)}>Add friend</Button>}
+                        : <Button variant="primary" size="sm" icon={<UserPlus size={15} aria-hidden />} onClick={() => addFriend(u)}>Add friend</Button>}
                     </span>
                   </li>
                 ))}
