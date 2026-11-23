@@ -26,7 +26,7 @@ export function prefersFinePointer() {
 export function useDialog<T extends HTMLElement = HTMLDivElement>(
   open: boolean,
   onClose: () => void,
-): RefObject<T | null> {
+): RefObject<T> {
   const ref = useRef<T>(null)
   const closeRef = useRef(onClose)
   closeRef.current = onClose

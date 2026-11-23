@@ -8,6 +8,7 @@
   padding: 24px;
   background: var(--scrim);
   animation: fade 0.2s ease-out;
+  overscroll-behavior: contain;
 }
 
 .sheet {
@@ -73,6 +74,7 @@
   gap: 20px;
   padding: 4px 28px 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* The body scrolls; its children must keep their size instead of squashing. */
@@ -109,6 +111,25 @@
   color: var(--text-3);
   font-size: 18px;
   font-weight: 500;
+}
+
+.titleField {
+  display: grid;
+  gap: 6px;
+}
+
+.fieldError,
+.saveError {
+  color: var(--owe);
+  font-size: 13px;
+}
+
+.saveError {
+  padding: 0 28px;
+}
+
+.summary:focus {
+  outline: none;
 }
 
 .amountError {
@@ -232,6 +253,7 @@
   color: var(--text);
 }
 
+.segmented [aria-pressed='true'],
 .segmented .segOn {
   background: var(--surface);
   color: var(--text);

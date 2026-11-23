@@ -1,8 +1,9 @@
 import { Check, ChevronDown, X } from 'lucide-react'
-import { useEffect, useMemo, useState, type ReactNode, type SelectHTMLAttributes } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode, type SelectHTMLAttributes } from 'react'
 import type { Category, Expense, Group, User } from '../../types'
 import { splitEvenly } from '../../lib/balances'
 import { CURRENCY, categoryLabel, firstName, money } from '../../lib/format'
+import { useDialog } from '../../lib/a11y'
 import { Avatar } from '../ui/Avatar'
 import { Button } from '../ui/Button'
 import styles from './AddExpenseModal.module.css'
@@ -60,6 +61,12 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
   const [mode, setMode] = useState<SplitMode>('equal')
   const [included, setIncluded] = useState<string[]>(groups[0].memberIds)
   const [custom, setCustom] = useState<Record<string, string>>({})
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [errors, setErrors] = useState<{ amount?: string; title?: string; split?: string }>({})
+  const amountRef = useRef<HTMLInputElement>(null)
+  const titleRef = useRef<HTMLInputElement>(null)
+  const splitRef = useRef<HTMLParagraphElement>(null)
 
   const group = groups.find((g) => g.id === groupId)!
   const total = parseFloat(amount) || 0
@@ -77,14 +84,18 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
     setMode('equal')
     setIncluded(groups[0].memberIds)
     setCustom({})
+    setErrors({})
   }, [open, groups, me, today])
 
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  // Escape, backdrop click and Cancel all come through here, so a half-typed
+  // expense is never thrown away without asking.
+  const dirty = amount !== '' || title.trim() !== ''
+  function requestClose() {
+    if (saving) return
+    if (dirty && !window.confirm('Discard this expense? What you entered will be lost.')) return
+    onClose()
+  }
+  const dialogRef = useDialog(open, requestClose)
 
   function changeGroup(id: string) {
     const next = groups.find((g) => g.id === id)!
@@ -115,12 +126,28 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
   }, [group, included, mode, total, custom])
 
   const balanced = Math.abs(remaining) < 0.01
-  const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState('')
-  const valid = total > 0 && !exceedsMax && title.trim() !== '' && included.length > 0 && balanced && !saving
+
+  /** Inline errors for each field, and focus the first one that needs fixing. */
+  function validate() {
+    const next: typeof errors = {}
+    if (!(total > 0)) next.amount = 'Enter how much it cost.'
+    else if (exceedsMax) next.amount = `The maximum for one expense is ${money(MAX_EXPENSE_AMOUNT)}.`
+    if (title.trim() === '') next.title = 'Say what it was for, e.g. “Dinner” or “Taxi”.'
+    if (included.length === 0) next.split = 'Pick at least one person to split with.'
+    else if (mode !== 'equal' && !balanced) {
+      next.split = mode === 'exact'
+        ? `The shares must add up to ${money(total)}.`
+        : 'The percentages must add up to 100%.'
+    }
+    setErrors(next)
+    if (next.amount) amountRef.current?.focus()
+    else if (next.title) titleRef.current?.focus()
+    else if (next.split) splitRef.current?.focus()
+    return Object.keys(next).length === 0
+  }
 
   async function save() {
-    if (!valid) return
+    if (saving || !validate()) return
     setSaving(true)
     setSaveError('')
     const now = new Date()
@@ -183,12 +210,12 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
             : `${Math.abs(Math.round(remaining * 100) / 100)}% ${remaining > 0 ? 'left to assign' : 'over 100%'}`
 
   return (
-    <div className={styles.backdrop} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="add-expense-title">
+    <div className={styles.backdrop} onMouseDown={(e) => e.target === e.currentTarget && requestClose()}>
+      <div ref={dialogRef} className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="add-expense-title">
         <header className={styles.header}>
           <h2 id="add-expense-title">New expense</h2>
-          <button className={styles.close} onClick={onClose} aria-label="Close">
-            <X size={18} />
+          <button type="button" className={styles.close} onClick={requestClose} aria-label="Close">
+            <X size={18} aria-hidden />
           </button>
         </header>
 
@@ -198,32 +225,56 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
             e.preventDefault()
             save()
           }}
+          noValidate
         >
           <label className={styles.amount}>
             <span className="visually-hidden">Amount</span>
             <input
-              autoFocus
+              ref={amountRef}
+              data-autofocus
               type="number"
+              name="amount"
+              autoComplete="off"
               inputMode="decimal"
               max={MAX_EXPENSE_AMOUNT}
               step="0.01"
               placeholder="0"
               value={amount}
-              onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ''))}
+              aria-invalid={errors.amount ? true : undefined}
+              aria-describedby={errors.amount ? 'expense-amount-error' : undefined}
+              onChange={(e) => {
+                setAmount(e.target.value.replace(/[^\d.]/g, ''))
+                if (errors.amount) setErrors((prev) => ({ ...prev, amount: undefined }))
+              }}
               style={{ width: `${Math.max(amount.length, 1) + 0.5}ch` }}
             />
             <span>{CURRENCY}</span>
           </label>
-          {exceedsMax && <p className={styles.amountError} role="alert">Maximum expense is 100,000 MAD.</p>}
+          {(errors.amount || exceedsMax) && (
+            <p id="expense-amount-error" className={styles.amountError} role="alert">
+              {errors.amount ?? `The maximum for one expense is ${money(MAX_EXPENSE_AMOUNT)}.`}
+            </p>
+          )}
 
-          <input
-            className={styles.input}
-            placeholder="What was it for?"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={MAX_EXPENSE_DESCRIPTION_LENGTH}
-            aria-label="Description"
-          />
+          <div className={styles.titleField}>
+            <input
+              ref={titleRef}
+              className={styles.input}
+              name="description"
+              autoComplete="off"
+              placeholder="What was it for? e.g. Dinner at the riad…"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value)
+                if (errors.title) setErrors((prev) => ({ ...prev, title: undefined }))
+              }}
+              maxLength={MAX_EXPENSE_DESCRIPTION_LENGTH}
+              aria-label="Description"
+              aria-invalid={errors.title ? true : undefined}
+              aria-describedby={errors.title ? 'expense-title-error' : undefined}
+            />
+            {errors.title && <p id="expense-title-error" className={styles.fieldError} role="alert">{errors.title}</p>}
+          </div>
 
           <div className={styles.fields}>
             <Field label="Group">
@@ -261,13 +312,12 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
           <div className={styles.split}>
             <div className={styles.splitHead}>
               <h3>Split</h3>
-              <div className={styles.segmented} role="tablist" aria-label="Split method">
+              <div className={styles.segmented} role="group" aria-label="Split method">
                 {SPLIT_MODES.map(([m, label]) => (
                   <button
                     type="button"
                     key={m}
-                    role="tab"
-                    aria-selected={mode === m}
+                    aria-pressed={mode === m}
                     className={mode === m ? styles.segOn : ''}
                     onClick={() => {
                       setMode(m)
@@ -293,7 +343,7 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
                       className={`${styles.check} ${on ? styles.checkOn : ''}`}
                       onClick={() => toggle(id)}
                     >
-                      {on && <Check size={13} strokeWidth={3} />}
+                      {on && <Check size={13} strokeWidth={3} aria-hidden />}
                     </button>
                     <Avatar user={users[id] ?? { id, name: 'Unknown member', email: '' }} size={30} />
                     <span className={styles.memberName}>
@@ -306,6 +356,8 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
                         {mode === 'percent' && <small className="tabular">{money(shares[id] ?? 0)}</small>}
                         <label>
                           <input
+                            name={`share-${id}`}
+                            autoComplete="off"
                             inputMode="decimal"
                             placeholder="0"
                             value={custom[id] ?? ''}
@@ -322,17 +374,23 @@ export function AddExpenseModal({ open, onClose, onSave, groups, users, me, toda
               })}
             </ul>
 
-            <p className={styles.summary} data-warn={included.length === 0 || (mode !== 'equal' && !balanced)} aria-live="polite">
-              {summary}
+            <p
+              ref={splitRef}
+              tabIndex={-1}
+              className={styles.summary}
+              data-warn={Boolean(errors.split) || included.length === 0 || (mode !== 'equal' && !balanced)}
+              aria-live="polite"
+            >
+              {errors.split && !(included.length > 0 && (mode === 'equal' || balanced)) ? errors.split : summary}
             </p>
           </div>
 
-          {saveError && <p role="alert" style={{ color: 'var(--owe)', fontSize: 13, padding: '0 28px' }}>{saveError}</p>}
+          {saveError && <p role="alert" className={styles.saveError}>{saveError}</p>}
           <footer className={styles.footer}>
-            <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>
+            <Button type="button" variant="ghost" onClick={requestClose} disabled={saving}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" disabled={!valid}>
+            <Button type="submit" variant="primary" disabled={saving} aria-busy={saving}>
               {saving ? 'Saving…' : 'Save expense'}
             </Button>
           </footer>
