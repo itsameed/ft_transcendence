@@ -10,7 +10,7 @@ export function NotFoundPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <Link to="/" className={styles.brand} aria-label="Splitify home">
-          <span className={styles.brandMark} aria-hidden="true"><Split size={16} strokeWidth={2.2} /></span>
+          <span className={styles.brandMark} aria-hidden="true"><Split size={16} strokeWidth={2.2} aria-hidden /></span>
           <span>Splitify</span>
         </Link>
         <button
@@ -20,14 +20,14 @@ export function NotFoundPage() {
           aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           aria-pressed={dark}
         >
-          {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
+          {dark ? <Sun size={18} strokeWidth={1.75} aria-hidden /> : <Moon size={18} strokeWidth={1.75} aria-hidden />}
         </button>
       </header>
 
       <main className={styles.main}>
         <section className={styles.message} aria-labelledby="not-found-title">
           <div className={styles.receipt} aria-hidden="true">
-            <Receipt size={25} strokeWidth={1.6} />
+            <Receipt size={25} strokeWidth={1.6} aria-hidden />
             <span className={styles.receiptRule} />
             <strong>404</strong>
           </div>

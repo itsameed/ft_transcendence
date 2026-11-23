@@ -204,7 +204,7 @@ export function SettingsPage() {
                 <strong>{me.name}</strong>
                 <span>{me.email}</span>
               </div>
-              <Button type="button" icon={<LogOut size={15} />} onClick={signOut} disabled={loggingOut} className={styles.signOut}>
+              <Button type="button" icon={<LogOut size={15} aria-hidden />} onClick={signOut} disabled={loggingOut} className={styles.signOut}>
                 {loggingOut ? 'Logging out…' : 'Log out'}
               </Button>
             </Card>

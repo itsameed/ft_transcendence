@@ -122,10 +122,10 @@ export function NotificationsPage() {
             </div>
             {items.length > 0 && (
               <span className={styles.headingActions}>
-                <Button size="sm" icon={<CheckCheck size={15} />} onClick={markAllRead} disabled={markingAll || unread === 0}>
+                <Button size="sm" icon={<CheckCheck size={15} aria-hidden />} onClick={markAllRead} disabled={markingAll || unread === 0}>
                   Mark all read
                 </Button>
-                <Button size="sm" icon={<Trash2 size={15} />} onClick={clearAll}>
+                <Button size="sm" icon={<Trash2 size={15} aria-hidden />} onClick={clearAll}>
                   Clear all
                 </Button>
               </span>
@@ -163,7 +163,7 @@ export function NotificationsPage() {
                       <button type="button" className={styles.rowButton} onClick={() => markRead(n)}>{body}</button>
                     )}
                     <button type="button" className={styles.delete} onClick={() => remove(n)} aria-label={`Delete notification: ${n.title}`}>
-                      <X size={16} />
+                      <X size={16} aria-hidden />
                     </button>
                   </li>
                 )
