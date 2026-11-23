@@ -14,7 +14,7 @@ import {
   generateInitialsAvatar,
   getInitials,
 } from '../../lib/avatars'
-import type { UploadProgress } from '../../lib/upload'
+import { formatBytes, type UploadProgress } from '../../lib/upload'
 import { Button } from './Button'
 import { UploadProgressBar } from './UploadProgressBar'
 import styles from './AvatarStep.module.css'
@@ -289,7 +289,7 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error, uploadP
       return 'Invalid file format. Please upload a JPG, PNG, or WebP photo.'
     }
     if (file.size > MAX_FILE_SIZE) {
-      return `Photo is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Please choose an image under 5MB or compress it before uploading.`
+      return `Photo is too large (${formatBytes(file.size)}). Choose an image under 5\u00a0MB, or compress it first.`
     }
     return null
   }, [])
@@ -367,7 +367,7 @@ export function AvatarStep({ username, onSubmit, onSkip, loading, error, uploadP
       {/* Heading */}
       <div className={styles.heading}>
         <h2 className={styles.title}>Choose your look</h2>
-        <p className={styles.subtitle}>This is how you'll appear in groups</p>
+        <p className={styles.subtitle}>This is how you’ll appear in groups</p>
       </div>
 
       {/* Live preview */}

@@ -94,7 +94,7 @@ if (!response.ok) {
           onClick={toggle}
           aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
+          {dark ? <Sun size={18} strokeWidth={1.75} aria-hidden /> : <Moon size={18} strokeWidth={1.75} aria-hidden />}
         </button>
       </header>
 
@@ -118,7 +118,7 @@ if (!response.ok) {
           </div>
 
           <form className={styles.form} onSubmit={handleSubmit}>
-            {error && <div className={styles.errorAlert}>{error}</div>}
+            {error && <div className={styles.errorAlert} role="alert">{error}</div>}
 
             <div className={styles.field}>
               <label htmlFor="handler">Username or Email</label>
@@ -126,10 +126,13 @@ if (!response.ok) {
                 type="text"
                 id="handler"
                 name="handler"
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
                 className={styles.input}
                 value={handler}
                 onChange={(e) => setHandler(e.target.value)}
-                placeholder="alex or alex@example.com"
+                placeholder="alex or alex@example.com…"
                 required
               />
             </div>
@@ -140,6 +143,7 @@ if (!response.ok) {
                 type="password"
                 id="password"
                 name="password"
+                autoComplete="current-password"
                 className={styles.input}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -152,9 +156,10 @@ if (!response.ok) {
               type="submit"
               variant="primary"
               disabled={loading}
+              aria-busy={loading}
               className={styles.submitBtn}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Signing in…' : 'Sign In'}
             </Button>
           </form>
 

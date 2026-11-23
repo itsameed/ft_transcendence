@@ -132,7 +132,7 @@ export function Signup() {
                onClick={toggle}
                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-               {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
+               {dark ? <Sun size={18} strokeWidth={1.75} aria-hidden /> : <Moon size={18} strokeWidth={1.75} aria-hidden />}
             </button>
          </header>
 
@@ -167,10 +167,12 @@ export function Signup() {
                               id="username"
                               name="username"
                               autoComplete="username"
+                              autoCapitalize="none"
+                              spellCheck={false}
                               className={styles.input}
                               value={username}
                               onChange={(e) => setUsername(e.target.value)}
-                              placeholder="alex"
+                              placeholder="alex…"
                               maxLength={40}
                               required
                            />
@@ -183,10 +185,11 @@ export function Signup() {
                               id="email"
                               name="email"
                               autoComplete="email"
+                              spellCheck={false}
                               className={styles.input}
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
-                              placeholder="alex@example.com"
+                              placeholder="alex@example.com…"
                               required
                            />
                         </div>
@@ -214,7 +217,7 @@ export function Signup() {
                                  aria-label={passwordVisible ? 'Hide password' : 'Show password'}
                                  aria-pressed={passwordVisible}
                               >
-                                 {passwordVisible ? <EyeOff size={17} /> : <Eye size={17} />}
+                                 {passwordVisible ? <EyeOff size={17} aria-hidden /> : <Eye size={17} aria-hidden />}
                               </button>
                            </div>
                            <p id="passwordHint" className={styles.passwordHint}>
@@ -227,7 +230,7 @@ export function Signup() {
                            variant="primary"
                            className={styles.submitBtn}
                         >
-                           Continue
+                           Continue to avatar
                         </Button>
 
                         <p className={styles.legalNotice}>
