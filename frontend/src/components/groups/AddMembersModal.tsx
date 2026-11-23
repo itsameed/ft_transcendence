@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import type { User } from '../../types'
+import { useDialog } from '../../lib/a11y'
 import { Avatar } from '../ui/Avatar'
 import { Button } from '../ui/Button'
 import styles from './CreateGroupModal.module.css'
@@ -27,12 +28,7 @@ export function AddMembersModal({ open, groupId, groupName, friends, memberIds, 
     setSaving(false)
   }, [open ])
 
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  const dialogRef = useDialog(open, onClose)
 
   if (!open) return null
 
@@ -68,11 +64,11 @@ export function AddMembersModal({ open, groupId, groupName, friends, memberIds, 
 
   return (
     <div className={styles.backdrop} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="add-members-title">
+      <div ref={dialogRef} className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="add-members-title">
         <header className={styles.header}>
           <h2 id="add-members-title">Add people to {groupName}</h2>
           <button type="button" className={styles.close} onClick={onClose} aria-label="Close">
-            <X size={18} />
+            <X size={18} aria-hidden />
           </button>
         </header>
 
@@ -105,7 +101,7 @@ export function AddMembersModal({ open, groupId, groupName, friends, memberIds, 
             <span className={styles.error} role="alert">{error}</span>
             <span className={styles.footerActions}>
               <Button type="button" onClick={onClose}>Cancel</Button>
-              <Button type="submit" variant="primary" disabled={saving || picked.length === 0}>
+              <Button type="submit" variant="primary" disabled={saving || available.length === 0} aria-busy={saving}>
                 {saving ? 'Adding…' : picked.length > 1 ? `Add ${picked.length} people` : 'Add to group'}
               </Button>
             </span>

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import type { User } from '../../types'
+import { useDialog } from '../../lib/a11y'
 import { Avatar } from '../ui/Avatar'
 import { Button } from '../ui/Button'
 import { money } from '../../lib/format'
@@ -31,18 +32,13 @@ export function SettleUpModal({ open, groupId, groupName, debts, onClose, onSett
     setSaving(false)
   }, [open, debts])
 
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  const dialogRef = useDialog(open, onClose)
+  const amountRef = useRef<HTMLInputElement>(null)
 
   if (!open) return null
 
   const target = debts.find((d) => d.user.id === targetId)
   const parsed = Number(amount)
-  const valid = target !== undefined && Number.isFinite(parsed) && parsed > 0 && parsed <= target.amount
 
   function pick(id: string) {
     setTargetId(id)
@@ -56,10 +52,12 @@ export function SettleUpModal({ open, groupId, groupName, debts, onClose, onSett
     setError('')
     if (!target || !Number.isFinite(parsed) || parsed <= 0) {
       setError('Enter an amount greater than zero.')
+      amountRef.current?.focus()
       return
     }
     if (parsed > target.amount) {
-      setError(`The amount cannot exceed ${money(target.amount)}.`)
+      setError(`You owe ${target.user.name} ${money(target.amount)}, so you can pay up to that.`)
+      amountRef.current?.focus()
       return
     }
     setSaving(true)
@@ -81,15 +79,15 @@ export function SettleUpModal({ open, groupId, groupName, debts, onClose, onSett
 
   return (
     <div className={styles.backdrop} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="settle-title">
+      <div ref={dialogRef} className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="settle-title">
         <header className={styles.header}>
           <h2 id="settle-title">Settle up in {groupName}</h2>
           <button type="button" className={styles.close} onClick={onClose} aria-label="Close">
-            <X size={18} />
+            <X size={18} aria-hidden />
           </button>
         </header>
 
-        <form className={styles.body} onSubmit={submit}>
+        <form className={styles.body} onSubmit={submit} noValidate>
           <fieldset className={styles.friends}>
             <legend>Who are you paying?</legend>
             {debts.length === 0 ? (
@@ -118,30 +116,33 @@ export function SettleUpModal({ open, groupId, groupName, debts, onClose, onSett
           <label className={styles.field}>
             <span>Amount</span>
             <input
+              ref={amountRef}
               type="number"
+              name="settle-amount"
+              autoComplete="off"
+              inputMode="decimal"
               min="0.01"
               max={target?.amount}
               step="0.01"
               value={amount}
-              onChange={(e) => {
-                const nextAmount = e.target.value
-                setAmount(target && Number(nextAmount) > target.amount ? target.amount.toFixed(2) : nextAmount)
-              }}
+              onChange={(e) => { setAmount(e.target.value); if (error) setError('') }}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? 'settle-error settle-hint' : 'settle-hint'}
               placeholder="0.00"
               disabled={debts.length === 0}
             />
           </label>
 
-          <p className={styles.hint}>
+          <p id="settle-hint" className={styles.hint}>
             {target ? `You can pay up to ${money(target.amount)}. ` : ''}
             This records a payment. The expenses stay in the group’s history — only the balance changes.
           </p>
 
           <div className={styles.footer}>
-            <span className={styles.error} role="alert">{error}</span>
+            <span id="settle-error" className={styles.error} role="alert">{error}</span>
             <span className={styles.footerActions}>
               <Button type="button" onClick={onClose}>Cancel</Button>
-              <Button type="submit" variant="primary" disabled={saving || !valid}>
+              <Button type="submit" variant="primary" disabled={saving || debts.length === 0} aria-busy={saving}>
                 {saving ? 'Recording…' : 'Record payment'}
               </Button>
             </span>
