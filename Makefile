@@ -63,8 +63,8 @@ restore:
 	./scripts/restore-db.sh "$(FILE)"
 
 # Seeds run inside the backend container so they use its MONGO_URL.
-# The backend is rebuilt first (cached, fast when unchanged) so the image has the latest seed.
-SEED_RUN = $(COMPOSE) up -d --build --wait backend && $(COMPOSE) exec backend node
+# The scripts are baked into the backend image (Dockerfile: COPY . .), so we only exec them.
+SEED_RUN = $(COMPOSE) exec backend node
 
 seed:
 	$(SEED_RUN) scripts/seed.js
