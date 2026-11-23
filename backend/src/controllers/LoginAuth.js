@@ -60,7 +60,6 @@ async function loginAuth(req, res, next) {
             gender: user.gender,
             role: isAdmin ? 'admin' : (user.role || 'user')
         });
-        // return res.redirect('Dashboard');
     } catch (error) {
         console.error('Error while attempting to log in:', error);
         return res.status(500).json({ message: 'Unable to log in. Please try again.' });

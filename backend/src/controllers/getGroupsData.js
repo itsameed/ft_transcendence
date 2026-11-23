@@ -1,5 +1,4 @@
 const GroupSchema = require("../models/Schemas/Group");
-const ExpenseSchema = require('../models/Schemas/Expenses');
 
 
 function returnGroups(group) {

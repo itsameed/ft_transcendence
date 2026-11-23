@@ -5,7 +5,6 @@ const { loginLimiter, twoFactorLimiter } = require('../middleware/rateLimiter.js
 const { verifyLoginCode, cancelChallenge, challengeStatus } = require('../controllers/loginTwoFactor');
 
 router.get('/', (req, res) => {
-   //  res.render('signup');
    res.status(200).json({ message: 'Login page rendered successfully.' });
 });
 
