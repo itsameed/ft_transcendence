@@ -4,12 +4,9 @@ import { ArrowLeft } from 'lucide-react'
 import { Logo } from '../components/layout/Sidebar'
 import styles from './Legal.module.css'
 
-/**
- * TODO before launch: set your real contact address and review the dates.
- * Both legal pages read from here, so you only change them once.
- */
+
 export const LEGAL = {
-  contactEmail: 'support@splitify.example',
+  contactEmail: 'splitifysupportteam@gmail.com',
   updated: 'November 21, 2026',
 }
 
