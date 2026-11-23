@@ -1611,7 +1611,10 @@
 }
 
 a.stripBtn {
-   display: inline-flex;
-   align-items: center;
+   color: var(--text);
    text-decoration: none;
+}
+
+a.stripBtnBrand {
+   color: var(--on-primary);
 }
