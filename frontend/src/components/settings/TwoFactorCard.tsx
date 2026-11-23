@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Check, Copy, Download, ShieldCheck, ShieldOff } from 'lucide-react'
+import { prefersFinePointer } from '../../lib/a11y'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import styles from './TwoFactorCard.module.css'
@@ -48,6 +49,8 @@ export function TwoFactorCard({ email }: { email: string }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  // Focus the field when a panel opens, but not on phones (it would pop the keyboard).
+  const autoFocus = prefersFinePointer()
 
   useEffect(() => {
     fetch('/api/2fa')
@@ -175,7 +178,7 @@ export function TwoFactorCard({ email }: { email: string }) {
                   placeholder="000000"
                   className={styles.codeInput}
                   required
-                  autoFocus
+                  autoFocus={autoFocus}
                 />
               </label>
             </li>
@@ -221,7 +224,7 @@ export function TwoFactorCard({ email }: { email: string }) {
           {status.hasPassword && (
             <label className={styles.field}>
               <span>Password</span>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required autoFocus />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required autoFocus={autoFocus} />
             </label>
           )}
           <label className={styles.field}>
@@ -230,9 +233,11 @@ export function TwoFactorCard({ email }: { email: string }) {
               value={code}
               onChange={(e) => setCode(e.target.value.slice(0, 11))}
               autoComplete="one-time-code"
+              autoCapitalize="none"
+              spellCheck={false}
               placeholder="000000"
               required
-              autoFocus={!status.hasPassword}
+              autoFocus={autoFocus && !status.hasPassword}
             />
           </label>
           <Footer error={error}>
@@ -255,7 +260,7 @@ export function TwoFactorCard({ email }: { email: string }) {
               placeholder="000000"
               className={styles.codeInput}
               required
-              autoFocus
+              autoFocus={autoFocus}
             />
           </label>
           <Footer error={error}>
@@ -307,7 +312,7 @@ function download(codes: string[], email: string) {
   const body = [
     'Splitify recovery codes',
     `Account: ${email}`,
-    `Created: ${new Date().toLocaleString()}`,
+    `Created: ${new Intl.DateTimeFormat('en-GB', { dateStyle: 'long', timeStyle: 'short' }).format(new Date())}`,
     '',
     'Each code can be used once to sign in if you lose access to your authenticator app.',
     '',
