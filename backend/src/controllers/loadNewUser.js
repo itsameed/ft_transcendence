@@ -70,31 +70,43 @@ async function loadNewUser(req, res, next) {
                     <p>This link will expire in 24 hours.</p>
                 `
             });
+            newUser.isVerified = true;
             console.log(`✅ Verification email sent to ${newUser.email}`);
-        } catch (emailError) {
+        }
+        catch (emailError) {
             console.error('❌ Failed to send verification email:', emailError);
         }
-        req.session.regenerate((sessionError) => {
-            if (sessionError) return next(sessionError);
+        // req.session.regenerate((sessionError) => {
+        //     if (sessionError) return next(sessionError);
 
-            req.session.userId = String(newUser._id);
-            req.session.username = newUser.username;
-            req.session.save((saveError) => {
-                if (saveError) return next(saveError);
+        //     req.session.userId = String(newUser._id);
+        //     req.session.username = newUser.username;
+        //     req.session.save((saveError) => {
+        //         if (saveError) return next(saveError);
 
-                printLogsDate(`User with Id ${newUser._id} signed up at : `);
-                return res.status(201).json({
-                    message: 'User created successfully.',
-                    userId: newUser._id,
-                    username: newUser.username,
-                    email: newUser.email,
-                    bio: newUser.bio,
-                    gender: newUser.gender,
-                    avatar: newUser.avatar,
-                });
-            });
+        //         printLogsDate(`User with Id ${newUser._id} signed up at : `);
+        //         return res.status(201).json({
+        //             message: 'User created successfully.',
+        //             userId: newUser._id,
+        //             username: newUser.username,
+        //             email: newUser.email,
+        //             bio: newUser.bio,
+        //             gender: newUser.gender,
+        //             avatar: newUser.avatar,
+        //         });
+        //     });
+        // });
+        console.log(`User with Id ${newUser._id} signed up at: ${new Date().toISOString()}`);
+
+        return res.status(201).json({
+            message: 'User created successfully. Please check your email to verify your account.',
+            userId: newUser._id,
+            username: newUser.username,
+            email: newUser.email,
+            avatar: newUser.avatar,
         });
-    } catch (error) {
+    }
+    catch (error) {
         if (error.code === 11000) {
             return res.status(409).json({ message: 'This email or username is already registered.' });
         }
